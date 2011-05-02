@@ -1,0 +1,89 @@
+.attribut-kritisch {
+	font-weight: bold;
+	color: #d00;
+}
+
+.error {
+	font-weight: bold;
+	color: #f00;
+}
+
+#banner {
+	background-color: #aaa;
+	width: 728px;
+	height: 90px;
+	margin: 10px auto;
+	overflow: hidden;
+}
+
+#banner-inner img {
+	margin: 0; border: 0; padding: 0; display:block;
+}
+
+
+#container {
+	background-color: #aaa;
+	margin: 0px auto 30px auto;
+	width: 750px;
+}
+
+#maincontent {
+	background-color: #f8f8f8;
+	color: #000;
+	margin: 0px 0px 0px 200px;
+	padding: 20px;
+	min-height: 500px;
+}
+
+#sidebar {
+	width: 200px;
+	float: left;
+	background-color: #eee;
+}
+
+#sidebar #logo {
+	text-align: center;
+}
+
+#sidebar #logo a{
+	color: #000;
+	text-decoration:none;
+	padding: 0;
+	border: none;
+}
+
+#sidebar a {
+	background-color: #eee;
+	padding: 5px 20px;
+	border-top: 2px solid #ddd;
+	display: block;
+	text-decoration: none;
+	color: #000;
+}
+
+#sidebar a:hover {
+	background-color: #ddd;
+}
+
+#footer {
+	font-size: 75%;
+	clear: both;
+	background-color: #666;
+	padding: 10px;
+	text-align: center;
+	color: #ccc;
+}
+
+#footer a {
+	color: #e8e8e8;
+}
+
+body {
+	background-color: #ff8800;
+	font-family: tahoma, arial, sans-serif;
+}
+
+table td {
+	border: 1px solid grey;
+	padding: 5px;
+}

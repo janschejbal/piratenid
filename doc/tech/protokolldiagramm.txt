@@ -1,0 +1,24 @@
+
+msc {
+ hscale = "2", arcgradient = 0;
+ 
+ f [label="Webanwendung"], b [label="Browser des Nutzers"], s [label="ID-System"];
+
+ b :> f [label="\n https \n", textcolor="gray", linecolour="gray"], f :> b [label="\n https \n", textcolor="gray", linecolour="gray"],
+ b :> s [label="\n https \n", textcolor="gray", linecolour="gray"], s :> b [label="\n https \n", textcolor="gray", linecolour="gray"];
+ 
+ b=>f [label="GET /example.php?action=login"];
+ f>>b [label="nonce, domain, returnurl, attributes\n(in FORM mit Action auf ID-System)", linecolour="#0000cc", textcolour="#0000cc"];
+
+ b=>s [label="POST /id/request.php\n(nonce, domain, returnurl, attributes)", linecolour="#0000cc", textcolour="#0000cc"];
+ s>>b [label="Daten (attributes) fuer (domain) freigeben? Login bitte!\n(FORM mit nonce, domain, returnurl, attributes)"];
+ |||;
+ |||;
+ |||;
+ b=>s [label="POST /id/verify.php\n(user, passwort, nonce, domain, returnurl, attributes)"];
+ s>>b [label="XML-Antwort + Signatur (in FORM mit Action auf returnurl)\nEnthaelt: nonce, domain, Attributwerte, success/error", linecolour="#007700", textcolour="#007700"];
+
+ b=>f [label="POST /example.php\nXML-Antwort + Signatur", linecolour="#007700", textcolour="#007700"];
+ f>>b [label="Herzlich willkommen"];
+ |||;
+}
