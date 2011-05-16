@@ -60,7 +60,7 @@ function hashPassword($username, $pw) {
 	if (strlen($rawhash) != 64) die("Password hashing failed");
 	
 	$h = $rawhash;
-	for ($i = 0; $i < 50000; $i++) {
+	for ($i = 0; $i < 100000; $i++) {
 		$h =  hash("sha256", "$i|$h|$rawhash");
 	}
 	return $h;
@@ -208,6 +208,7 @@ function printLoginFields() {
 	</tr>
 	<script>
 		document.getElementById('clickjackprotectInput').value = "<?php safeout($clickjackcode) ?>";
+		document.getElementById('clickjackprompt').style.display = 'none';
 	</script>
 	<input type="hidden" name="clickjackprotect1" value="<?php safeout($clickjackcode) ?>">
 	<?php

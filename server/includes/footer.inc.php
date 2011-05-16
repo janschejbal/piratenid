@@ -15,7 +15,6 @@
 		alert("ACHTUNG: Jemand hat versucht, das Piraten-ID-System in einem (i)frame einzubinden. Bitte mit Angabe der Website an die IT der Piratenpartei melden!");
 	} else {
 		document.getElementById('clickjackingwarning').style.display = 'none';
-		document.getElementById('clickjackprompt').style.display = 'none';
 	}
 </script>
 

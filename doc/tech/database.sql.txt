@@ -52,3 +52,16 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `token` (`token`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+
+--
+-- Tabellenstruktur für Tabelle `openid`
+--
+
+CREATE TABLE IF NOT EXISTS `openid` (
+  `nonce` varchar(255) COLLATE utf8_bin NOT NULL,
+  `hmac` varchar(255) COLLATE utf8_bin NOT NULL,
+  `createtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`nonce`),
+  UNIQUE KEY `signature` (`signature`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
