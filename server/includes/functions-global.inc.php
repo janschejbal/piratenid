@@ -12,12 +12,10 @@ require_once('siteconstants.inc.php');
 // TODO HTML validieren
 // TODO Startseite
 // TODO Hilfe, Doku
-// TODO self-review ID-dir
 // TODO full test again, especially clickjacking protection with/without JS (regular case/attack case), IE6 blocker, extendedAttributeDomains (in siteconstants)
 // TODO DB charset
 // TODO encodings checken
 
-// TODO openID?
 
 // TODO search for TODOs (also in client!)
 
@@ -110,6 +108,7 @@ class DB {
 	public function cleanup() {
 		$this->query("UPDATE users SET resettoken = NULL, resettime = NULL WHERE resettime < TIMESTAMPADD(DAY,-2,NOW())", array());
 		$this->query("DELETE FROM users WHERE email_verified = 0 AND token <=> NULL AND createtime < TIMESTAMPADD(DAY,-2,NOW())", array());
+		$this->query("DELETE FROM openid WHERE createtime < TIMESTAMPADD(HOUR,-1,NOW())", array());
 	}
 	
 	// singleton getter

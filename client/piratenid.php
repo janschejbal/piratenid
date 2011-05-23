@@ -1,21 +1,15 @@
 <?php
 
+die("incomplete - especially, the signature verification is missing. DO NOT EVEN THINK ABOUT USING THIS.");
+
 class PiratenID {
-	// HTTPS url to which requests will be sent
-	const serverurl = "https://piratenid.janschejbal.de/id/request.php";
-	
-	// insert the message signing RSA public key of the ID server here
-	const serverpubkey = <<<END
------BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxXBlghOWQAtXEbC++VT9
-mD5XTUPzsLNoJWrtaXgEKfdFQonY7SK/wqJHYJmQ09IIOg3m3DnYP4mWC2L2dovZ
-2YKyRpWUA/7UGs3pIE5NAySJmIaimWYs0Q+WpDsOn4sEqF2Wy87P7dhRi/s6Soa8
-KBdMXCJlSDee4gld81/binhp/lOIzJmI8OcMp4bTpM4eqWWRzO/TX2ggP3BpGyKo
-77Dg0QH2+Y/TWvTf/UTvaMZXoYUxRYojWV2k9W7u1rDb8H8xwMTejIU76W2KxyUq
-ZbjFLsjEu3/GARqol5Vk7+iiopRT4pfa2vz1iVTh71TvqEsaElyphA2nmpSsem4J
-3QIDAQAB
------END PUBLIC KEY-----
-END;
+	// OpenID endpoint to use
+	const serverroot = "https://piratenid.janschejbal.de/";
+
+	// WARNING: THIS IS NOT AN OpenID CLIENT IMPLEMENTATION
+	// This is a partial implementation of the OpenID protocol for usage with a single trusted provider.
+	// It does not perform all checks required to ensure security when more than one OpenID provider is accepted!
+	// Furthermore, protocol variants not used by the PiratenID software are ignored.
 
 	// static convenience methods that automate session-handling
 	// These methods wrap the class methods below, applying them to an automatically created instance that is stored in the session
@@ -77,9 +71,9 @@ END;
 		return $result;
 	}
 	
-	static function session_request($attributes, $returnurl, $domain) {
+	static function session_printLoginForm($returnurl, $realm, $pseudonym = true, $attributes = null) {
 		$instance = self::getFromSession();
-		$result = $instance->request($attributes, $returnurl, $domain);
+		$result = $instance->printLoginForm($returnurl, $realm, $pseudonym, $attributes);
 		self::storeToSession($instance);
 		return $result;
 	}
@@ -110,10 +104,12 @@ END;
 	private $authenticated = false;
 	private $error = null;
 	private $attributes = array();
-	private $nonce = null;
-	private $domain = null;
 	
-	// returns true if the user is authenticated (not necessarily a pirate!)
+	private $returnurl = null;
+	private $usePseudonym = true;
+	private $requestedAttributes = null;
+	
+	// returns true if the user is authenticated
 	function isAuthenticated() {
 		if ( $this->blockNonSSL() ) return false;
 		return $this->authenticated;
@@ -130,9 +126,9 @@ END;
 		$err = $this->error;
 		$this->error = null;
 		return $err;
-	}
+	}	
 	
-	// Handles a response from the authentication server
+	// Handles a response from the authentication server, if previously requested using request()
 	// Call when receiving the POST on the return url, or each time you receive a POST.
 	// Checks if the relevant POST fields exist, and if they do, tries to verify the response.
 	// If successfully authenticated, isAuthenticated() will start returning true and you will be able to retrieve the attributes with getAttributes()
@@ -141,91 +137,146 @@ END;
 	function handle() {
 		if ( $this->blockNonSSL() ) return false;
 
-		if ( empty($_POST['piratenid_response']) || empty($_POST['piratenid_sig']) ) {
-			$this->error = "local: no response in POST";
+		$postFields = getOpenIDFields();
+		
+		if ( empty($postFields) || empty($postFields['openid.mode']) || empty($postFields['openid.ns']) || $postFields['openid.ns'] !== "http://specs.openid.net/auth/2.0" ) {
+			$this->error = "local: no OpenID response in POST";
 			return false;
 		}
 		
-		$response = $_POST['piratenid_response'];
-		$sig      = $_POST['piratenid_sig'];
+		if ( empty($this->returnurl) ) {
+			$this->error = "local: no outstanding request";
+			return false;
+		}
 		
-		$response = base64_decode($response);
-		$sig      = base64_decode($sig);
+		if ( $postFields['openid.mode'] == "cancel" ) {
+			$this->error = "user: cancelled";
+			return false;
+		}
 
-		$pubkeyid = openssl_get_publickey(self::serverpubkey);
-		$result = openssl_verify($response, $sig, $pubkeyid, "sha512");
-		openssl_free_key($pubkeyid);
-		
-		if ($result !== 1) {
-			$this->error = "local: invalid signature";
+		if ( $postFields['openid.mode'] == "error" ) {
+			$this->error = "remote: ".$postFields['openid.error'];
 			return false;
 		}
 		
-		// if we get here, we have a correctly signed response
-		
-		$xml = simplexml_load_string($response);
-		
-		// prevent re-use of a ticket created for another site (in case nonce was stolen by attacker)
-		if ($this->domain == null || ((string)$xml->domain) !== $this->domain) {
-			$this->error = "local: domain mismatch";
+		if ( $postFields['openid.mode'] !== "id_res" ) {
+			$this->error = "local: unknown openid.mode";
 			return false;
 		}
 		
-		if ($this->nonce == null || ((string)$xml->nonce) !== $this->nonce) {
-			$this->error = "local: nonce mismatch";
+		if ( $postFields['openid.return_to'] !== $this->returnurl ) {
+			$this->error = "local: return url mismatch";
 			return false;
 		}
 		
-		$this->nonce = null;
-		
-		if (((string)$xml->type) !== "success") {
-			$this->error = "remote: ". $xml->error;
+		if ( $postFields['openid.op_endpoint'] !== self::serverroot.'openid/endpoint.php' ) {
+		if ( $postFields['openid.op_endpoint'] !== self::serverroot.'openid/endpoint.php' ) {
+			$this->error = "local: endpoint mismatch";
 			return false;
 		}
 		
+		$tmpAttributes = array();
+		$requiredSignedFields = array('op_endpoint', 'return_to', 'response_nonce', 'assoc_handle');
+		
+		if ( $this->usePseudonym ) {
+			if (empty($postFields['openid.identity']) || empty($postFields['openid.claimed_id']) ) {
+				$this->error = "local: pseudonym requested but not provided";
+				return false;
+			}
+			if ($postFields['openid.identity'] !== $postFields['openid.claimed_id'] ) {
+				$this->error = "local: claimed_id / identity mismatch";
+				return false;
+			}
+			if (preg_match('|^'.str_replace('.','\\.',self::serverurl).'openid/openid/pseudonym\\.php\\?id=[0-9a-f]{64}$|', $postFields['openid.identity'])) {
+				$tmpAttributes['pseudonym'] = hash('sha256', $postFields['openid.identity']);
+				$tmpAttributes['pseudonym_url'] = $postFields['openid.identity'];
+				if (str_len($tmpAttributes['pseudonym']) !== 64) die("Pseudonym hashing failed");
+			} else {
+				$this->error = "local: invalid pseudonym format";
+				return false;
+			}
+			$requiredSignedFields[] = "identity";
+			$requiredSignedFields[] = "claimed_id";
+		} else {
+			if (!empty($postFields['openid.identity'] || !empty($postFields['openid.claimed_id']) ) {
+				$this->error = "local: pseudonym not requested but provided";
+				return false;
+			}
+		}
+		
+		if ( $this->requestedAttributes === null ) {
+			if (!empty($postFields['openid.ax.mode']) ) {
+				$this->error = "local: no attributes requested but got attribute response";
+				return false;
+			}
+		} else {
+			if (empty($postFields['openid.ax.mode'] || $postFields['openid.ax.mode'] !== "fetch_response" ) ) {
+				$this->error = "local: attributes requested but not provided";
+				return false;
+			}
+			$requiredSignedFields[] = "ax.mode";
+			$reqAttrArray = explode(',',$this->requestedAttributes);
+			foreach ($reqAttrArray as $attr) {
+				if (!isset($postFields["openid.ax.value.$attr"])) {
+					$this->error = "local: requested attribute(s) missing";
+					return false;				
+				}
+				if (empty($postFields["openid.ax.type.$attr"]) || $postFields["openid.ax.type.$attr"] !== "https://id.piratenpartei.de/openid/schema/$attr" ) {
+					$this->error = "local: invalid attribute type";
+					return false;				
+				}
+				$requiredSignedFields[] = "ax.type.$attr";
+				$requiredSignedFields[] = "ax.value.$attr";
+
+				$tmpAttributes[$attr] = $postFields["openid.ax.value.$attr"];
+			}
+		}
+		
+		// check if necessary fields signed
+		$actualSignedFields = explode(',',$postFields["openid.signed"]); 
+		foreach ($requiredSignedFields as $field) {
+			if (!in_array($field, $actualSignedFields)) {
+				$this->error = "local: not all required fields are signed";
+				return false;
+			}
+		}
+		
+		// TODO check signature (remote)
+		
+		// set attributes etc.
 		$this->authenticated = true;
-		$this->attributes = array();
+		$this->error = null;
+		$this->attributes = $tmpAttributes;
+		$this->returnurl = null;
 		
-		for ($i=0; $i < count($xml->attribute); $i++) {
-			$this->attributes[(string)($xml->attribute[$i]->name)] = (string)($xml->attribute[$i]->value);
-		}
-
 		return true;
 	}
 	
-	// Requests authentication
-	// Prints a self-submitting HTML form which will submit to the ID server; a nonce is automatically created
+	// Requests authentication by printing a self-submitting HTML login form which will submit to the ID server
 	// Parameters:
-	//     $attributes: attributes to request, for example "pseudonym,mitgliedschaft-bund"
-	//     $domain: domain of the service for which the authentication is valid (currently needs to match return url and current domain name exactly)
-	//     $returnurl: https url to which the browser will be directed after finishing authentication (needs to call handle() on this object!)
-	// returns: true if sucessfully authenticated, false if any error occured (use pollError to get error message)
-	function request($attributes, $returnurl, $domain) {
+	//     $returnurl: a URL that will handle the OpenID response. Must be inside realm.
+	//     $realm: The realm for which authentication is requested. Must end with a / (i.e. be a directory).
+	//             Current URL and returnurl must be inside realm, https is required.
+	//             The pseudonyms are calculated per realm, i.e. different realm means different pseudonyms
+	//     $usePseudonym: boolean indicating if a pseudonymous login should be requested (false = anonymous)
+	//     $attributes: additional attributes to request, for example "mitgliedschaft-bund, mitgliedschaft-land"
+	//                  If "mitgliedschaft-bund" is NOT one of the requested attributes, only verified members will be allowed to log in.
+	//                  If you request "mitgliedschaft-bund", its your own duty to check for membership (if you want to).
+	// returns: true if successfully printed the form, false if any error occured (use pollError to get error message)
+	function request($returnurl, $realm, $usePseudonym = true, $attributes = null) {
 		if ( $this->blockNonSSL() ) return false;
 	
-		if ( !preg_match('/^([a-z-]+\\.)+[a-z]+$/', $domain) ) {
-			$this->error = "local: request failed - invalid domain format";
-			return false;
-		}
-		
-		if ( (!empty($_SERVER['HTTP_HOST'])) && ($domain !== $_SERVER['HTTP_HOST']) ) {
-			$this->error = "local: request failed - domain does not match current host";
-			return false;
-		}
-		
-		$prefix = "https://$domain/";
-		if ( strpos($returnurl, $prefix) !== 0 ) {
-			$this->error = "local: request failed - return url must start with \"$prefix\"";
-			return false;
-		}
+		// TODO check realm and returnurl
 		
 		if ( !preg_match('/^[a-z_-]+(,[a-z_-]+)*$/', $attributes) ) {
 			$this->error = "local: request failed - invalid attribute list. Use comma separated attributes without spaces, containing only lowercase letters, dashes and underscores.";
 			return false;
 		}
 		
-		$this->nonce = self::generateNonce(32);
-		$this->domain = $domain;
+		$this->returnurl = $returnurl;
+		$this->usePseudonym = $usePseudonym;
+		$this->requestedAttributes = $attributes;
+		// TODO
 		?>
 		<form name="piratenid_requestform" action="<?php echo htmlspecialchars(self::serverurl); ?>" method="POST">
 			<input type="hidden" name="nonce" value="<?php self::safeout($this->nonce); ?>">
@@ -246,18 +297,51 @@ END;
 		$this->authenticated = false;
 		$this->error = null;
 		$this->attributes = array();
-		$this->nonce = null;
-		$this->domain = null;
+		$this->returnurl = null;
+		$this->usePseudonym = true;
+		$this->requestedAttributes = null;
 	}
 	
 	// Tests if the current page is being loaded via HTTPS
 	public static function isSSL() {
-		if ($_SERVER['SERVER_PORT']==80) return false;
 		if ($_SERVER['SERVER_PORT']==443) return true;
 		if ($_SERVER['HTTPS']==='on') return true;
 		return false;
 	}
 	
+	private static sfunction getOpenIDFields(&$error) {
+		// prefiltering done manually - type guaranteed by explode, isset() is checked,
+		// empty values in key will be rejected by substring-test, in value they are allowed, length is checked.
+		if ($_SERVER['REQUEST_METHOD'] === "POST") {
+			if ($_SERVER["CONTENT_TYPE"] !== "application/x-www-form-urlencoded") {
+				$error = "Falscher Content-Type";
+				return false;
+			}
+			$source = file_get_contents('php://input');
+		} else {
+			$source = $_SERVER['QUERY_STRING'];
+		}
+		$pairs = explode('&', $source);
+		$result = array();
+		foreach ($pairs as $pair) {
+			$pairarr = explode("=",$pair);
+			if (!isset($pairarr[0]) || !isset($pairarr[1])) {
+				$error = "Ungültige Parameter";
+				return false;
+			}
+			$key = urldecode($pairarr[0]);
+			$value = urldecode($pairarr[1]);
+			if (substr($key,0,7) !== "openid.") {
+				if (strlen($key) > 250 || strlen($value) > 250) {
+					$error = "Parameter zu lang";
+					return false;
+				}
+				$result[$key] = $value;
+			}
+		}
+		return $result;
+	}
+
 	// If current page is not being loaded via HTTPS, sets error and returns true
 	private function blockNonSSL() {
 		if (!self::isSSL()) {
@@ -265,14 +349,6 @@ END;
 			return true;
 		}
 		return false;
-	}
-	
-	// Generates a highly secure random nonce with the given number of bytes in hex format. Dies on failure.
-	public static function generateNonce($entropy) {
-		$strong = false;
-		$result = bin2hex(openssl_random_pseudo_bytes($entropy, $strong));
-		if ($strong !== true || strlen($result) != (2*$entropy)) die("openssl_random_pseudo_bytes failed");
-		return $result;
 	}
 }
 
