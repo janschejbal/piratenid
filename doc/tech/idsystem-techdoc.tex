@@ -56,135 +56,112 @@ beispielsweise ein von Dritten betriebenes Forum oder Umfragetool.
 Um Verwirrung zu vermeiden, wird der Begriff "`Client"' hier nicht verwendet, da dieser sowohl den Browser als auch die Webanwendung (Client des ID-Systems) bezeichnen könnte.
 Die Parteien werden im Folgenden als ID-System, Browser und Webanwendung bezeichnet.
 
-\section{Protokoll}
-Nach Analyse vorhandener Verfahren, unter anderem X.509-Clientzertifikate, OpenID, SAML, OAuth sowie Protokollen mit kryptographisch gesicherter Anonymität/Pseudonymität
-wurde entschieden, ein eigenes Protokoll zu entwickeln.
-Der Hauptgrund dafür war, dass OpenID und SAML äußerst komplex sind und diese Komplexität Sicherheitsrisiken birgt sowie die Anwendung erschwert.
-OpenID erfordert beispielsweise die Nutzung einer komplexen Library, und in gängigen Libraries
+\section{Authentifizierung}
+Statt eines ursprünglich geplaten Protokolls wird OpenID 2.0 \footnote{\url{http://openid.net/specs/openid-authentication-2_0.html}} (mit gewissen Einschränkungen)
+mit Attribute Exchange 1.0 \footnote{\url{http://openid.net/specs/openid-attribute-exchange-1_0.html}} verwendet.
+Die serverseitige Implementierung ist eine vollständige Eigenentwicklung, da die Libraries eine zu hohe Komplexität haben, um sie vollständig zu reviewen.
+Dabei wurde nur ein Teil des Protokolls implementiert, wodurch viele potentielle Quellen für Fehler und Sicherheitslücken wegfallen.
+Die Kompatibilität mit gängigen OpenID-Libraries bleibt gewahrt, bei der Verwendung solcher Libraries ist aber auf mögliche Sicherheitsprobleme zu achten.
 \footnote{Beispiel: Die PHP-OpenID-Library von Janrain greift bei fehlendem curl auf fopen zurück, was SSL-Zertifikate nicht prüft}
-und OpenID-Servern\footnote{von Janrain betriebener Service, clickjacking bei inaktivem Javascript} wurden Sicherheitslücken entdeckt.
-Das Protokoll sollte daher möglichst einfach sein, um eine Implementierung in beliebigen Programmiersprachen sowie eine Analyse zu ermöglichen.
 Zur Übersicht über die Überlegungen zu anderen Protokollen wird hier auf das englischsprachige Dokument
 "`Building an authentication system under strict real-world constraints"'
 \footnote{TODO LINK} von Jan Schejbal verwiesen.
 
-Das Protokoll ist angelehnt an SAML.
-ID-System und Webanwendung kommunizieren niemals direkt miteinander, sondern ausschließlich über den Browser mittels HTTPS-Requests.
-\footnote{Dadurch wird das Problem von serverseitiger Software die unsichere HTTPS-Verbindungen aufbaut (siehe PHP) vermieden.}
-Der Ablauf einer Authentifizierung wird in Abbildung \ref{fig:protokolldiagramm} gezeigt.
+Die Verwendung von OpenID statt einem eigenen Protokoll ermöglicht Kompatibilität mit bestehenden Anwendungen,
+ist im Fall einer Kompromittierung des Servers weniger problematisch
+(Sicherheit basiert auf SSL-Zertifikat, dieses kann separat z. B. auf einem Reverse-Proxy gelagert werden,
+Revocation über SSL möglich falls Clients auf Revocation prüfen, Angreifer müsste zusätzlich MitM "`in den Tiefen des Internets"' durchführen), 
+macht es aber leichter, kaputte Implementierungen zu erstellen (z. B. unzureichende Zertifikatsprüfung)
+und kann je nach Implementierung (Liste der akzeptierten Zertifikate/CAs) gegen kompromittierte/bösartige Zertifizierungsstellen (CAs) anfällig sein.
 
-\begin{figure}[h]
-\includegraphics[trim=100px 0px 100px 0px, width=\textwidth]{protokolldiagramm.eps}
-\caption{Ablauf einer Authentifizierung mit PiratenID}
-\label{fig:protokolldiagramm}
-\end{figure}
+Sämtliche OpenID-Transaktionen finden ausschließlich über HTTPS statt.
+Es ist darauf zu achten, dass Webanwendungen HTTPS korrekt einsetzen (z. B. Zertifikatsprüfung), da über die HTTPS-Verbindung die Daten des Benutzers übertragen werden.
+Zur Erhöhung der Sicherheit sollen Webanwendungen zusätzlich den Fingerprint des Zertifikats prüfen, um gegen Angriffe auf Zertifizierungsstellen geschützt zu sein.
+Associations werden nicht unterstützt, ebensowenig ein Fallback auf OpenID 1.1.
 
-Wenn der Browser sich bei der Webanwendung einloggen möchte und die Loginseite aufruft, erhält er ein HTML-Form mit versteckten Formularfeldern.
-In diesen sind enthalten:
+Webanwendungen, die gewöhnliche OpenID-Libraries einsetzen, müssen sicherstellen, dass Logins nur mit dem ID-System und nicht mit beliebigen fremden OpenID-Servern möglich sind.
+Zusätzlich muss sichergestellt sein, dass die Library SSL korrekt prüft und wenn irgendwie möglich nur das manuell eingepflegte Zertifikat des ID-Systems akzeptiert.
+
+Bei der OpenID-Anfrage unterliegt das Realm einer recht strengen Prüfung, es muss sich um eine HTTPS-URL auf einen Ordner handeln, genauer:
+Die URL muss mit einem Schrägstrich enden und darf keine Query-Parameter oder Anker enthalten.
+Sowohl die anfragende Seite als auch die Return-URL müssen innerhalb dieses Realms liegen.
+Das Realm wird zur Berechnung des Pseudonyms verwendet und dem Nutzer als der Name der Seite, bei der er sich anmeldet, angezeigt.
+
+
+\subsection{Authentifizierungsmodi}
+Bei der Authentifizierung über PiratenID werden mehrere Arten unterschieden.
+Bei der OpenID-Anfrage kann das Feld claimed\_id/identity entweder auf die Konstante \verb@http://specs.openid.net/auth/2.0/identifier\_select@
+für identifier\_select gestellt oder das Feld ganz weggelassen werden. (Andere Werte werden nicht akzeptiert.)
+In ersterem Fall wird eine pseudonyme Anmeldung durchgeführt, d.h. das ID-System berechnet das seitenspezifische Pseudonym und übermittelt eine URL der Form\\
+\verb@https://id.piratenpartei.de/openid/pseudonym.php?id=4e2b9b5163[...]faced7@\\
+wobei der Teil nach "`id="' das Pseudonym ist.
+
+In letzterem Fall wird eine anonyme Anmeldung durchgeführt:
+Die Anwendung erfährt bestimmte Informationen über den Nutzer (z. B. die Tatsache, dass er Pirat ist), aber nichts, womit sie den Nutzer wiedererkennen könnte.
+Dies könnte z. B. benutzt werden, um Zugang zu Informationen oder Diensten auf Piraten zu beschränken.
+Sollen Doppelaccounts verhindert oder Benutzer wiedererkannt werden, muss die pseudonyme Anmeldung benutzt werden.
+
+Unabhängig davon, ob die Anmeldung anonym oder pseudonym stattfindet, wird die Piratenmitgliedschaft des Nutzers entweder implizit oder explizit geprüft:
+Wird das Attribut "`mitgliedschaft-bund"' \textbf{nicht} über Attribute Exchange (siehe nächter Abschnitt) abgefragt findet eine implizite Prüfung statt - 
+nur Piraten mit gültiger Mitgliedschaft (und korrekt eingetragenem Token) können sich anmelden, alle anderen bekommen nur eine Fehlermeldung.
+Wird es jedoch explizit abgefragt, kann sich jeder anmelden und die Anwendung muss/kann Piraten und Nichtpiraten selbst trennen,
+z. B. um ehemaligen Mitgliedern noch Zugriff auf ihre Accounts zu ermöglichen.
+
+Wird mit einer gewöhnlichen OpenID-Library ohne besondere Optionen eine Authentifizierung durchgeführt, 
+so findet eine \textbf{pseudonyme} Anmeldung mit \textbf{impliziter} Prüfung der Mitgliedschaft statt, was für die meisten Fälle die richtige Wahl ist.
+Anwendungen, die OpenID bereits unterstützen, können so in der Regel mit minimalen Veränderungen (Beschränkung auf den PiratenID-Server, Zertifikate) direkt verwendet werden.
+
+\subsection{Mitgliedschaftsattribute}
+Folgende Attribute können über Attribute Exchange abgefragt werden:
+\label{attribute}
 \begin{itemize}
-\item eine von der Webanwendung generierte Nonce (nicht vorhersagbare Zufallszahl zur Verhinderung von Replay-Attacken),
-\item die Domain der Webanwendung,
-\item die Return-URL (d.h. die Adresse an die das Ergebnis der Authentifizierungsanfrage gesendet wird)
-\item die angefragten Attribute als mit Kommata getrennte Liste.
+\item mitgliedschaft-bund
+\item mitgliedschaft-land
+\item mitgliedschaft-bezirk
+\item mitgliedschaft-kreis
+\item mitgliedschaft-ort
 \end{itemize}
 
-Die Nonce besteht aus 20-256 Zeichen, zulässige Zeichen sind Kleinbuchstaben, Großbuchstaben, Zahlen sowie \verb@ ! . : ; | / + _ -@.
-Sie muss von der Webanwendung an die Sitzung des Nutzers gebunden gespeichert und beim Erhalt der Antwort geprüft werden.
-Sie ist wie eine Session-ID dritten gegenüber geheim und nicht vorhersagbar zu halten.
+Dem Attribut "`mitgliedschaft-bund"' kommt hierbei eine besondere Bedeutung zu,
+da abhängig davon ob es abgefragt wird oder nicht eine implizite oder explizite Prüfung der Mitgliedschaft erfolgt (siehe oben).
 
-Die Domain wird bei der Authentifizierung angezeigt und muss exakt zur Domain in der Return-URL passen.
-Pseudonyme werden abhängig von der Domain berechnet.
-Die Domain wird separat abgefragt, um ggf. später Ausnahmen zulassen zu können
-(z. B. wenn eine Webanwendung umzieht, könnte eine Ausnahme eingerichtet werden um trotz neuer Domain in der Return-URL die alte Domain zu akzeptieren,
-um die Pseudonyme migrieren zu können) oder die Prüfung aufzuweichen (z. B. Subdomains in der Return-URL zulassen).
+Die Attribute müssen mit genau diesen Namen als Alias abgefragt werden.
+Als Attributtyp ist jeweils "`https://id.piratenpartei.de/openid/schema/NAME"' anzugeben, wobei NAME durch den Namen des Attributs zu ersetzen ist.
 
-Die Attribute werden im Abschnitt \ref{attribute} erläutert.
+Ist ein Attribut in der Antwort leer, kann dies daran liegen, dass kein gültiges Token eingetragen ist.
+Um absichtlich leere Attributfelder zu kennzeichnen (z. B. Pirat ist in keinem Ortsverband) werden drei Bindestriche verwendet.
 
-Nachdem der Browser das Formular mit diesen Werten erhalten hat, sendet er es (entweder automatisch per JavaScript oder manuell) per HTTPS-POST an das ID-System.
-Dadurch wird der Nutzer auf die Seite des ID-Systems geleitet.
-Die Seite zeigt, welche Daten an welche Domain übermittelt werden sollen, und enthält die Formularfelder erneut als verstecktes Formular.
-Stimmt der Nutzer der Übertragung zu, bestätigt er dies mit seinem Benutzernamen und Kennwort und sendet das Formular per HTTPS-POST an das ID-System.
-
-Das ID-System prüft die Zugangsdaten und erstellt eine XML-Antwort (Beispiel siehe Abbildung \ref{fig:xmlantwort}, das Format der Werte kann vom Live-System abweichen!).
-Diese enthält die Nonce, die Domain, den Typ der Antwort (Erfolg/Fehler) sowie im Erfolgsfall die Attributwerte und im Fehlerfall eine Fehlerbeschreibung.
-(Nur bei bestimmten Fehlern, z. B. Benutzerabbruch, wird eine Antwort gesendet.)
-Die XML-Antwort wird daraufhin mit dem privaten Schlüssel des Servers signiert.
-Die Antwort und Signatur werden (jeweils base64-encoded, um eine Beschädigung beim Transport zu vermeiden) in einem HTML-Form an den Browser zurückgeschickt.
-Der Browser sendet dieses (entweder automatisch per JavaScript oder manuell) per HTTPS-POST an die Return-URL.
-
-
-\newcommand\xmltag[1]{\textcolor[rgb]{0.00,0.00,0.70}{\textbf{#1}}}
-\begin{figure}[h]
-\small\begin{Verbatim}[commandchars=\\\{\}, ]
-\xmltag{<?xml version="1.0"?>}
-\xmltag{<PiratenIDResponse>}
-    \xmltag{<nonce>}4e65731e9a097033c7e87d86b7d278c6acaf401e044c10907e93c17bf50cd631\xmltag{</nonce>}
-    \xmltag{<domain>}localhost.janschejbal.de\xmltag{</domain>}
-    \xmltag{<type>}success\xmltag{</type>}
-    \xmltag{<attribute>}
-        \xmltag{<name>}pseudonym\xmltag{</name>}
-        \xmltag{<value>}d36a5e0e747a20ed5c2d42dd44666bb90ab6a7ca082f3598a1f548d6215fe673\xmltag{</value>}
-    \xmltag{</attribute>}
-    \xmltag{<attribute>}
-        \xmltag{<name>}mitgliedschaft-bund\xmltag{</name>}
-        \xmltag{<value>}Ja\xmltag{</value>}
-    \xmltag{</attribute>}
-    \xmltag{<attribute>}
-        \xmltag{<name>}mitgliedschaft-land\xmltag{</name>}
-        \xmltag{<value>}HE\xmltag{</value>}
-    \xmltag{</attribute>}
-\xmltag{</PiratenIDResponse>}
-% \end{Verbatim}
-\caption{Beispiel für eine XML-Antwort}
-\label{fig:xmlantwort}
-\end{figure}
-
-Dort empfängt die Webanwendung die Daten und wertet sie aus. Zunächst wird die Gültigkeit der Signatur geprüft. Ist diese ungültig, werden die Daten verworfen.
-Im Anschluss wird geprüft, ob die Nonce korrekt ist, d.h. einer von diesem Browser gestellten Authentifizierungsanfrage entspricht und noch nicht verwendet wurde,
-sowie, ob die genannte Domain mit der eigenen Domain übereinstimmt. 
-(Dies verhindert, dass ein Angreifer der eine andere Webanwendung betreibt, eine empfangene Antwort verwenden kann, um sich bei anderen Diensten als der Nutzer anzumelden.)
-Die Nonce wird als verwendet markiert.
-
-Danach wird geprüft, ob es sich um eine Erfolgsmeldung handelt.
-Wenn ja, hat sich ein Nutzer erfolgreich eingeloggt - das heißt aber noch nicht, dass er ein Piratenmitglied ist, nur, dass er einen Account hat (den jeder haben kann)!
-Um die Pirateneigenschaft zu prüfen, muss das Attribut "`mitgliedschaft-bund"' angefragt und verglichen werden. (Siehe Abschnitt \ref{attribute}).
-
-\section{Attribute}\label{attribute}
-Attribute sind Angaben über den eingeloggten Benutzer, die von der Webanwendung angefragt und mit Zustimmung des Nutzers vom ID-System mitgeteilt und bestätigt werden.
-Die Attribute fallen in drei Kategorien, die im Folgenden erläutert werden.
-
-\subsection{Pseudonym}
-\label{sec:pseudo}
-Das Pseudonym (Attributname \texttt{pseudonym}) ermöglicht es einer Webanwendung, einen Benutzer wiederzuerkennen.
-Es handelt sich hierbei nicht um einen vom Nutzer gewählten Namen, sondern um einen berechneten Wert.
-
-Zu jedem Benutzer wird in der Datenbank ein Zufallswert gespeichert, das sogenannte Usersecret. 
-Das Pseudonym ist ein SHA256-Hash über eine systemweite geheime Konstante (das Pseudonym-Secret), das Usersecret sowie die anfragende Domain.
-Ändert sich einer dieser Werte, ändert sich auch das Pseudonym.
-Das Pseudonym ist somit für jede Kombination von Benutzer und Domain einmalig, d.h. ein Nutzer hat für jede Domain ein anderes Pseudonym.
-Das konstante Pseudonym-Secret wäre hierbei eigentlich nicht nötig, erhöht aber die Sicherheit:
-Wenn ein Angreifer Lesezugriff auf die Datenbank erhält, kann er ohne das (außerhalb der Datenbank) gespeicherte Pseudonym-Secret nichts mit den Usersecrets anfangen.
-Versuche, die Hashes zu brechen und aus dem Pseudonym auf das Usersecret zu schließen sind bereits aufgrund der Entropie des Usersecrets aussichtslos.
-Ohne Kenntnis von User- und Pseudonymsecret ist es nicht möglich festzustellen, ob zwei Pseudonyme dem gleichen Nutzer gehören.
-
-Mit Zugriff auf die Secrets ist eine Zuordnung eines Pseudonyms zu einem Account möglich.
-Bei einer Accountlöschung wird das Usersecret vernichtet, womit die Zuordnung nicht mehr möglich ist.
-
-\subsection{Mitgliedschaften}
-In den Attributen
-\texttt{mitgliedschaft-bund}, \texttt{mitgliedschaft-land}, \texttt{mitgliedschaft-bezirk}, \texttt{mitgliedschaft-kreis} und \texttt{mitgliedschaft-ort}
-wird festgehalten, in welchen Gliederungen eine Person Mitglied ist.
-
-Diese Attribute sind nur ausgefüllt, wenn der Nutzer ein gültiges Token eingetragen hat.
-Um zu prüfen, ob ein Nutzer Pirat ist oder nicht, muss das Attribut \texttt{mitgliedschaft-bund} abgefragt werden.
-Nur wenn dort (TODO WERT) eingetragen ist, ist diese Person Mitglied.
-
-Die übrigen Felder geben an, in welchen Untergliederungen der Nutzer Mitglied ist.
+Das Feld "`mitgliedschaft-bund"' enthält bei Mitgliedern den Wert "`ja"' (TODO WERT),
+die restlichen Attribute teilen mit, in welchen Untergliederungen der Nutzer Mitglied ist.
 Für mögliche Werte sei auf die Liste der Untergliederungen\footnote{TODO} verwiesen.
 
 Die Verknüpfung des Useraccounts mit den zugehörigen Daten findet über das Token statt.
 Die Betreiber des ID-Servers können einen Account also nicht einer bestimmten Person zuordnen,
 da die Zuordnung zwischen Token und Person nur über die Mitgliederverwaltung möglich ist.
+
+
+\subsection{Pseudonym}
+\label{sec:pseudo}
+Das Pseudonym ermöglicht es einer Webanwendung, einen Benutzer wiederzuerkennen.
+Es handelt sich hierbei nicht um einen vom Nutzer gewählten Namen, sondern um einen berechneten Wert.
+Das Pseudonym wird nicht als Attribut, sondern als Teil des Felds claimed\_identifier übermittelt.
+
+Zu jedem Benutzer wird in der Datenbank ein Zufallswert gespeichert, das sogenannte Usersecret. 
+Das Pseudonym ist ein SHA256-Hash über eine systemweite geheime Konstante (das Pseudonym-Secret), das Usersecret sowie das Realm aus dem OpenID-Request.
+Ändert sich einer dieser Werte, ändert sich auch das Pseudonym.
+Das Pseudonym ist somit für jede Kombination von Benutzer und Realm einmalig, d.h. ein Nutzer hat für jedes Realm ein anderes Pseudonym.
+Das konstante Pseudonym-Secret wäre hierbei eigentlich nicht nötig, erhöht aber die Sicherheit:
+Wenn ein Angreifer Lesezugriff auf die Datenbank erhält, kann er ohne das (außerhalb der Datenbank) gespeicherte Pseudonym-Secret nichts mit den Usersecrets anfangen.
+Versuche, die Hashes zu brechen und aus dem Pseudonym auf das Usersecret zu schließen sind bereits aufgrund der Entropie des Usersecrets aussichtslos.
+Ohne Kenntnis von User- und Pseudonymsecret ist es nicht möglich festzustellen, ob zwei Pseudonyme dem gleichen Nutzer gehören.
+
+Es wird empfohlen, als zusätzliche Sicherheitsmaßnahme das Pseudonym bei der pseudonymen Anmeldung dem Nutzer nicht anzuzeigen und am Besten nur gehasht zu speichern.
+Hierbei ist es egal, ob die gesamte URL oder nur das Pseudonym an sich gehasht wird.
+Dadurch kann selbst ein Angreifer, der aus irgendeinem Grund Authentifizierungsvorgänge fälschen kann, nicht die Identität eines bestehenden Nutzers übernehmen,
+wenn er das Pseudonym nicht anderweitig erfahren hat.
+
+Mit Zugriff auf die Secrets ist eine Zuordnung eines Pseudonyms zu einem Account möglich.
+Bei einer Accountlöschung wird das Usersecret vernichtet, womit die Zuordnung nicht mehr möglich ist.
 
 \subsection{Personenbezogene Daten}
 Auf Wunsch einiger Mitglieder wurde die Option vorgesehen, auch personenbezogene Daten über das ID-System bestätigen zu können.
@@ -193,7 +170,7 @@ Hierzu wurden die Attribute \texttt{realname} und \texttt{mitgliedsnummer} sowie
 Über ein zweites Token ("`B-Teil"') könnten diese Werte nach einem noch festzulegenden Verfahren
 nach ausdrücklicher und freiwilliger Zustimmung des Mitglieds aus der Mitgliederverwaltung nachgetragen werden.
 Der Zugriff auf diese Attribute ist derzeit vollständig deaktiviert.
-Nach der Aktivierung ist eine Whitelist vorgesehen, d.h. nur gesondert freigeschaltete Domains hätten die Möglichkeit, diese Daten anzufordern.
+Nach der Aktivierung ist eine Whitelist vorgesehen, d.h. nur gesondert freigeschaltete Realms hätten die Möglichkeit, diese Daten anzufordern.
 Diese Freischaltung würde nur für Webanwendungen erfolgen, die die Daten zwingend brauchen und strenge Datenschutzvorschriften einhalten.
 Wie alle Attribute werden diese Informationen nur nach ausdrücklicher Zustimmung des Nutzers an einen Dienst herausgegeben.
 
@@ -210,7 +187,7 @@ In diesem Abschnitt werden Sicherheitseigenschaften des Systems aufgelistet, sow
 Bevor auf die Sicherheitseigenschaften des Systems eingegangen wird, sollte erwähnt werden, welche möglichen Erwartungen an das System \textbf{nicht} erfüllt werden.
 Die Liste kann logischerweise nie vollständig sein, sollte aber die wichtigsten Punkte umfassen.
 
-\subsubsection{Ahsolute Sicherheit der Accounts}
+\subsubsection{Absolute Sicherheit der Accounts}
 Wie bei Onlinediensten üblich kann unter Angabe der E-Mail-Adresse eine Mail mit einem Kennwortrücksetzlink angefordert werden.
 Ist ein Angreifer in der Lage, diese Mail mitzulesen, beispielsweise indem er den SMTP-Datenverkehr abhört oder Zugang zum E-Mail-Postfach des Nutzers hat,
 kann er sich Zugang zum betroffenen Benutzerkonto verschaffen.
@@ -228,7 +205,7 @@ Eine solche Regelung wäre für den Nutzer verwirrend, und würde unter Umständ
 
 Die Möglichkeit festzustellen, dass eine Adresse verwendet wird, wird daher akzeptiert,
 was im Übrigen auch gängige Praxis
-\footnote{getestet: wordpress.com (Passwortreset), drupal.org (Accounterstellung), phpbb.com (Accounterstellung im Supportforum, news.piratenpartei.de (Accounterstellung)}
+\footnote{getestet: wordpress.com (Passwortreset), drupal.org (Accounterstellung), phpbb.com (Accounterstellung im Supportforum), news.piratenpartei.de (Accounterstellung)}
 ist.
 
 \subsubsection{Schutz vor Betreiber}
@@ -263,23 +240,20 @@ Die Entwickler sind für die Sicherheit der Anwendungen jedoch selbst verantwort
 Bei korreter Anwendung des Protokolls soll sich die Webanwendung darauf verlassen können,
 dass genau der Nutzer, zu dem die übermittelten Daten gehören, sich gegenüber dem ID-System eingeloggt hat,
 sowie dass diese Daten korrekt sind.
-Daraus folgt auch, dass es keinem Dritten möglich sein darf, sich mit einem fremden Pseudonym gegenüber einer Domain auszuweisen.
+Daraus folgt auch, dass es keinem Dritten möglich sein darf, sich mit einem fremden Pseudonym gegenüber einer Webanwendung auszuweisen.
 
-Die digitale Signatur über die Antwort stellt sicher, dass nur unverfälschte Antworten, die vom ID-System erstellt wurden, akzeptiert werden.
-Die Nonce verhindert Replay-Attacken (eine Antwort auf eine andere Anfrage wird nicht akzeptiert, weil sie eine andere Nonce enthält).
-Die verschlüsselte Übertragung der Daten stellt sicher, dass die signierte Antwort nicht von Unbefugten missbraucht werden kann.
+Die Prüfung der Antwort beim ID-Server im Rahmen des OpenID-Protokolls stellt sicher, dass nur unverfälschte Antworten, die vom ID-System erstellt wurden, akzeptiert werden.
+Replay-Attacken werden verhindert, da die Korrektheit einer Antwort nur einmal bestätigt wird.
+Die Übermittlung per HTTPS verhindert das Mitlesen der Antworten.
 
-Man-in-the-Middle-Attacken, bei denen eine Webanwendung die signierte XML-Antwort eines Nutzers missbraucht,
-um sich als dieser Nutzer an einer anderen Domain anzumelden, werden ebenfalls verhindert:
-Die Antwort enthält die Domain, für die sie gültig ist - weicht diese ab, wird die Antwort nicht akzeptiert.
-(Ohne diese Prüfung könnte ein Angreifer der Zielanwendung gegenüber als Client auftreten, die Nonce dann dem Nutzer, der sich bei ihm anmeldet, weiterreichen,
-und dann die ID-System-Antwort des Nutzers an die Zielanwendung schicken.)
-
+Man-in-the-Middle-Attacken, bei denen eine Webanwendung die Login-Antwort eines Nutzers missbraucht,
+um sich als dieser Nutzer an einer anderen Anwendung anzumelden, werden ebenfalls verhindert,
+da die Return-URL im Rahmen des OpenID-Protokolls geprüft wird.
 
 \subsubsection{Vertraulichkeit der Daten}
 Die freigegebenen Daten werden nur an den angegebenen Dienst herausgegeben.
-Dies wird sichergestellt, indem die Domain, an die die Daten weitergegeben werden sollen, angezeigt wird,
-und die Return-URL (an die die Daten gesendet werden) zu dieser Domain gehören muss.
+Dies wird sichergestellt, indem die Seite (Realm), an die die Daten weitergegeben werden sollen, angezeigt wird,
+und die Return-URL (an die die Daten gesendet werden) zu diesem Realm gehören muss.
 Die Übertragung der Daten findet SSL-gesichert statt, sodass Dritte nicht mitlesen können.
 
 Der Dienst, der die Daten erhält, kann technisch nicht daran gehindert werden, diese Daten zu missbrauchen oder weiterzugeben.
@@ -288,8 +262,8 @@ Der Nutzer muss selbst entscheiden, ob er einem Dienst seine Daten anvertrauen m
 \subsubsection{Datenweitergabe nur mit Einverständnis}
 Im ID-System gespeicherte Daten werden nur mit Einverständnis des Nutzers, bestätigt durch die Eingabe des Kennworts, weitergegeben.
 
-\subsubsection{Ein Pirat - ein Pseudonym (pro Domain)}
-Jeder Nutzer hat nur ein Pseudonym pro Domain.
+\subsubsection{Ein Pirat - ein Pseudonym (pro Realm)}
+Jeder Nutzer hat nur ein Pseudonym pro Realm.
 Eine Webanwendung, die Umfragen oder Abstimmungen anbietet, kann sich daher in der Regel darauf verlassen, dass jedes Mitglied nur einmal teilnehmen kann,
 wenn pro Pseudonym nur eine Teilnahme ermöglicht wird und die Mitgliedseigenschaft geprüft wird.
 
@@ -315,7 +289,7 @@ Webanwendungen könnten somit selbst entscheiden, ob bzw. bis zu wie viele Neuau
 
 \subsubsection{Nichtverknüpfbarkeit der Pseudonyme}
 Es soll Dritten nicht möglich sein, Pseudonyme mit dem Benutzerkonto oder mit anderen Pseudonymen zu verknüpfen,
-d.h. es soll auch zusammenarbeitenden Diensteanbietern (mit verschiedenen Domains) nicht möglich sein festzustellen, 
+d.h. es soll auch zusammenarbeitenden Diensteanbietern (mit verschiedenen Domains/Realms) nicht möglich sein festzustellen, 
 dass ein Pseudonym zu einem bestimmten Benutzerkonto gehört oder dass
 Pseudonym 1 in der ersten Webanwendung und Pseudonym 2 in der zweiten Webanwendung dem gleichen Nutzer gehören.
 Dies wird durch das Berechnungsverfahren für Pseudonyme (siehe entsprechender Abschnitt) sichergestellt.
@@ -340,7 +314,8 @@ da ein zusätzliches, in den Systemkonstanten gespeichertes geheimes Salt verwen
 Auch das Zuordnen von Pseudonymen sollte unmöglich sein, da das zusätzlich verwendete Pseudonym-Secret unbekannt ist.
 
 \subsubsection{Stärke gegen Angreifer mit Dateisystemzugriff}
-Ein Angreifer, der Lesezugriff auf das Dateisystem erlangt, ist in der Lage, den Signaturkey auszulesen und somit falsche XML-Antworten zu erzeugen.
+Ein Angreifer, der Lesezugriff auf das Dateisystem erlangt, könnte in der Lage sein, den privaten Schlüssel für das SSL-Zertifikat zu erlangen.
+Damit könnte er Antworten fälschen, wenn es ihm gelingt, die Echtheitsanfrage der Webanwendung an den ID-Server auf sein System umzuleiten.
 Ohne vorherige Kenntnis des Pseudonyms kann er dieses nur berechnen (und darüber Pseudonyme zuordnen),
 wenn er auch Zugriff auf die Datenbank (oder die Dateien in der die Datenbanktabellen liegen) hat.
 Ohne Kenntnis des Pseudonyms kann er gegenüber Webanwendungen nicht vortäuschen, ein bestimmter anderer Nutzer zu sein.
@@ -350,7 +325,7 @@ Benutzerkonten mit sicheren Kennwörtern sollten weiterhin wie beim Angreifer mi
 \section{Schutzmaßnahmen gegen Angriffe}
 \subsection{Server}
 \subsubsection{Schwachstelle Mensch}
-Um Angriffe, die Fehler des Nutzers ausnutzen, zu erschweren, werden die Nutzer durch gut sichtbare Werbebanner auf wichtige Sicherheitsmaßnahmen hingewiesen.
+Um Angriffe, die Fehler des Nutzers ausnutzen, zu erschweren, werden die Nutzer durch gut sichtbare Banner auf wichtige Sicherheitsmaßnahmen hingewiesen.
 Dazu zählt die sichere Verwendung von HTTPS, Sicherheit des verwendeten Computers, Passwortsicherheit, sowie die Absicherung des E-Mail-Accounts.
 
 \subsubsection{Cross-site request forgery, Session-basierte Angriffe}
@@ -361,7 +336,7 @@ Der Zugriff auf Nutzerdaten wird wo möglich über einer Funktion gekapselt, die
 \subsubsection{SQL-Injection/Truncation}
 Zum Schutz vor SQL-Injection werden Prepared Statements benutzt.
 Um Truncation-Angriffe zu verhindern, wird an mehreren Stellen die Länge von Parametern geprüft
-und die Datenbankverbindung so konfiguriert (SQL mode), dass auch leichte Fehler (z. B. überlange Felder) als Fehler behandelt werden.
+und die Datenbankverbindung so konfiguriert (SQL mode), dass auch leichte Fehler (z. B. überlange Felder) als fatale Fehler behandelt werden.
 
 \subsubsection{Passwort-Hashverfahren}
 \label{sec:pwhash}
@@ -390,7 +365,7 @@ Dadurch werden Brute-Force-Versuche so stark ausgebremst, dass sie unpraktisch w
 
 Anzumerken ist, dass diese Schutzmaßnahmen nur für den unwahrscheinlichen Fall benötigt werden, dass es einem Angreifer gelingt, die Benutzerdatenbank zu kopieren.
 Da die Verlangsamung durch das strengthening auch auf den Server selbst zutrifft,
-wird auch bei Online-Brute-Force-Versuchen die Geschwindigkeit durch die CPU-Leistung des Servers wirksam begrenzt.
+wird bei Online-Brute-Force-Versuchen die Geschwindigkeit durch die CPU-Leistung des Servers wirksam begrenzt.
 
 \subsubsection{Hashing}
 Auch andere Informationen werden wo möglich nur gehasht gespeichert,
@@ -440,7 +415,7 @@ TODO (client)
 
 \section{Datenbank}
 TODO
-- zwei tabellen
+- drei tabellen
 - erklärung import
 - erklärung felder
 
@@ -471,7 +446,7 @@ Diese Datei enthält das Ende jeder ausgegebenen HTML-Seite:
 Diese Datei enthält (z.T. geheime!) Konstanten, die bei der Installation des Servers gesetzt werden müssen:
 \begin{itemize}
 	\item \texttt{\$sitepath} - Die absolute Adresse des ID-Systems. Wird z. B. beim Versand von E-Mails verwendet.
-	\item \texttt{\$extendedAttributeDomains} - Die Liste der Domains, die erweiterte Attribute (Realname, Mitgliedsnummer) anfragen können.
+	\item \texttt{\$extendedAttributeRealms} - Die Liste der Realms, die erweiterte Attribute (Realname, Mitgliedsnummer) anfragen können.
 	\item \texttt{getDatabasePDO()} - Hier werden die Datenbank-Zugangsdaten eingetragen
 	\item \texttt{\$pseudonymsecret} - Ein zusätzliches Salt zur Berechnung der Pseudonyme, siehe Abschnitt \ref{sec:pseudo} Pseudonyme.
 	\item \texttt{\$passwordsaltsecret} - Ein zusätzliches Salt zur Berechnung der Passwort-Hashes, siehe Abschnitt \ref{sec:pwhash} Passwort-Hashverfahren.
@@ -545,10 +520,10 @@ Um den Account zu löschen, werden bis auf Token(hash), E-Mail-Verifizierungssta
 Der Tokenhash bleibt gespeichert, damit das Token nicht wiederverwendet werden kann.
 Der Benutzername wird durch einen zufällig generierten Benutzernamen ersetzt.
 
-\subsection{Verzeichnis /id/}
-Dieses Verzeichnis enthält die serverseitige Implementierung des PiratenID-Protokolls.
+\subsection{Verzeichnis /openid/}
+Dieses Verzeichnis enthält die serverseitige Implementierung des OpenID-Teils
 
-TODO Document, review
+TODO document
 
 
 
@@ -558,7 +533,7 @@ Dieses Verzeichnis enthält statische Dateien wie Grafiken, Stylesheets, die Sic
 
 \section{Datenbank}
 Ein SQL-Dump der Datenbankstruktur sollte dieser Dokumentation beiliegen.
-Die Datenbank besteht aus zwei Tabellen:
+Die Datenbank besteht aus drei Tabellen:
 
 TODO
 

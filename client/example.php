@@ -1,69 +1,40 @@
 <?php
 	require_once("piratenid.php");
-	PiratenID::session_init(); // VOR allen anderen Ausgaben aufrufen, damit das Session-Cookie gesetzt werden kann!
-
+	PiratenID::$imagepath =  "/";
+	PiratenID::$realm     = "https://localhost.janschejbal.de/"; // Sicherheitsrelevant! Festen Wert vorgeben, keine Variablen wie $_SERVER nutzen!
+		                                                         // (siehe http://blog.oncode.info/2008/05/07/php_self-ist-boese-potentielles-cross-site-scripting-xss/)
+	PiratenID::$logouturl  =  "/example.php?piratenid_logout";   // Wenn die Realm-URL keinen Button enthält, muss eine Logout-URL angegeben werden, damit das Logout funktioniert.
+	                                                             // Dabei kann entweder eine URL, auf der ein Button zu sehen ist, zusammen mit dem Parameter piratenid_logout
+																 // angegeben werden, oder eine eigene Logout-URL. Siehe auch die Hinweise im Handbuch.
+	PiratenID::$attributes =  "mitgliedschaft-bund,mitgliedschaft-land";
+	$button = PiratenID::run(); // VOR allen anderen Ausgaben aufrufen, damit das Session-Cookie gesetzt werden kann!
 ?>
 <html>
 <head>
 <title>PiratenID-Demo</title>
 </head>
 <body>
+<!-- An prominenter Stelle den Button einbinden -->
+<div style="float: right;"><?php echo $button; ?></div>
 <h1>PiratenID-Demo</h1>
 <p>Diese Seite demonstriert, wie das PiratenID-System funktioniert.</p>
 <div>
 <?php
 
-
-	// NOTE: PHP_SELF und ähnliche sind BÖSE!
-	// http://blog.oncode.info/2008/05/07/php_self-ist-boese-potentielles-cross-site-scripting-xss/
-	$domain = "localhost.janschejbal.de";
-	$returnto = "https://$domain/example.php";
-	
-	// Login-Handling
-	if (!empty($_GET['action']) && $_GET['action'] === 'login') {
-		if (!PiratenID::session_request("pseudonym,mitgliedschaft-bund,mitgliedschaft-land", $returnto, $domain )) {
-			// Alle Ausgaben müssen escaped werden!
-			echo "<p><strong>Fehler beim Erstellen der Login-Anfrage (".htmlspecialchars(PiratenID::session_pollError()).")</strong></p>\n";
-		}
-	}
-
-	// Logout-Handling
-	if (!empty($_GET['action']) && $_GET['action'] === 'logout') {
-		PiratenID::session_reset();
-		echo "<p>Abgemeldet</p>\n";
-	}
-	
-	// Response-handler - empfängt Antwort des PiratenID-Servers
-	if (isset($_POST['piratenid_response'])) {
-		if (PiratenID::session_handle()) {
-			echo "<p><strong>Login erfolgreich</strong></p>\n";
+	if ($_SESSION['piratenid_user']['authenticated']) {
+		// Nutzer ist angemeldet.
+		echo "Willkommen, ";
+		// Wir haben "mitgliedschaft-bund" abgefragt. Daher können sich auch Nichtpiraten anmelden, aber wir können feststellen, ob jemand Pirat ist:
+		if ($_SESSION['piratenid_user']['attributes']['mitgliedschaft-bund'] === "ja") {
+			// Alle Ausgaben (außer dem Button) müssen escaped werden!
+			echo "Pirat aus ". htmlentities($_SESSION['piratenid_user']['attributes']['mitgliedschaft-land']) ."!";
 		} else {
-			// Alle Ausgaben müssen escaped werden!
-			echo "<p><strong>Login fehlgeschlagen (".htmlspecialchars(PiratenID::session_pollError()).")</strong></p>\n";
-		}
-	}
-
-	if (PiratenID::session_isAuthenticated()) {
-		// Nutzer ist angemeldet. Es steht aber noch nicht fest, dass er auch Pirat ist!
-		?>
-		<p>Du bist angemeldet. <a href="?action=logout">Abmelden</a></p>
-		<?php
-		$attrib = PiratenID::session_getAttributes();
-		
-		echo "<p>Dein Pseudonym lautet: ".htmlspecialchars($attrib['pseudonym'])."</p>\n";
-		
-		// Pirateneigenschaft explizit prüfen!
-		if ($attrib['mitgliedschaft-bund'] === "JA") {
-			echo "<p>Du bist Pirat!</p>\n";
-			echo "<p>Landesverband: ".htmlspecialchars($attrib['mitgliedschaft-land'])."</p>\n";
-		} else {
-			echo "<p>Du bist KEIN Pirat!</p>\n";
+			echo "Nichtpirat!";
 		}
 	} else {
-		?>
-		<p>Du bist nicht angemeldet. <a href="?action=login">Jetzt mit PiratenID einloggen!</a></p>
-		<?php
+		echo "Bitte oben anmelden!";
 	}
+
 ?>
 </div>
 </body>

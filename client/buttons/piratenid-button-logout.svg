@@ -12,16 +12,16 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    version="1.0"
-   width="32"
-   height="32"
+   width="120"
+   height="48"
    id="svg2410"
    sodipodi:version="0.32"
    inkscape:version="0.48.1 "
-   sodipodi:docname="icon.svg"
+   sodipodi:docname="piratenid-button-logout.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
-   inkscape:export-filename="C:\Users\Jan\Eigene Dateien\projekte\piratenpartei\piratenid\server\static\icon128.png"
-   inkscape:export-xdpi="360"
-   inkscape:export-ydpi="360">
+   inkscape:export-filename="C:\Users\Jan\eigene dateien\projekte\piratenpartei\piratenid\client\button-logout.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <metadata
      id="metadata39">
     <rdf:RDF>
@@ -47,9 +47,9 @@
      pagecolor="#ffffff"
      id="base"
      showgrid="false"
-     inkscape:zoom="11.367874"
-     inkscape:cx="-14.237526"
-     inkscape:cy="21.608997"
+     inkscape:zoom="1"
+     inkscape:cx="147.81752"
+     inkscape:cy="8.2714816"
      inkscape:window-x="-4"
      inkscape:window-y="-4"
      inkscape:current-layer="svg2410"
@@ -305,10 +305,36 @@
        xlink:href="#XMLID_5_"
        gradientUnits="userSpaceOnUse"
        gradientTransform="matrix(1.156702,0,0,1.156702,297.626,127.6626)" />
+    <filter
+       inkscape:collect="always"
+       id="filter3877">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.5475"
+         id="feGaussianBlur3879" />
+    </filter>
   </defs>
+  <rect
+     style="color:#000000;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;opacity:1;filter:url(#filter3877)"
+     id="rect3016-7"
+     width="110"
+     height="36"
+     x="5.5"
+     y="6.5"
+     rx="3"
+     ry="3" />
+  <rect
+     style="color:#000000;fill:#ff8800;fill-opacity:1;fill-rule:nonzero;stroke:#ff8800;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+     id="rect3016"
+     width="110"
+     height="36"
+     x="4.5"
+     y="5.5"
+     rx="3"
+     ry="3" />
   <g
      id="g3831"
-     transform="matrix(0.4846622,0,0,0.4846622,30.6446,11.73206)">
+     transform="matrix(0.43831954,0,0,0.43831954,36.727316,19.07315)">
     <path
        transform="matrix(1.2089971,0,0,2.1913072,6.403486,-57.902219)"
        sodipodi:end="6.2831853"
@@ -349,4 +375,30 @@
       </g>
     </g>
   </g>
-</svg>
+  <flowRoot
+     xml:space="preserve"
+     id="flowRoot3842"
+     style="font-size:13px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:DejaVu Sans Condensed;-inkscape-font-specification:'DejaVu Sans Condensed, Bold'"
+     transform="translate(-3.737793,1.9278416)"><flowRegion
+       id="flowRegion3844"><rect
+         id="rect3846"
+         width="72"
+         height="21"
+         x="40.5"
+         y="8"
+         style="font-size:13px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:DejaVu Sans Condensed;-inkscape-font-specification:'DejaVu Sans Condensed, Bold'" /></flowRegion><flowPara
+       id="flowPara3848"
+       style="font-size:13px">Eingeloggt</flowPara></flowRoot>  <flowRoot
+     xml:space="preserve"
+     id="flowRoot3842-9"
+     style="font-size:13px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;font-family:DejaVu Sans;-inkscape-font-specification:DejaVu Sans"
+     transform="translate(-2.3808594,18.016101)"><flowRegion
+       id="flowRegion3844-8"><rect
+         id="rect3846-7"
+         width="70"
+         height="20.75"
+         x="40.5"
+         y="8"
+         style="font-size:13px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:DejaVu Sans;-inkscape-font-specification:DejaVu Sans" /></flowRegion><flowPara
+       id="flowPara3848-3"
+       style="font-size:12px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;text-anchor:end;font-family:DejaVu Sans;-inkscape-font-specification:DejaVu Sans">Logout</flowPara></flowRoot></svg>

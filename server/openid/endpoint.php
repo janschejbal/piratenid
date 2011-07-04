@@ -74,6 +74,20 @@ function sendIndirectResponse($fields, $target, $isError = false) {
 		Mit einem Klick auf den unten stehenden Button gelangst du zurück zur anfragenden Seite.
 		Solltest du nach dem Klick auf den Button z. B. aufgefordert werden, ein Kennwort einzugeben, stammt diese Aufforderung nicht mehr vom ID-System!
 	</p>
+	<script>function setCookie(c_name,value,exdays)
+{
+var exdate=new Date();
+exdate.setDate(exdate.getDate() + exdays);
+var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
+document.cookie=c_name + "=" + c_value;
+}
+		function updateSkipSetting(sourcebox) {
+			document.cookie="piratenid_noexitwarning="+sourcebox.checked+"; expires=Mon Feb 01 2038 00:00:00 GMT;";
+		}
+	</script>
+	<p>
+		<input type="checkbox" onchange="updateSkipSetting(this)">Warnung automatisch überspringen (Cookies + JavaScript erforderlich)
+	</p>
 	<?php
 	echo '<form name="piratenid_responseform" action="'. htmlspecialchars($target).'" method="POST" accept-charset="utf-8">';
 	printOpenIDFields($fields);
@@ -81,9 +95,9 @@ function sendIndirectResponse($fields, $target, $isError = false) {
 	<input type="submit" value="Zurück zur anfragenden Seite &gt;&gt;&gt;">
 	</form>
 	<script type="text/javascript">
-		// disabled to make sure user knows he is leaving the ID system (to avoid phishing attacks, for example using http basic auth)
-		//document.forms['piratenid_responseform'].submit();
-		// TODO nicht-mehr-anzeigen-cookie?
+		if (document.cookie.indexOf("piratenid_noexitwarning=true") > -1) { // good enough for this purpose
+			document.forms['piratenid_responseform'].submit();
+		}
 	</script>
 	<?php
 	include('../includes/footer.inc.php');
@@ -196,7 +210,7 @@ function evaluateFields(&$reqfields, &$error, &$usePseudonym, &$implicitMembersh
 	// check realm
 	if (!isset($reqfields['openid.realm'])) $reqfields['openid.realm'] = $reqfields['openid.return_to']; // default: return_to url
 	if (!validURL($reqfields['openid.realm'])) {
-		$error = "realm is not a valid url";
+		$error = "realm is not a valid HTTPS url";
 		return false;
 	}
 	
@@ -327,9 +341,9 @@ function handleCheckidSetup($reqfields, $errormessage = null) {
 			<?php
 				printOpenIDFields($reqfields);
 			?>
-			</form>
 			<input type="hidden" name="action" value="cancel">
 			<input type="submit" value="Vorgang abbrechen">
+			</form>
 		</div>
 		<?php
 		include('../includes/footer.inc.php');
