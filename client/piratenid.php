@@ -1,7 +1,5 @@
 <?php
 
-die('incomplete - especially, the signature verification is missing. DO NOT EVEN THINK ABOUT USING THIS.');
-
 class PiratenID {
 	// Set these parameters before calling run() - no need to modify this file, see example.php if unsure
 	public static $realm = null;        // OpenID realm to use. MANDATORY. Most often set to the site root, i.e. 'https://www.example.com/'.
@@ -26,6 +24,7 @@ class PiratenID {
 	private static $hasRun = false;
 	
 	// OpenID endpoint to use
+	const serverCN   = 'localhost';
 	const serverroot = 'https://piratenid.janschejbal.de/';
 	const endpoint   = 'https://piratenid.janschejbal.de/openid/endpoint.php';
 
@@ -100,13 +99,7 @@ class PiratenID {
 			$type  = 'error';
 			$title = "PiratenID-Fehler: $errortext ($title)";
 		}
-		// TODO login/logout URL, mouseover-text
-		switch ($type) {
-			case 'login': break;
-			case 'logout': break;
-			case 'error': break;
-			default: return null; 
-		}
+		
 		$imgurl = self::$imagepath.'button-'.$type.'.png';
 		return '<a title="'.htmlspecialchars($title).'" href="'.htmlspecialchars($targeturl).'">'.
 			'<img alt="'.htmlspecialchars($title).'" style="border: none;" width="120" height="48" src="'.htmlspecialchars($imgurl).'"></a>';
@@ -275,9 +268,23 @@ class PiratenID {
 			}
 		}
 		
-		// TODO check signature (remote)
-		echo 'ALERT - SIGNATURE CHECK NOT IMPLEMENTED. YOU ARE USING AN UNFINISHED LIBRARY THAT IS CURRENTLY TOTALLY INSECURE.';
+		// Additional check: Check that ALL fields are signed
+		foreach ($postFields as $field => $value) {
+			if ($field === "openid.mode") continue;
+			if ($field === "openid.signed") continue;
+			if ($field === "openid.sig") continue;
+			if ($field === "openid.ns") continue;
+			if (!in_array(substr($field,7), $actualSignedFields)) {
+				$result['error'] = 'local: unexpected unsigned fields in response';
+				return $result;
+			}
+		}
 		
+		$error = null;
+		if (self::checkSignature($postFields, $error) !== true) {
+				$result['error'] = 'local: signature verification failed - '.$error;
+				return $result;			
+		}
 		
 		// set attributes etc.
 		$result['authenticated'] = true;
@@ -296,13 +303,8 @@ class PiratenID {
 		if (self::initParams() !== null) return null;
 	
 		$req = self::getOpenIDRequest();
-		
-		$urlparts = array();
-		foreach ($req as $key => $value) {
-			$urlparts[] = urlencode($key) . '=' . urlencode($value);
-		}
 	
-		return self::endpoint .'?'. implode('&',$urlparts);
+		return self::endpoint .'?'. http_build_query($req,'','&');
 	}
 	
 	// Returns the fields for a OpenID request with the currently set parameters as an associative array (or null if parameters are invalid)
@@ -353,6 +355,63 @@ class PiratenID {
 		if ($_SERVER['SERVER_PORT']==443) return true;
 		if ($_SERVER['HTTPS']==='on') return true;
 		return false;
+	}
+	
+	
+	private static function checkSignature($fields, &$error) {
+		$fields['openid.mode'] = 'check_authentication';
+		$urlEncodedFields = http_build_query($fields, '', '&');
+		$options = array(
+				'http' => array(
+					'method' => 'POST',
+					'header'  => 'Content-type: application/x-www-form-urlencoded',
+					'user_agent' => "phpPiratenIDclient/1.0",
+					'content' => $urlEncodedFields,
+					'max-redirects' => 0,
+					'timeout' => 10,
+					'ignore_errors' => false
+				),
+				'ssl' => array(
+					'verify_peer'       => true,
+					'CN_match'          => self::serverCN,
+					'verify_depth'      => 9,     // OpenSSL default, only to prevent problems in case of insane PHP defaults
+					'allow_self_signed' => false,
+					'capture_peer_cert' => false, // Change to be able to inspect certificate
+					'ciphers'           => "aRSA+kEDH+TLSv1+HIGH", // only high-security TLSv1 ciphers featuring ephemeral keys and RSA authentication allowed
+					'cafile'            => __DIR__."/certificate.pem"
+				)
+			);
+		$context = stream_context_create($options);
+		$response = @file_get_contents(self::endpoint, false, $context);
+		if (!$response) {
+			$error = "could not get response from server";
+			return false;
+		}
+		
+		// Parse KV form
+		$lines = explode("\n", $response);
+		$responseArray = array();
+		foreach ($lines as $line) {
+			if ($line == '') continue;
+			$parts = explode(":",$line, 2);
+			if (count($parts) != 2 || !self::isValidKeyValue($parts[0], $parts[1])) {
+				$error = "invalid response from server";
+				return false;
+			}
+			$responseArray[$parts[0]] = $parts[1];
+		}
+		
+		if (empty($responseArray['ns']) || $responseArray['ns'] !== 'http://specs.openid.net/auth/2.0' ) {
+			$error = "invalid response from server";
+			return false;
+		}
+		
+		if (!empty($responseArray['is_valid']) && $responseArray['is_valid'] === 'true') {
+			return true;
+		} else {
+			$error = "server rejected signature";
+		}
+		
 	}
 	
 	private static function getOpenIDFields(&$error) {
