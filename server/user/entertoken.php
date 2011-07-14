@@ -24,7 +24,7 @@ function enterToken(&$error) {
 		return false;
 	}
 		
-	if ( false !== ($result = $db->query("SELECT username FROM users WHERE token=?",array($token))) ) {
+	if ( false !== ($result = $db->query("SELECT username FROM users WHERE token = ?",array($token))) ) {
 		if ( count($result) > 0) {
 			$error = "Dieses Token wird bereits verwendet"; // user friendlyness/additional security only, database constraint prevents token reuse
 			return false;
@@ -34,7 +34,7 @@ function enterToken(&$error) {
 		return false;
 	}
 	
-	if ( false !== ($result = $db->query("SELECT `token` FROM tokens WHERE `token`=?",array($token))) ) {
+	if ( false !== ($result = $db->query("SELECT token FROM tokens WHERE token = ?",array($token))) ) {
 		if ( count($result) !== 1) {
 			$error = "Ungültiges Token";
 			return false;
@@ -45,7 +45,7 @@ function enterToken(&$error) {
 	}
 	
 	// Token gültig, noch nicht verwendet, User hat noch kein Token
-	if (false !== $db->query("UPDATE users SET `token` = ? WHERE username = ?", array($token, $userarray['username']))) {
+	if (false !== $db->query("UPDATE users SET token = ? WHERE username = ?", array($token, $userarray['username']))) {
 		?>
 			<h2>Token-Eingabe</h2>
 			<p>Token erfolgreich eingetragen. Der Account kann jetzt verwendet werden.</p>

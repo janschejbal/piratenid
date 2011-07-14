@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Erstellungszeit: 02. Mai 2011 um 20:23
+-- Erstellungszeit: 14. Juli 2011 um 15:52
 -- Server Version: 5.5.8
 -- PHP-Version: 5.3.5
 
@@ -16,16 +16,30 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- --------------------------------------------------------
 
 --
+-- Tabellenstruktur für Tabelle `openid`
+--
+
+CREATE TABLE IF NOT EXISTS `openid` (
+  `nonce` varchar(255) COLLATE utf8_bin NOT NULL,
+  `hmac` varchar(255) COLLATE utf8_bin NOT NULL,
+  `createtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`nonce`),
+  UNIQUE KEY `hmac` (`hmac`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- --------------------------------------------------------
+
+--
 -- Tabellenstruktur für Tabelle `tokens`
 --
 
 CREATE TABLE IF NOT EXISTS `tokens` (
-  `token` varchar(255) CHARACTER SET latin1 NOT NULL,
-  `mitgliedschaft-bund` varchar(255) CHARACTER SET latin1 NOT NULL,
-  `mitgliedschaft-land` varchar(255) CHARACTER SET latin1 NOT NULL,
-  `mitgliedschaft-bezirk` varchar(255) CHARACTER SET latin1 NOT NULL,
-  `mitgliedschaft-kreis` varchar(255) CHARACTER SET latin1 NOT NULL,
-  `mitgliedschaft-ort` varchar(255) CHARACTER SET latin1 NOT NULL,
+  `token` varchar(255) COLLATE utf8_bin NOT NULL,
+  `mitgliedschaft-bund` varchar(255) COLLATE utf8_bin NOT NULL,
+  `mitgliedschaft-land` varchar(255) COLLATE utf8_bin NOT NULL,
+  `mitgliedschaft-bezirk` varchar(255) COLLATE utf8_bin NOT NULL,
+  `mitgliedschaft-kreis` varchar(255) COLLATE utf8_bin NOT NULL,
+  `mitgliedschaft-ort` varchar(255) COLLATE utf8_bin NOT NULL,
   PRIMARY KEY (`token`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
@@ -36,32 +50,19 @@ CREATE TABLE IF NOT EXISTS `tokens` (
 --
 
 CREATE TABLE IF NOT EXISTS `users` (
-  `username` varchar(255) CHARACTER SET latin1 NOT NULL,
-  `usersecret` varchar(255) CHARACTER SET latin1 NOT NULL,
-  `pwhash` varchar(255) CHARACTER SET latin1 NOT NULL,
-  `email` varchar(255) CHARACTER SET latin1 NOT NULL,
-  `email_activationkey` varchar(255) CHARACTER SET latin1 DEFAULT NULL,
+  `username` varchar(255) COLLATE utf8_bin NOT NULL,
+  `usersecret` varchar(255) COLLATE utf8_bin NOT NULL,
+  `pwhash` varchar(255) COLLATE utf8_bin NOT NULL,
+  `email` varchar(255) COLLATE utf8_bin NOT NULL,
+  `email_activationkey` varchar(255) COLLATE utf8_bin DEFAULT NULL,
   `email_verified` tinyint(1) NOT NULL DEFAULT '0',
-  `token` varchar(255) CHARACTER SET latin1 DEFAULT NULL,
-  `mitgliedsnr` varchar(255) CHARACTER SET latin1 DEFAULT NULL,
-  `realname` varchar(255) CHARACTER SET latin1 DEFAULT NULL,
-  `resettoken` varchar(255) CHARACTER SET latin1 DEFAULT NULL,
+  `token` varchar(255) COLLATE utf8_bin DEFAULT NULL,
+  `mitgliedsnr` varchar(255) COLLATE utf8_bin DEFAULT NULL,
+  `realname` varchar(255) COLLATE utf8_bin DEFAULT NULL,
+  `resettoken` varchar(255) COLLATE utf8_bin DEFAULT NULL,
   `resettime` timestamp NULL DEFAULT NULL,
   `createtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`username`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `token` (`token`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-
-
---
--- Tabellenstruktur für Tabelle `openid`
---
-
-CREATE TABLE IF NOT EXISTS `openid` (
-  `nonce` varchar(255) COLLATE utf8_bin NOT NULL,
-  `hmac` varchar(255) COLLATE utf8_bin NOT NULL,
-  `createtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`nonce`),
-  UNIQUE KEY `signature` (`signature`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

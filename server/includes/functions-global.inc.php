@@ -72,8 +72,23 @@ class DB {
 	private static $instance = null;
 	
 	private function __construct() {
-		$this->connection = getDatabasePDO();
-		if (false === $this->query("SET sql_mode = TRADITIONAL")) die("Failed to set secure (strict) SQL mode");
+		try {
+			$this->connection = @getDatabasePDO(); 
+			if (false === $this->query("SET sql_mode = TRADITIONAL")) {
+				die("Failed to set SQL connection mode"); // should never happen
+			}
+			if (false === $this->query("SET NAMES 'utf8'")) {
+				die("Failed to set SQL connection charset"); // should never happen
+			}
+		} catch (PDOException $e) {
+			$tmperror = $e->errorInfo;
+			if (is_array($tmperror)) {
+				$this->error = $tmperror;
+			} else {
+				$this->error = array("XXXXX", "0", "PDO Exception: ".$e->getMessage()); // follow errorInfo structure
+			}
+			$this->connection = null;
+		}
 	}
 	
 	/**
@@ -86,6 +101,8 @@ class DB {
 			check for false !== $db->query(...) to check for success.
 	*/
 	public function query($querystr, $paramarray = array()) {
+		if ($this->connection == null) return false;
+		
 		$error = null;
 		
 		foreach ($paramarray as $value) {

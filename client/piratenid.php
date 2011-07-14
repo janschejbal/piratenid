@@ -72,8 +72,9 @@ class PiratenID {
 	
 	// set error, return error button
 	private static function error($text) {
+		$html = self::button($text); // may overwrite self::$error
 		self::$error = $text;
-		return self::button($text);
+		return $html;
 	}
 	
 	// Returns a login/logout button of the appropriate type (login, logout or error).
@@ -158,7 +159,7 @@ class PiratenID {
 		
 		$result = array('error'=>null, 'authenticated'=>false);
 		
-		$error = null;
+		self::$error = null;
 		$postFields = self::getOpenIDFields($error);
 		
 		if ($error !== null) {
@@ -300,7 +301,8 @@ class PiratenID {
 	
 	// Returns the URL to start the OpenID request. Make sure all settings are set before you call this.
 	public static function makeOpenIDURL() {
-		if (self::initParams() !== null) return null;
+		self::$error = self::initParams();
+		if (self::$error !== null) return null;
 	
 		$req = self::getOpenIDRequest();
 	
@@ -309,7 +311,8 @@ class PiratenID {
 	
 	// Returns the fields for a OpenID request with the currently set parameters as an associative array (or null if parameters are invalid)
 	public static function getOpenIDRequest() {
-		if (self::initParams() !== null) return null;
+		self::$error = self::initParams();
+		if (self::$error !== null) return null;
 		
 		$fields = array(
 			'openid.ns'         => 'http://specs.openid.net/auth/2.0',
