@@ -15,7 +15,7 @@ require_once('siteconstants.inc.php');
 // TODO full test again, especially clickjacking protection with/without JS (regular case/attack case), IE6 blocker, extendedAttributeDomains (in siteconstants)
 // TODO DB charset
 // TODO encodings checken
-
+// TODO prepared statements?
 
 // TODO search for TODOs (also in client!)
 

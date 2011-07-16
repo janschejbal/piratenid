@@ -53,6 +53,7 @@ class PiratenID {
 			$_SESSION['piratenid_user'] = array('authenticated' => false);
 			unset($_GET['piratenid_logout']);
 		}
+		
 		if (isset($_POST['openid_mode'])) {
 			$result = self::handle();
 			if ($result['error'] === null && $result['authenticated'] === true) {
@@ -78,11 +79,12 @@ class PiratenID {
 		return $html;
 	}
 	
-	// Returns a login/logout button of the appropriate type (login, logout or error).
+	// Returns a login/logout button of the appropriate type (login, logout or error), or null if params are invalid
 	// If $errortext is set, an error button is returned with the specified text in the tooltip.
 	public static function button($errortext = null) {
 		if (self::initParams() !== null) return null;
-		
+		if (session_id() == '') self::initSession();
+
 		if (!$_SESSION['piratenid_user']['authenticated']) {
 			$type = "login";
 			$title = "Nicht eingeloggt. Klicken zum Einloggen per PiratenID.";
@@ -108,7 +110,7 @@ class PiratenID {
 	}
 
 	// Logs the user out, if any is logged in (starting the session if necessary)
-	public static function logout($type, $text) {
+	public static function logout() {
 		if (session_id() == '') self::initSession();
 		$_SESSION['piratenid_user'] = array('authenticated' => false);
 	}
@@ -160,7 +162,7 @@ class PiratenID {
 		
 		$result = array('error'=>null, 'authenticated'=>false);
 		
-		self::$error = null;
+		$error = null;
 		$postFields = self::getOpenIDFields($error);
 		
 		if ($error !== null) {
@@ -358,14 +360,14 @@ class PiratenID {
 		return null;
 	}
 	
-	// Tests if the current page is being loaded via HTTPS
+	// Tests/guesses if the current page is being loaded via HTTPS
 	public static function isSSL() {
 		if ($_SERVER['SERVER_PORT']==443) return true;
 		if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS']==='on') return true;
 		return false;
 	}
 	
-	
+	// Checks an OpenID signature with the OpenID provider (dumb mode)
 	private static function checkSignature($fields, &$error) {
 		$fields['openid.mode'] = 'check_authentication';
 		$urlEncodedFields = http_build_query($fields, '', '&');
@@ -386,7 +388,7 @@ class PiratenID {
 					'allow_self_signed' => false,
 					'capture_peer_cert' => false, // Change to be able to inspect certificate
 					'ciphers'           => "aRSA+kEDH+TLSv1+HIGH", // only high-security TLSv1 ciphers featuring ephemeral keys and RSA authentication allowed
-					'cafile'            => __DIR__."/certificate.pem"
+					'cafile'            => __DIR__."/certificate.pem" // This file shall contain the cert of the server or the CA used for that cert
 				)
 			);
 		$context = stream_context_create($options);
@@ -418,6 +420,7 @@ class PiratenID {
 			return true;
 		} else {
 			$error = "server rejected signature";
+			return false;
 		}
 		
 	}
