@@ -50,7 +50,8 @@ class PiratenID {
 		if ($errormsg !== null) return self::error($errormsg);
 		
 		if (self::$allowDefaultLogout && isset($_GET['piratenid_logout'])) {
-			$_SESSION['piratenid_user']['authenticated'] = false;
+			$_SESSION['piratenid_user'] = array('authenticated' => false);
+			unset($_GET['piratenid_logout']);
 		}
 		if (isset($_POST['openid_mode'])) {
 			$result = self::handle();
@@ -346,7 +347,11 @@ class PiratenID {
 		// Find base (domain) in realm, and verify realm
 		if (!preg_match('%^(https://[a-zA-Z0-9.-]+)/(?:[a-zA-Z0-9$_.+!*\'(),/;:-]+/)?$%', self::$realm, $matches)) return 'local: invalid realm';
 		if (self::$returnurl == null) {
-			self::$returnurl = $matches[1].$_SERVER['REQUEST_URI']; // request_uri may be malicious, but all outputs are escaped.
+			$uri = $_SERVER['REQUEST_URI'];
+			if (self::$allowDefaultLogout) {
+				$uri = preg_replace('/[?&]piratenid_logout$/',"",$uri);
+			}
+			self::$returnurl = $matches[1].$uri; // request_uri may be malicious, but all outputs are escaped.
 		}
 		if (!preg_match('%^([a-z-]+)?(,([a-z-]+))*$%', self::$attributes)) return 'local: invalid attribute list';
 		
@@ -356,7 +361,7 @@ class PiratenID {
 	// Tests if the current page is being loaded via HTTPS
 	public static function isSSL() {
 		if ($_SERVER['SERVER_PORT']==443) return true;
-		if ($_SERVER['HTTPS']==='on') return true;
+		if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS']==='on') return true;
 		return false;
 	}
 	
@@ -465,7 +470,7 @@ class PiratenID {
 	}	
 }
 
-// Require SSL if this file is only included
+// Require SSL if this file is included
 if (!PiratenID::isSSL()) die('PiratenID included on non-HTTPS page. You will be handling sensitive user data and are required to use it on the whole site.');
 
 ?>
