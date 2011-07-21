@@ -1,21 +1,15 @@
 <?php
 require_once('siteconstants.inc.php');
 
-
-// DONE secure random numbers for token (also in client!)
-// DONE force secure session id generation in client
-// DONE make sure the site name is included in the response and checked. nonce alone is not enough - if predicted/stolen, attacker could request user to auth himself to attacker with that nonce, then abuse the signed response to simulate being the user
-// DONE db length limit (truncation attacks) - db setting and limit in DB class and direct checks on input
-// DONE check return url for correct scheme (javascript injection!)
-// DONE check for working hash function
-// DONE pw reset (email)
 // TODO HTML validieren
 // TODO Startseite
 // TODO Hilfe, Doku
 // TODO full test again, especially clickjacking protection with/without JS (regular case/attack case), IE6 blocker, extendedAttributeDomains (in siteconstants)
 // TODO DB charset
 // TODO encodings checken
-// TODO stored procedures?
+// TODO-later? stored procedures
+// TODO-later? PGP/GPG support
+
 
 // TODO search for TODOs (also in client!)
 

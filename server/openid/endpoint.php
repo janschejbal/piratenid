@@ -332,7 +332,7 @@ function handleCheckidSetup($reqfields, $errormessage = null) {
 			<input type="hidden" name="action" value="confirm">
 			<table>
 				<?php printLoginFields(); ?>
-				<tr><td>&nbsp;</td><td><input type="submit"></td></tr>
+				<tr><td>&nbsp;</td><td><input type="submit" value="Anmelden"></td></tr>
 			</table>
 			</form>
 		</div>

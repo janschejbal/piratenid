@@ -2,7 +2,6 @@
 require("../includes/header.inc.php");
 
 function requestReset(&$error) {
-	$db = DB::get();
 	
 	$email = prefilter($_POST['email']);
 	if ($email === false) {
@@ -16,7 +15,8 @@ function requestReset(&$error) {
 		return false;
 	} 
 	
-	$result = $db->query("SELECT * FROM users WHERE email = ? AND email_verified = 1 AND resettoken <=> NULL", array($email));
+	$db = DB::get();
+	$result = $db->query("SELECT username FROM users WHERE email = ? AND email_verified = 1 AND resettoken <=> NULL", array($email));
 	if ($result === false) {
 		$error .= 'Datenbankfehler';
 		return false;
@@ -61,7 +61,8 @@ function requestReset(&$error) {
 	// TODO DEBUG send mail
 	echo("<pre>Text der Mail:\n\n$text</pre>"); // TODO DEBUG REMOVE
 	// $success = mail($email, $subject, $text);
-
+	$success = true; // TODO DEBUG REMOVE
+	return $success;
 }
 
 

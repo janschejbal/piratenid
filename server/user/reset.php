@@ -2,13 +2,14 @@
 require("../includes/header.inc.php");
 
 function resetPassword(&$error) {
-	$db = DB::get();
 	$key = prefilter($_POST['key'], $error);
 	if ($key === false) return false;
 	$key = hash('sha256',$key);
 	
+	if (!checkPassword($_POST['newpw1'], $_POST['newpw2'], $error)) return false; // checkPassword contains prefilter
 	
-	$result = $db->query("SELECT * FROM users WHERE resettoken = ?", array($key));
+	$db = DB::get();
+	$result = $db->query("SELECT username FROM users WHERE resettoken = ?", array($key));
 	if ($result === false) {
 		$error = "Fehler: Datenbankfehler";
 		return false;
@@ -17,14 +18,13 @@ function resetPassword(&$error) {
 		$error = "Fehler: Ungültiger Reset-Key.";
 		return false;
 	}
-	$userarray = $result[0];
+	$username = $result[0]['username'];
 	
-	if (!checkPassword($_POST['newpw1'], $_POST['newpw2'], $error)) return false; // checkPassword contains prefilter
 	
 	// Password ok, hash and change
-	$newhash = hashPassword($userarray['username'], $_POST['newpw1']); // newpw1 field was checked above
+	$newhash = hashPassword($username, $_POST['newpw1']); // newpw1 field was checked above
 	if ( false !== $db->query("UPDATE users SET pwhash = ?, resettoken = NULL, resettime = NULL WHERE username = ? AND resettoken = ?",
-									array($newhash, $userarray['username'], $key)) ) {
+									array($newhash, $username, $key)) ) {
 		return true;
 	} else {
 		$error = "Datenbankfehler";

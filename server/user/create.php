@@ -40,10 +40,10 @@ if ($valid) {
 	$usersecret = generateNonce(32);
 	$pwhash = hashPassword($username, $password);
 	$activationkey = generateNonce(16);;
-
+	$hashedkey = hash('sha256',$activationkey);
 	
 	$result = $db->query("INSERT INTO users (username, usersecret, pwhash, email, email_activationkey) values (?,?,?,?,?)",
-											array($username, $usersecret, $pwhash, $mail, hash('sha256',$activationkey) ) );
+											array($username, $usersecret, $pwhash, $mail, $hashedkey ) );
 	$success = (false !== $result);
 
 	

@@ -267,7 +267,7 @@ class PiratenID {
 				$rawIdentityURL = $postFields['openid.identity'];
 				if (strlen($pseudonym) !== 64) die('Pseudonym hashing failed');
 			} else {
-				$result['error'] = 'local: invalid pseudonym format';
+				$result['error'] = 'local: invalid pseudonym format (pseudonym must start with serverroot)';
 				return $result;
 			}
 			$requiredSignedFields[] = 'identity';
