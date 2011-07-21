@@ -51,7 +51,7 @@ Für Entwickler von Webanwendungen existiert eine separate Anleitung\footnote{TO
 Das PiratenID-System soll es Mitgliedern der Piratenpartei ermöglichen, ihren Mitgliedschaftsstatus gegenüber von Dritten betriebenen Webseiten nachzuweisen,
 ohne dass Zugriff auf die Mitgliederdatenbank nötig ist und ohne mehr Daten als nötig offenlegen zu müssen.
 
-An einem Authentifizierungsvorgang sind immer drei Parteien beteiligt: Der Nutzer bzw. sein Browser, der Server des ID-Systems und die Webanwendung,
+An einem Authentifizierungsvorgang sind immer drei Parteien beteiligt: (1) Der Nutzer bzw. sein Browser, (2) der Server des ID-Systems und (3) die Webanwendung,
 beispielsweise ein von Dritten betriebenes Forum oder Umfragetool.
 Um Verwirrung zu vermeiden, wird der Begriff "`Client"' hier nicht verwendet, da dieser sowohl den Browser als auch die Webanwendung (Client des ID-Systems) bezeichnen könnte.
 Die Parteien werden im Folgenden als ID-System, Browser und Webanwendung bezeichnet.
@@ -59,18 +59,19 @@ Die Parteien werden im Folgenden als ID-System, Browser und Webanwendung bezeich
 \section{Authentifizierung}
 Statt eines ursprünglich geplaten Protokolls wird OpenID 2.0 \footnote{\url{http://openid.net/specs/openid-authentication-2_0.html}} (mit gewissen Einschränkungen)
 mit Attribute Exchange 1.0 \footnote{\url{http://openid.net/specs/openid-attribute-exchange-1_0.html}} verwendet.
-Die serverseitige Implementierung ist eine vollständige Eigenentwicklung, da die Libraries eine zu hohe Komplexität haben, um sie vollständig zu reviewen.
+Die serverseitige Implementierung ist eine vollständige Eigenentwicklung, da die Libraries eine zu hohe Komplexität haben, um sie vollständig zu reviewen,
+und eine kurze Durchsicht einiger Libraries Zweifel an der Sicherheit weckte.
+\footnote{Beispiel: Die PHP-OpenID-Library von Janrain greift bei fehlendem curl auf fopen zurück, was SSL-Zertifikate nicht prüft.}
 Dabei wurde nur ein Teil des Protokolls implementiert, wodurch viele potentielle Quellen für Fehler und Sicherheitslücken wegfallen.
 Die Kompatibilität mit gängigen OpenID-Libraries bleibt gewahrt, bei der Verwendung solcher Libraries ist aber auf mögliche Sicherheitsprobleme zu achten.
-\footnote{Beispiel: Die PHP-OpenID-Library von Janrain greift bei fehlendem curl auf fopen zurück, was SSL-Zertifikate nicht prüft}
 Zur Übersicht über die Überlegungen zu anderen Protokollen wird hier auf das englischsprachige Dokument
 "`Building an authentication system under strict real-world constraints"'
-\footnote{TODO LINK} von Jan Schejbal verwiesen.
+\footnote{\url{http://www.janschejbal.de/arbeiten/authenticationsystem11.pdf}} verwiesen.
 
 Die Verwendung von OpenID statt einem eigenen Protokoll ermöglicht Kompatibilität mit bestehenden Anwendungen,
 ist im Fall einer Kompromittierung des Servers weniger problematisch
 (Sicherheit basiert auf SSL-Zertifikat, dieses kann separat z. B. auf einem Reverse-Proxy gelagert werden,
-Revocation über SSL möglich falls Clients auf Revocation prüfen, Angreifer müsste zusätzlich MitM "`in den Tiefen des Internets"' durchführen), 
+Revocation des Zertifikats möglich falls Clients auf Revocation prüfen, Angreifer müsste zusätzlich MitM "`in den Tiefen des Internets"' durchführen), 
 macht es aber leichter, kaputte Implementierungen zu erstellen (z. B. unzureichende Zertifikatsprüfung)
 und kann je nach Implementierung (Liste der akzeptierten Zertifikate/CAs) gegen kompromittierte/bösartige Zertifizierungsstellen (CAs) anfällig sein.
 
@@ -80,7 +81,7 @@ Zur Erhöhung der Sicherheit sollen Webanwendungen zusätzlich den Fingerprint d
 Associations werden nicht unterstützt, ebensowenig ein Fallback auf OpenID 1.1.
 
 Webanwendungen, die gewöhnliche OpenID-Libraries einsetzen, müssen sicherstellen, dass Logins nur mit dem ID-System und nicht mit beliebigen fremden OpenID-Servern möglich sind.
-Zusätzlich muss sichergestellt sein, dass die Library SSL korrekt prüft und wenn irgendwie möglich nur das manuell eingepflegte Zertifikat des ID-Systems akzeptiert.
+Zusätzlich muss sichergestellt sein, dass die Library SSL korrekt nutzt und wenn irgendwie möglich nur das manuell eingepflegte Zertifikat des ID-Systems akzeptiert.
 
 Bei der OpenID-Anfrage unterliegt das Realm einer recht strengen Prüfung, es muss sich um eine HTTPS-URL auf einen Ordner handeln, genauer:
 Die URL muss mit einem Schrägstrich enden und darf keine Query-Parameter oder Anker enthalten.
@@ -113,7 +114,7 @@ Anwendungen, die OpenID bereits unterstützen, können so in der Regel mit minim
 
 \subsection{Mitgliedschaftsattribute}
 Folgende Attribute können über Attribute Exchange abgefragt werden:
-\label{attribute}
+\label{sec:attribute}
 \begin{itemize}
 \item mitgliedschaft-bund
 \item mitgliedschaft-land
@@ -129,7 +130,7 @@ Die Attribute müssen mit genau diesen Namen als Alias abgefragt werden.
 Als Attributtyp ist jeweils "`https://id.piratenpartei.de/openid/schema/NAME"' anzugeben, wobei NAME durch den Namen des Attributs zu ersetzen ist.
 
 Ist ein Attribut in der Antwort leer, kann dies daran liegen, dass kein gültiges Token eingetragen ist.
-Um absichtlich leere Attributfelder zu kennzeichnen (z. B. Pirat ist in keinem Ortsverband) werden drei Bindestriche verwendet.
+Um absichtlich leere Attributfelder zu kennzeichnen (z. B. Pirat ist in keinem Ortsverband) werden drei Bindestriche (TODO WERT) verwendet.
 
 Das Feld "`mitgliedschaft-bund"' enthält bei Mitgliedern den Wert "`ja"' (TODO WERT),
 die restlichen Attribute teilen mit, in welchen Untergliederungen der Nutzer Mitglied ist.
@@ -211,10 +212,9 @@ ist.
 \subsubsection{Schutz vor Betreiber}
 Das System ist ein zentralisiertes Authentifizierungssystem.
 Die Sicherheit beruht auf der Annahme, dass der Betreiber des Systems vertrauenswürdig ist.
-Mit Zugriff auf den Signaturschlüssel können falsche XML-Antworten mit beliebigen Attributen erzeugt werden.
-Der Betreiber hätte somit die Möglichkeit, sich mit fremden oder falschen Attributen bei Diensten zu identifizieren.
+Der Betreiber kann beliebige OpenID-Antworten liefern und hat somit die Möglichkeit, sich mit fremden oder falschen Attributen bei Diensten zu identifizieren.
 Der ID-Server sieht bei jedem Login-Vorgang, welcher Nutzer sich wann bei welchem Dienst angemeldet hat.
-Mit den Daten des ID-Servers können mit realistischem Aufwand Pseudonyme zu Nutzern zugeordnet werden, solange das Usersecret nicht gelöscht wurde.
+Mit den Daten des ID-Servers können mit realistischem Aufwand Pseudonyme zu Nutzerkonten zugeordnet werden, solange das Usersecret nicht gelöscht wurde.
 
 \subsubsection{Fehler beim Nutzer}
 Das ID-System nutzt gewöhnliche Passwortauthentifizierung.
@@ -227,7 +227,9 @@ Der Nutzer wird von fremden (d.h. potentiell bösartigen) Seiten auf die Seite d
 Der Nutzer muss selbst prüfen, dass er sich auf der richtigen Seite befindet.
 Tut er dies nicht und gibt seine Nutzerdaten auf einer gefälschten Seite ein, können diese missbraucht werden.
 Entsprechende Hinweise werden auf der Seite eingeblendet.
-Die Verwendung von Spezialhardware (SecurID-Token, Smartcards) würde diese Probleme reduzieren, erscheint aber nicht angemessen.
+
+Client-Zertifikate werden nicht genutzt, da die Mehrzahl der Nutzer mit der korrekten Nutzung (Backup, Transfer auf andere Geräte) überfordert sein dürfte.
+Außerdem würde es den Nutzern die Möglichkeit nehmen, sich von beliebigen Computern anzumelden, was von den Nutzern nicht akzeptiert würde.
 
 \subsubsection{Sicherheitslücken in Webanwendungen}
 Das ID-System schützt nicht vor Sicherheitslücken in den Webanwendungen.
@@ -281,7 +283,7 @@ bedeutet dies, dass ein Mitglied, welches sein Konto mit eingetragenem Token lö
 Die Mitgliederverwaltung darf in diesem Fall \textbf{kein} neues Token ausstellen, da das Prinzip "`Ein Pirat - ein Pseudonym"' damit verletzt würde!
 
 Nicht verwendete Token können beliebig ausgetauscht werden. Vor der Neuausstellung eines Tokens sollte die Mitgliederverwaltung bestätigen lassen,
-dass das alte Token nicht verwendet wurde.
+dass das alte Token nicht verwendet wurde, und dieses sperren lassen.
 Sollte ein Austausch verwendeter Token gewünscht sein, muss entweder die Verletzung dieses Prinzips im Einzelfall in Kauf genommen werden,
 oder es muss ein weiteres Attribut "`token-index"' eingeführt werden, durch welches Webanwendungen gegenüber angezeigt wird, ob ein Token neu ausgestellt wurde.
 Webanwendungen könnten somit selbst entscheiden, ob bzw. bis zu wie viele Neuausstellungen (d.h. Pseudonymänderungen) sie pro Mitglied zulassen.
@@ -314,7 +316,8 @@ da ein zusätzliches, in den Systemkonstanten gespeichertes geheimes Salt verwen
 Auch das Zuordnen von Pseudonymen sollte unmöglich sein, da das zusätzlich verwendete Pseudonym-Secret unbekannt ist.
 
 \subsubsection{Stärke gegen Angreifer mit Dateisystemzugriff}
-Ein Angreifer, der Lesezugriff auf das Dateisystem erlangt, könnte in der Lage sein, den privaten Schlüssel für das SSL-Zertifikat zu erlangen.
+Ein Angreifer, der Lesezugriff auf das Dateisystem erlangt, könnte in der Lage sein, den privaten Schlüssel für das SSL-Zertifikat zu erlangen,
+sofern dieser auf dem System gespeichert ist.
 Damit könnte er Antworten fälschen, wenn es ihm gelingt, die Echtheitsanfrage der Webanwendung an den ID-Server auf sein System umzuleiten.
 Ohne vorherige Kenntnis des Pseudonyms kann er dieses nur berechnen (und darüber Pseudonyme zuordnen),
 wenn er auch Zugriff auf die Datenbank (oder die Dateien in der die Datenbanktabellen liegen) hat.
@@ -356,7 +359,7 @@ Um solche Angriffe zu erschweren, werden die Hashes folgendermaßen gebildet:
 \end{enumerate}
 
 Die Salts sorgen dafür, dass das gleiche Kennwort bei zwei unterschiedlichen Nutzern oder auf zwei verschiedenen Systemen unterschiedliche Hashes ergibt.
-Das geheime Systemsalt macht Angriffe gegen die Hashes völlig unmöglich, solange der Angreifer es nicht erlangt.
+Das geheime Systemsalt macht Brute-Force-Angriffe gegen die Hashes völlig unmöglich, solange der Angreifer es nicht erlangt.
 Die Verkettung und Verwendung des Zählers stellt sicher, dass jede Iteration anders ist und verhindert so, dass das Verfahren in einen Zyklus gerät.
 
 Durch die Verwendung der Salts wird die Verwendung vorausberechneter Rainbow Tables zur Beschleunigung von Angriffen unmöglich.
@@ -365,7 +368,8 @@ Dadurch werden Brute-Force-Versuche so stark ausgebremst, dass sie unpraktisch w
 
 Anzumerken ist, dass diese Schutzmaßnahmen nur für den unwahrscheinlichen Fall benötigt werden, dass es einem Angreifer gelingt, die Benutzerdatenbank zu kopieren.
 Da die Verlangsamung durch das strengthening auch auf den Server selbst zutrifft,
-wird bei Online-Brute-Force-Versuchen die Geschwindigkeit durch die CPU-Leistung des Servers wirksam begrenzt.
+wird bei Online-Brute-Force-Versuchen die Geschwindigkeit durch die CPU-Leistung des Servers selbst dann wirksam begrenzt,
+wenn andere (gegen DoS-Attacken gerichtete) Schutzmaßnahmen versagen.
 
 \subsubsection{Hashing}
 Auch andere Informationen werden wo möglich nur gehasht gespeichert,
@@ -407,17 +411,40 @@ Mit dem IE6 ist eine sichere Internetnutzung nicht möglich, zudem deutet sein V
 
 
 
-TODO (client)
-- session fixation
-- session-cookie sicherheit
-- selbstschutz gegen falsche verwendung
-- anleitung
+\subsection{Client}
+\label{security-client}
+Der speziell entwickelte PHP-Client für PiratenID enthält einige erwähnenswerte Schutzmaßnahmen:
 
-\section{Datenbank}
-TODO
-- drei tabellen
-- erklärung import
-- erklärung felder
+\subsubsection{Schutz vor Session fixation}
+Es wird versucht, den php.ini-Wert \texttt{session.use\_only\_cookies} zu setzen.
+Gelingt dies, werden session fixation-Versuche beim Start der Session ignoriert.
+Scheitert dies, wird nach jedem Start/Fortsetzen der Session eine neue Session-ID erstellt, um Angriffe zu verhindern.
+Dadurch kann die Stabilität der Sessions beeinträchtigt werden.
+
+Da jedoch nicht ausgeschlossen werden kann, dass andere Skripte auf dem Server session fixation zulassen,
+wird die Sitzungs-ID auch neu generiert, wenn die Sitzung bereits gestartet war,
+oder wenn sie zum ersten Mal von PiratenID genutzt wird.
+
+Dadurch wird sichergestellt, dass eine dem Angreifer dank session fixation bekannte Session-ID ungültig wird,
+bevor Daten bzw. ein Loginzustand von PiratenID in der Sitzung gespeichert werden.
+
+\subsubsection{Sicherheit des Session-Cookies}
+Die Gültigkeit des Session-Cookies wird beschränkt auf das eingestellte OpenID-Realm.
+Dadurch wird in Szenarien, wo mehrere Anwendungen sich eine Domain teilen, sichergestellt,
+dass Skripte außerhalb des Realms nicht an die Session-ID gelangen.
+
+Das Session-Cookie wird weiterhin so eingestellt, dass es lediglich über HTTPS-gesicherte Verbindungen verschickt wird.
+Dies verhindert, dass die Session-ID z. B. durch unsicher eingebundene Bilddateien unverschlüsselt übertragen wird.
+Eine weitere Option, die aktiviert wird, verhindert das Auslesen das Cookies durch JavaScript (was z. B. XSS-Angriffe erschwert).
+
+\subsubsection{Parameterprüfungen, Selbstschutz}
+Die Library schützt sich gegen irrtümlich falsche Benutzung,
+z. B. indem die Einbindung auf Seiten, die nicht über HTTPS aufgerufen werden, verhindert wird.
+Gegen absichtlichen Missbrauch ist die Library nicht geschützt, da jeder, der die Library missbrauchen möchte, einfach den Code ändern kann.
+
+\subsubsection{Anleitung}
+Webanwendungsentwickler erhalten eine Anleitung, welche neben der korrekten Verwendung der PiratenID-Library auch allgemeine Sicherheit von Webanwendungen behandelt.
+
 
 \section{Dateien des Servers}
 
@@ -431,7 +458,7 @@ Diese Datei enthält den Anfang jeder ausgegebenen HTML-Seite und nimmt auch ein
 	\item Es wird sichergestellt, dass \texttt{register\_globals} deaktiviert ist.
 	\item \texttt{siteconstants.inc.php} und \texttt{functions-global.inc.php} werden eingebunden
 	\item Die HTTP-Header \texttt{X-Frame-Options} und \texttt{Strict-Transport-Security}
-	\item Das HTML-Grundgerüst der Seite mit Sicherheitshinweisen, Menü und IE6-Blocker wird ausgeliefert. Das maincontent-DIV wird geöffnet
+	\item Das HTML-Grundgerüst der Seite mit Sicherheitshinweisen, Menü und IE6-Blocker werden ausgeliefert. Das maincontent-DIV wird geöffnet
 \end{itemize}
 
 \subsubsection{/includes/footer.inc.php}
@@ -450,8 +477,7 @@ Diese Datei enthält (z.T. geheime!) Konstanten, die bei der Installation des Se
 	\item \texttt{getDatabasePDO()} - Hier werden die Datenbank-Zugangsdaten eingetragen
 	\item \texttt{\$pseudonymsecret} - Ein zusätzliches Salt zur Berechnung der Pseudonyme, siehe Abschnitt \ref{sec:pseudo} Pseudonyme.
 	\item \texttt{\$passwordsaltsecret} - Ein zusätzliches Salt zur Berechnung der Passwort-Hashes, siehe Abschnitt \ref{sec:pwhash} Passwort-Hashverfahren.
-	\item \texttt{\$signaturekey\_pem} - Der private RSA-Signaturschlüssel, mindestens 2048 Bit.
-		Wird dieser Schlüssel kompromittiert, muss er sofort getauscht und der alte Schlüssel in den Webanwendungen deaktiviert werden!
+	\item \texttt{\$openid\_hmacsecret} - Das zur Berechnung der OpenID-Signaturen verwendete secret. 
 \end{itemize}
 Maßnahmen, die zu treffen sind, wenn eine der geheimen Konstanten kompromittiert wird, sind in der Datei selbst dokumentiert.
 
@@ -510,7 +536,7 @@ Sie zeigt das entsprechende Formular an, nimmt die Daten entgegen, prüft sie, e
 
 \subsubsection{/user/reset.php}
 Diese Datei ermöglicht es dem Nutzer, sein Kennwort über einen via requestreset.php angeforderten Link zurückzusetzen.
-TODO
+Sie gibt ein Formular zur Eingabe eines neuen Kennworts aus, nimmt die Daten entgegen, prüft das Token und die Daten und ändert ggf. das Kennwort.
 
 \subsubsection{/user/delete.php}
 Diese Datei ermöglicht es dem Nutzer, sein Benutzerkonto zu löschen.
@@ -523,8 +549,46 @@ Der Benutzername wird durch einen zufällig generierten Benutzernamen ersetzt.
 \subsection{Verzeichnis /openid/}
 Dieses Verzeichnis enthält die serverseitige Implementierung des OpenID-Teils
 
-TODO document
+\subsubsection{/openid/endpoint.php}
+Der OpenID-Endpoint, das Herzstück des Systems.
+Behandelt den Authentifizierungsvorgang:
 
+\begin{itemize}
+	\item OpenID-Requests von Webanwendungen
+	\item Login durch den Nutzer
+	\item Antwort auf die OpenID-Anfrage
+	\item Bestätigen der OpenID-Daten gegenüber der Webanwendung
+\end{itemize}
+
+Der Großteil der Datei besteht aus Funktionsdefinitionen.
+Am Ende wird entschieden, was für eine Anfrage vorliegt, und entsprechend die passende Funktion aufgerufen.
+Die einzelnen Funktionen sind innerhalb der Datei kommentiert, nur die wichtigsten werden hier aufgeführt,
+in der Reihenfolge, in der sie in einem normalen Authentifizierungsvorgang eine Rolle spielen.
+
+\begin{itemize}
+	\item \texttt{getOpenIDFields} - liest die OpenID-Werte aus der GET- oder POST-Anfrage aus. Umgeht dabei ein PHP-"`Feature"', welches Feldnamen umbenennt.
+	\item \texttt{evaluateFields} - prüft die übergebenen OpenID-Werte von Anfragen (wird von handleCheckidSetup und handleUserConfirm genutzt/aufgerufen)
+	\item \texttt{handleCheckidSetup} - liefert das Login-Formular, wenn eine OpenID-Authentifizerungsanfrage ankommt oder handleUserConfirm einen Fehler entdeckt.
+	\item \texttt{handleUserConfirm} - verarbeitet die Antwort auf das Login-Formular (d.h. die Bestätigung der Anfrage durch den Nutzer)
+	\item \texttt{addAXAttributes} - fügt einer von handleUserConfirm vorbereiteten OpenID-Antwort die zusätzlichen Attributfelder hinzu, falls nötig.
+	\item \texttt{sendIndirectResponse} - liefert eine HTML-Seite mit einer indirekten OpenID-Antwort (wird von handleUserConfirm aufgerufen)
+											(d.h. einem HTML-Formular, welches an die anfragende Webanwendung zurückgePOSTed wird und die OpenID-Antwort enthält.
+											Enthält eine Warnung, dass der Nutzer nun zur ursprünglichen Seite zurückkehrt,
+											um Phishing z. B. durch das Anfordern von HTTP Basic Auth (während der Nutzer noch die ID-Seite sieht) zu verhindern.
+	\item \texttt{handleCheckAuth} - verarbeitet die Verifizierungsanfrage der Webanwendung (Prüfung der indirekten Antwort)
+	\item \texttt{sendDirectResponse} - beantwortet eine direkte OpenID-Anfrage (für die Überprüfung der übermittelten Daten, wird von handleCheckAuth aufgerufen)
+\end{itemize}
+
+
+
+\subsubsection{/openid/xrds.php}
+Liefert ein XRDS-Dokument mit einem Verweis auf den OpenID-Endpoint aus.
+Dies wird für die Verwendung mit normalen OpenID-Libraries benötigt.
+
+\subsubsection{/openid/pseudonym.php}
+Die Pseudonym-URLs verweisen auf diese Datei.
+Liefert ein XRDS-Dokument aus, welches bestätigt, dass die Pseudonyme vom PiratenID-Endpoint authentifiziert werden.
+Dies wird für die Verwendung mit normalen OpenID-Libraries benötigt.
 
 
 \subsection{Verzeichnis /static/}
@@ -535,11 +599,105 @@ Dieses Verzeichnis enthält statische Dateien wie Grafiken, Stylesheets, die Sic
 Ein SQL-Dump der Datenbankstruktur sollte dieser Dokumentation beiliegen.
 Die Datenbank besteht aus drei Tabellen:
 
-TODO
+\subsection{Tabelle "`users"'}
+Diese Tabelle enthält die Benutzerkonten. Folgende Felder sind vorhanden:
+\begin{itemize}
+	\item \texttt{username} - der eindeutige, nicht änderbare Benutzername (Primärschlüssel)
+	\item \texttt{usersecret} - das Benutzer-Secret zur Berechnung der Pseudonyme (siehe Abschnitt \ref{sec:pseudo})
+	\item \texttt{pwhash} - der Hash des Passworts (siehe Abschnitt \ref{sec:pwhash})
+	\item \texttt{email} - die E-Mail-Adresse (z. B. für Passwortresets)
+	\item \texttt{email\_activationkey} - der Hash des Aktivierungsschlüssels zum Bestätigen der Mailadresse
+	\item \texttt{email\_verified} - gibt an, ob die Adresse bestätigt ist
+	\item \texttt{token} - das eingetragene Token (gehasht) - darf nicht mehr verändert oder gelöscht werden!
+	\item \texttt{mitgliedsnr} - Feld zur Aufnahme der Mitgliedsnummer, sofern diese Funktion implementiert wird
+	\item \texttt{realname} - Feld zur Aufnahme des Realnamens, sofern diese Funktion implementiert wird
+	\item \texttt{resettoken} - Hash des Passwort-Reset-Tokens, falls verschickt (sonst NULL)
+	\item \texttt{resettime} - Zeitpunkt, zu dem die Resetmail verschikt wurde
+	\item \texttt{createtime} - Zeitpunkt, zu dem der Account erstellt wurde
+\end{itemize}
 
 
+\subsection{Tabelle "`tokens"'}
+Diese Tabelle enthält die Zuordnungen zwischen Token(hashes) und Verbandsmitgliedschaften.
+Sie sollte regelmäßig geleert und neu aus der Mitgliederverwaltung importiert werden.
+Folgende Felder sind vorhanden:
+\begin{itemize}
+	\item \texttt{token} - Das (gehashte) Token (Primärschlüssel)
+	\item \texttt{mitgliedschaft-bund}
+	\item \texttt{mitgliedschaft-land}
+	\item \texttt{mitgliedschaft-bezirk}
+	\item \texttt{mitgliedschaft-kreis}
+	\item \texttt{mitgliedschaft-ort}
+\end{itemize}
+
+Bezüglich der Bedeutung und möglicher Werte für die Mitgliedschaftsfelder sei auf Abschnitt \ref{sec:attribute} verwiesen.
+
+\subsection{Tabelle "`openid"'}
+- drei tabellen
+- erklärung import
+- erklärung felder
 
 
+\section{Client (PHP)}
+\input{idsystem-clientdoc-shared}
+
+\subsection{Dateien}
+Der Client besteht aus folgenden Dateien:
+\begin{itemize}
+	\item \texttt{piratenid.php} -
+		Die Client-Klasse selbst. Die Funktionen werden weiter unten beschrieben.
+	\item \texttt{certificate.pem} - 
+		Das Zertifikat, über das der PiratenID-Server authentifiziert wird.
+		Dabei kann es sich entweder um das Zertifikat des Servers selbst,
+		oder um das einer CA (Zertifizierungsstelle) im Zertifikatspfad des Serverzertifikats handeln.
+	\item \texttt{button-*.png} -
+		Drei Grafiken für Login/Logout/Fehler-Buttons.
+	\item \texttt{example.php} -
+		Ein Beispiel für die Verwendung des OpenID-Clients. Nicht Teil des eigentlichen Clients, sollte nicht in die Produktivumgebung kopiert werden.
+\end{itemize}
+
+\subsection{Funktionen}
+Die Funktionen sind in der PiratenID-Klasse kommentiert. Fett gedruckte Funktionen sind public.
+\begin{itemize}
+	\item \textbf{\texttt{run()}} -
+		Automatisiert alle relevanten Abläufe, siehe Abschnitt \ref{sec:client-usage-basic}.
+		Eine Session wird gestartet, OpenID-Antworten und Logout-Wünsche werden bearbeitet.
+	\item \texttt{error(...)} -
+		Setzt die \$error-Variable und gibt den HTML-Code für einen Fehlerbutton zurück. Wird von \texttt{run()} genutzt.
+	\item \textbf{\texttt{autoButton(...)}} -
+		Liefert je nach Login-Status den passenden Button (Login oder Logout) zurück. Initialisiert die Session, falls nötig.
+	\item \textbf{\texttt{button(...)}} -
+		Liefert den HTML-Code für einen Button zurück, welcher auf eine passende URL (Login/Logout etc.) verweist.
+	\item \textbf{\texttt{logout()}} -
+		Loggt den Benutzer aus. Initialisiert die Session, falls nötig.
+	\item \textbf{\texttt{initSession()}} -
+		Initialisiert die Session und wendet dabei erweiterte Sicherheitsmaßnahmen an.
+	\item \textbf{\texttt{handle()}} -
+		Wertet eine OpenID-Antwort aus (inkl. Verifizierung via \texttt{checkSignature(...)}) und gibt das Ergebnis zurück.
+		Siehe auch Abschnitt  \ref{sec:client-usage-advanced}.
+	\item \textbf{\texttt{makeOpenIDURL()}} -
+		Liefert eine URL zum OpenID-Endpoint, welche eine Login-Anfrage mit den aktuellen Parametern enthält.
+		Siehe auch Abschnitt  \ref{sec:client-usage-advanced}.
+	\item \textbf{\texttt{getOpenIDRequest()}} -
+		Liefert die OpenID-Felder für eine Login-Anfrage mit den aktuellen Parametern.
+		Siehe auch Abschnitt  \ref{sec:client-usage-advanced}.
+	\item \texttt{initParams()} -
+		Prüft und initialisiert die Parameter, errechnet abgeleitete Defaultwerte.
+		Wird von den meisten Funktionen, die Parameter nutzen, aufgerufen.
+	\item \textbf{\texttt{isSSL()}} -
+		Gibt eine Vermutung darüber ab, ob die Seite über eine SSL-Verbindung aufgerufen wird.
+	\item \texttt{checkSignature(...)} -
+		Prüft die Signatur einer OpenID-Antwort durch SSL-gesicherte Rückfrage beim Endpoint.
+	\item \texttt{getOpenIDFields(...)} - 
+		Liest die OpenID-Werte aus einer GET- oder POST-Anfrage aus. Umgeht dabei ein PHP-"`Feature"', welches Feldnamen umbenennt.
+	\item \texttt{isValidKeyValue(...)} - 
+		Prüft, ob das übergebene Paar gültige Werte für einen OpenID-Feldnamen und -wert beinhaltet.
+	
+
+\end{itemize}
+
+\subsection{Schutzmaßnahmen}
+Besondere Schutzmaßnahmen im Client werden in Abschnitt \ref{sec:security-client} erläutert.
 
 \end{document}
 

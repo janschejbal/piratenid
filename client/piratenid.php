@@ -6,24 +6,28 @@ class PiratenID {
 	                                    // Security critical, must be under your exclusive control, do NOT use values from $_SERVER!
 	                                    // See documentation for format restrictions.
 	public static $returnurl = null;    // OpenID return_to URL. Optional, must start with realm if set. Otherwise, will be auto-detected.
-	public static $logouturl = null;    // URL to which the logout button directs the user. Defaults to realm with ?piratenid_logout appended.
-	                                    // If run() is called on that page and the piratenid_logout parameter is set, the user will be logged out.
-										// If you want to set it yourself, or do not use run() on the realm URL, make sure that a GET request to this URL
-										// logs the user out, i.e. deletes the session variable piratenid_user.
-	public static $imagepath = '';      // String to prepend in front of button image URLs, i.e. '', '/', '/piratenid' or 'https://images.example.com/'
+	public static $imagepath = '';      // String to prepend in front of button image URLs, i.e. '', '/', '/piratenid/' or 'https://images.example.com/'
 	public static $attributes = '';     // Comma-separated list of attributes to request. See documentation for list of attributes.
 	                                    // Note that 'mitgliedschaft-bund' has a special meaning (requesting it also allows non-member logins)
 	public static $usePseudonym = true; // True if the pseudonym should be requested, false for anonymous authentication (useful only in very special cases).
 	
-	public static $allowDefaultLogout = true; // If true, run() will perform a logout if the GET parameter ?piratenid_logout is set.
-	                                          // As this allows malicious logouts using CSRF, you can disable it and implement logout yourself
-											  // (by setting $_SESSION['piratenid_user'] = null after the session was started).
+	public static $logouturl = null;    // URL to which the logout button directs the user. Defaults to realm.
+	                                    // See also $handleLogout.
+	public static $handleLogout = true; // If true, run() will generate a random token once the user logs in.
+										// A GET parameter (piratenid_logout) containing that token will be appended to the logout URL.
+										// run() will look for that parameter and log the user out if the correct value is detected.
+										// The parameter will be removed from the $_GET array.
+	                                    // As long as you use the default button and make sure that run() is called on requests to the logout URL,
+										// this will take care of your entire logout handling.
 	
+	// For cookies, will be set by initParams().
+	private static $realm_domain = null; 
+	private static $realm_path = null;
 	
 	public static $error = null;
 	private static $hasRun = false;
 	
-	// OpenID endpoint to use
+	// OpenID endpoint to use (TODO)
 	const serverCN   = 'localhost';
 	const serverroot = 'https://piratenid.janschejbal.de/';
 	const endpoint   = 'https://piratenid.janschejbal.de/openid/endpoint.php';
@@ -40,7 +44,7 @@ class PiratenID {
 	
 	
 	// Processes the request, returning HTML code for a login/logout button to display.
-	// You must set the realm before calling this, and you probably want to set imagepath.
+	// You must set the parameters before calling this.
 	public static function run() {
 		if (self::$hasRun) return self::error('local: run() called multiple times');
 		self::$hasRun = true;
@@ -49,11 +53,18 @@ class PiratenID {
 		$errormsg = self::initParams();
 		if ($errormsg !== null) return self::error($errormsg);
 		
-		if (self::$allowDefaultLogout && isset($_GET['piratenid_logout'])) {
-			$_SESSION['piratenid_user'] = array('authenticated' => false);
+		$logouterror = false;
+		if (self::$handleLogout && isset($_GET['piratenid_logout'])) {
+			if (!empty($_SESSION['piratenid_user']['logouttoken']) && $_GET['piratenid_logout'] === $_SESSION['piratenid_user']['logouttoken']) {
+				$_SESSION['piratenid_user'] = array('authenticated' => false);
+				// TODO logout-callback hier einbauen
+			} else {
+				$logouterror = true;
+			}
 			unset($_GET['piratenid_logout']);
 		}
 		
+		$loggedin = false;
 		if (isset($_POST['openid_mode'])) {
 			$result = self::handle();
 			if ($result['error'] === null && $result['authenticated'] === true) {
@@ -63,39 +74,66 @@ class PiratenID {
 				if (self::$usePseudonym) {
 					$_SESSION['piratenid_user']['pseudonym'] = $result['pseudonym'];
 				}
+				$loggedin = true;
+				// the logout token generation may not be very secure, but should be good enough for this purpose
+				// and is as good as it gets without breaking compatibility
+				$_SESSION['piratenid_user']['logouttoken'] = substr(md5(mt_rand().mt_rand().mt_rand().mt_rand()),0,16); 
 			} else {
 				// error occurred
 				return self::error($result['error']);
 			}
 		}
 		
-		return self::button();
+		// TODO login-callback hier einbauen
+		
+		if ($logouterror) {
+			return self::error('logout failed - wrong token');
+		}
+		
+		return self::autoButton();
 	}
 	
 	// set error, return error button
 	private static function error($text) {
-		$html = self::button($text); // may overwrite self::$error
+		$html = self::autoButton($text); // may overwrite self::$error
 		self::$error = $text;
 		return $html;
 	}
 	
 	// Returns a login/logout button of the appropriate type (login, logout or error), or null if params are invalid
+	// The basic type (login/logout) is determined according to the session state, the session is initialized if that has not already happened.
 	// If $errortext is set, an error button is returned with the specified text in the tooltip.
-	public static function button($errortext = null) {
-		if (self::initParams() !== null) return null;
+	public static function autoButton($errortext = null) {
 		if (session_id() == '') self::initSession();
+		return self::button($_SESSION['piratenid_user']['authenticated']===true, $errortext);
+	}
+	
+	// Returns a login/logout button of the appropriate type (login, logout or error), or null if params are invalid
+	// if $logout is true, a logout-button is generated (otherwise a login-button is generated)
+	// If $errortext is set, an error button is returned with the specified text in the tooltip.
+	public static function button($logout, $errortext = null) {
+		if (self::initParams() !== null) return null;
 
-		if (!$_SESSION['piratenid_user']['authenticated']) {
+		if (!$logout) {
 			$type = "login";
 			$title = "Nicht eingeloggt. Klicken zum Einloggen per PiratenID.";
 			$targeturl = self::makeOpenIDURL();
 		} else {
 			$type = "logout";
 			$title = "Eingeloggt per PiratenID. Klicken zum Ausloggen.";
-			if (self::$logouturl !== null) {
-				$targeturl = self::$logouturl;
-			} else {
-				$targeturl = self::$realm.'?piratenid_logout';
+			$targeturl = self::$logouturl;
+			if (self::$handleLogout) {
+				if (!empty($_SESSION['piratenid_user']['logouttoken'])) {
+					$anchor = '';
+					if (preg_match('/(#.*)$/', $targeturl, $matches)) { // remove anchor (will be re-added)
+						$targeturl = preg_replace('/(#.*)$/', '', $targeturl);
+						$anchor = $matches[1];
+					}
+					$separator = (strpos($targeturl, '?') === false) ? '?' : '&';
+					$targeturl = $targeturl . $separator . 'piratenid_logout=' . $_SESSION['piratenid_user']['logouttoken'] . $anchor;
+				} else {
+					$errortext = 'WRONG USAGE OF PIRATENID LIBRARY. Tried to generate button with $handleLogout=true without correctly initialized session.';
+				}
 			}
 		}
 		
@@ -136,14 +174,21 @@ class PiratenID {
 		// Try to enhance security, ignore if it fails (will be detected later)
 		@ini_set('session.use_only_cookies',1);
 
+		$cookieChanged = false;
 		$params = session_get_cookie_params();
-		if (!$params['secure']) session_set_cookie_params($params['lifetime'],$params['path'],$params['domain'], true, true);
+		if (!$params['secure']) {
+			session_set_cookie_params(0,self::$realm_path,self::$realm_domain, true, true);
+			$cookieChanged = true;
+		}
 	
 		$alreadyStarted = session_id() !== '';
 		$onlyCookies = ini_get('session.use_only_cookies') === '1';
 		
 		if (!$alreadyStarted) session_start();
-		if ($alreadyStarted || !$onlyCookies) session_regenerate_id(true); // ensure params are applied, prevent session fixation attack
+		
+		if ($alreadyStarted || !$onlyCookies || !isset($_SESSION['piratenid_user']) || $cookieChanged) {
+			session_regenerate_id(true); // ensure params are applied, prevent session fixation attack
+		}
 
 		if (!isset($_SESSION['piratenid_user'])) {
 			$_SESSION['piratenid_user']['authenticated'] = false;
@@ -347,16 +392,18 @@ class PiratenID {
 	private static function initParams() {
 		if (self::$realm == null) return 'local: realm not set';
 		// Find base (domain) in realm, and verify realm
-		if (!preg_match('%^(https://[a-zA-Z0-9.-]+)/(?:[a-zA-Z0-9$_.+!*\'(),/;:-]+/)?$%', self::$realm, $matches)) return 'local: invalid realm';
+		if (!preg_match('%^(https://[a-zA-Z0-9.-]+)(/(?:[a-zA-Z0-9$_.+!*\'(),/;:-]+/)?)$%', self::$realm, $matches)) return 'local: invalid realm';
+		self::$realm_domain = $matches[1];
+		self::$realm_path = $matches[2];
 		if (self::$returnurl == null) {
 			$uri = $_SERVER['REQUEST_URI'];
-			if (self::$allowDefaultLogout) {
-				$uri = preg_replace('/[?&]piratenid_logout$/',"",$uri);
+			if (self::$handleLogout) {
+				$uri = preg_replace('/[?&]piratenid_logout=[a-f0-9]{16}$/',"",$uri);
 			}
 			self::$returnurl = $matches[1].$uri; // request_uri may be malicious, but all outputs are escaped.
 		}
 		if (!preg_match('%^([a-z-]+)?(,([a-z-]+))*$%', self::$attributes)) return 'local: invalid attribute list';
-		
+		if (self::$logouturl === null) self::$logouturl = self::$realm;
 		return null;
 	}
 	

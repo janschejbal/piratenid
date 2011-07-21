@@ -377,8 +377,7 @@ function addAXAttributes(&$response, $attribarray, $userdata, &$error) {
 			case 'mitgliedschaft-ort':
 				// always available for members, but may be empty. undef/null if no valid token provided.
 				if (!isset($userdata[$attrib]) || $userdata[$attrib] === null) {
-					// TODO: Auth fehlschlagen lassen oder mit leerem Attribut zurückgeben?
-					// Explizite Abfrage von Mitgliedschaft-bund sinnlos, wenn wir bei fehlendem Token eh fehlschlagen lassen
+					// Explizite Abfrage von mitgliedschaft-bund wäre sinnlos, wenn wir bei fehlendem Token fehlschlagen lassen
 					//  $error = "Dieser Nutzer hat nicht alle angeforderten Attribute (Token eingetragen?)";
 					//  return false;
 					$userdata[$attrib] = "";

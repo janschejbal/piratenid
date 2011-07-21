@@ -7,7 +7,7 @@ $sitepath = "https://piratenid.janschejbal.de/";
 // List of domains that may receive extended attributes
 $extendedAttributeRealms = array();
 
-// Database login data
+// Database login data (if compromised, change. no DB access from outside should be possible, and user should have very limited rights)
 function getDatabasePDO() {
 	return new PDO('mysql:dbname=piratenid;host=127.0.0.1', "root", "");
 }

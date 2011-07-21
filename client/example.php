@@ -1,11 +1,11 @@
 <?php
 	require_once("piratenid.php");
-	PiratenID::$imagepath =  "/";
+	PiratenID::$imagepath =  "";  // leer = aktuelles Verzeichnis. Normalerweise z. B. "/piratenid-buttons/" oder ähnlich.
 	PiratenID::$realm     = "https://localhost.janschejbal.de/"; // Sicherheitsrelevant! Festen Wert vorgeben, keine Variablen wie $_SERVER nutzen!
 		                                                         // (siehe http://blog.oncode.info/2008/05/07/php_self-ist-boese-potentielles-cross-site-scripting-xss/)
-	PiratenID::$logouturl  =  "/example.php?piratenid_logout";   // Wenn die Realm-URL keinen Button enthält, muss eine Logout-URL angegeben werden, damit das Logout funktioniert.
-	                                                             // Dabei kann entweder eine URL, auf der ein Button zu sehen ist, zusammen mit dem Parameter piratenid_logout
-																 // angegeben werden, oder eine eigene Logout-URL. Siehe auch die Hinweise im Handbuch.
+	PiratenID::$logouturl  =  "/example.php";  // Wenn die Realm-URL keinen Button enthält, muss eine Logout-URL angegeben werden, damit das Logout funktioniert.
+												// Das kann entweder eine eigene URL sein, welche sich um das Logout kümmert ($handleLogout auf false setzen!)
+												// oder (bei aktivem $handleLogout) eine URL, wo run() aufgerufen wird.
 	PiratenID::$attributes =  "mitgliedschaft-bund,mitgliedschaft-land";
 	$button = PiratenID::run(); // VOR allen anderen Ausgaben aufrufen, damit das Session-Cookie gesetzt werden kann!
 ?>

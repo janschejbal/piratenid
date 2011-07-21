@@ -1,0 +1,165 @@
+Der bereitgestellte PiratenID-Client ist eine vollständige Eigenentwicklung.
+Er ist in PHP geschrieben und ermöglicht Webanwendungen in der gleichen Sprache eine bequeme und sichere Nutzung des PiratenID-Systems.
+
+Die Parameter des PiratenID-Systems sind fest in den Client eingebaut.
+Der Client ist nicht für die Nutzung mit anderen OpenID-Servern gedacht oder geeignet.
+(Es fehlen wichtige Teile des OpenID-Protokolls, welche für die Nutzung mit einem fest vorgegebenen Server jedoch nicht nötig sind.)
+
+Der Client besteht aus einer PHP-Klasse mit statischen Funktionen und einigen statischen, öffentlichen Variablen.
+Um ihn zu nutzen, werden (nach dem Einbinden der Datei) zunächst über die Variablen die gewünschten Parameter eingestellt.
+Danach können die enthaltenen Funktionen benutzt werden.
+
+Der Client kann das komplette Session-Handling übernehmen.
+Hierzu müssen die betroffenen Funktionen (run bzw. initSession) aufgerufen werden, bevor die Header gesendet worden sind, d.h. vor allen Ausgaben.
+Vorsicht: Ein Byte-order-mark, was manche Editoren am Anfang von UTF-8-Textdateien einfügen, kann in einer PHP-Datei dazu führen, dass die Header gesendet werden!
+Wenn der Client das Session-Handling übernimmt, werden automatisch einige zusätzliche Sicherheitsmaßnahmen angewendet.
+Falls es also möglich ist, sollte das Session-Handling immer dem Client überlassen werden.
+
+Den einfachsten Einstieg in die Nutzung des Clients bietet das mitgelieferte Beispiel (\texttt{example.php}).
+
+\subsection{Voraussetzungen}
+Der Client benötigt PHP mit aktivierten Stream-Funktionen mitsamt HTTPS/SSL-Unterstützung.
+Der Client wurde auf PHP 5.3.5 getestet.
+Aus Sicherheitsgründen sollte stets eine aktuelle PHP-Version verwendet werden.
+
+Die PHP-Einstellung \texttt{session.use\_only\_cookies} sollte zur Erhöhung der Sicherheit in der php.ini aktiviert werden, falls möglich.
+Kann diese Einstellung nicht aktiviert werden, wird der Client die Session-ID bei jedem Aufruf neu erzeugen,
+um session fixation-Angriffe zu verhindern.
+Dies kann die Stabilität der Sessions beeinträchtigen.
+
+\subsubsection{Session-Cookie}
+Falls das im Client eingebaute Session-Handling benutzt wird, gilt Folgendes:
+
+Wenn ein Session-Cookie vorhanden ist, und dieses Session-Cookie als "`Secure"' (nur über HTTPS abrufbar) konfiguiert ist,
+geht das PiratenID-System davon aus, dass sich jemand über Session-Sicherheit Gedanken gemacht hat und übernimmt
+die Konfiguration des Session-Cookies.
+
+Ist das Secure-Flag nicht gesetzt, wird lediglich die Gültigkeitsdauer übernommen.
+Der Gültigkeitsbereich des Cookies wird auf das Realm festgelegt und die Secure- und HTTP-Only-Flags werden gesetzt.
+
+\subsection{Installation und Einrichtung}
+Die Buttongrafiken (\texttt{button-*.png}) müssen in einen geeigneten öffentlichen Ordner platziert werden.
+Der Pfad, unter dem die Grafiken erreicht werden können, ist im Parameter \texttt{PiratenID::\$imagepath} zu setzen (siehe unten).
+
+Die Clientdatei (\texttt{piratenid.php}) muss irgendwo platziert werden, wo sie eingebunden werden kann,
+und in den sie verwendenden PHP-Seiten eingebunden werden (beispielsweise mit \texttt{require('piratenid.php')}).
+Im gleichen Verzeichnis muss die Datei certificate.pem liegen.
+Diese enthält das SSL-Zertifikat, über das der PiratenID-Server authentifiziert wird.
+Dabei kann es sich entweder um das Zertifikat des Servers selbst, oder um das einer CA (Zertifizierungsstelle) im Zertifikatspfad des Serverzertifikats handeln.
+
+\subsubsection{Parameter}
+Nachdem die Datei eingebunden wurde, müssen vor der Nutzung einige Parameter gesetzt werden:
+\begin{itemize}
+	\item \texttt{PiratenID::\$realm} - Das OpenID-Realm, den Bereich, für welchen die Authentifizierung erfolgt. Muss gesetzt werden!
+										Dieser Bereich muss sich unter alleiniger Kontrolle der Webanwendung befinden.
+										Diese Angabe ist sicherheitskritisch und sollte fest eingetragen werden.
+										Variablen aus \texttt{\$\_SERVER} können z. T. gefälscht werden und dürfen daher hier nicht genutzt werden!
+										Das Realm einer recht strengen Prüfung, es muss sich um eine HTTPS-URL auf einen Ordner handeln, genauer:
+										Die URL muss mit einem Schrägstrich enden und darf keine Query-Parameter oder Anker enthalten.
+										Sowohl die anfragende Seite als auch die Return-URL müssen innerhalb dieses Realms liegen.
+										Das Realm wird auch für den Gültigkeitsbereich des Cookies verwendet.
+										
+	\item \texttt{PiratenID::\$returnurl} - Die URL, zu der der PiratenID-Server den Nutzer nach der Authentifizierung zurückschickt.
+											Falls gesetzt, muss diese URL innerhalb des Realms liegen, d.h. sie muss mit der Realm-URL beginnen.
+											Wird automatisch erkannt (Adresse der aktuellen Seite), falls nicht gesetzt.
+
+	\item \texttt{PiratenID::\$imagepath} - Der öffentliche Pfad zu den Buttongrafiken. Standardmäßig leer (d.h. aktuelles Verzeichnis).
+											Dieser Wert wird vor die Button-URLs eingefügt und kann ein relativer oder absoluter Pfad wie '/',
+											'/piratenid-buttons/' oder 'https://images.example.com/piratenid/' sein.
+
+	\item \texttt{PiratenID::\$attributes} - Die anzufragenden Attribute als durch Kommata getrennte Liste. Standardmäßig leer.
+											Mögliche Attribute siehe Abschnitt \ref{attribute}.
+											Wenn hier  \texttt{mitgliedschaft-bund} aufgeführt wird, können sich auch Nichtmitglieder einloggen,
+											die Webanwendung prüft die Mitgliedschaft selbst (explizite Prüfung der Mitgliedschaft).
+											Wird dieses Attribut nicht abgefragt, können sich nur Mitglieder einloggen.
+
+	\item \texttt{PiratenID::\$usePseudonym} - boolean-Wert (Standard: true), welcher angibt, ob ein Pseudonym angefragt werden soll.
+											Ist dieser Wert false, erfolgt ein anonymes Login.
+											Damit kann sichergestellt werden, dass sich gerade ein Pirat eingeloggt hat.
+											Nutzer können jedoch nicht wiedererkannt werden, d.h. Doppelaccounts können nicht verhindert werden.
+											Diese Option ist daher nur in Sonderfällen nützlich.
+								
+											Mögliche Attribute siehe Abschnitt \ref{attribute}.
+											Wenn hier  \texttt{mitgliedschaft-bund} aufgeführt wird, können sich auch Nichtmitglieder einloggen,
+											die Webanwendung prüft die Mitgliedschaft selbst (explizite Prüfung der Mitgliedschaft).
+											Wird dieses Attribut nicht abgefragt, können sich nur Mitglieder einloggen.
+	
+	\item \texttt{PiratenID::\$logouturl} - Die URL, auf die der Logout-Button verweisen soll. Standard: Realm-URL.
+											Siehe auch \texttt{PiratenID::\$handleLogout}.
+
+	\item \texttt{PiratenID::\$handleLogout} - Boolean, gibt an, ob das integrierte Logout-Handling verwendet werden soll.
+											Wenn true, wird beim Login eine Zufallszahl erzeugt und in der Sitzung gespeichert.
+											Diese wird an die Logout-URL automatisch in einem Parameter (\texttt{piratenid\_logout}) angehängt.
+											\texttt{PiratenID::\$run()} erkennt diesen Parameter und loggt den Nutzer aus,
+											wenn die Zufallszahl übereinstimmt. (Die Zufallszahl verhindert böswillige Logouts über CSRF.)
+											Der Parameter wird automatisch aus dem \$\_GET-Array entfernt.
+											Bei Verwendung von \texttt{PiratenID::\$run()} und des dadurch erzeugten Buttons
+											wird das komplette Loginhandling übernommen!
+											\\\textbf{Vorsicht:
+												Soll statt \texttt{PiratenID::\$run()} direkt \texttt{PiratenID::\$button(...)} aufgerufen werden,
+												so muss dieser Parameter deaktiviert werden! }
+
+\end{itemize}
+
+\subsection{Nutzung}
+Für die Nutzung des Clients, nachdem die Parameter eingestellt worden sind, gibt es zwei Möglichkeiten:
+
+\subsubsection{Nutzung über \texttt{PiratenID::run()}}
+\label{sec:client-usage-basic}
+
+Das "`Komplettpaket"' \texttt{PiratenID::run()} übernimmt sämtliche Aufgaben, die mit PiratenID verbunden sind (wie die Verarbeitung von OpenID-Antworten),
+und gibt den HTML-Code für einen Login/Logout-Button zurück, der einfach an einer geeigneten Stelle ausgegeben werden kann.
+Eine Session wird automatisch erzeugt, die Funktion ist daher vor allen Ausgaben aufzurufen.
+Die Session-Variable \verb@$_SESSION['piratenid_user']@ wird angelegt und mit einem assoziativen Array befüllt.
+Dieses Array enthält folgende Elemente:
+\begin{itemize}
+	\item \texttt{authenticated}: Boolean, gibt an, ob ein Nutzer eingeloggt ist.
+	\item \texttt{attributes}: Assoziatives Array, enthält bei eingeloggten Nutzern die Attribute, die der Server geliefert hat.
+	\item \texttt{pseudonym}: String, enthält bei pseudonym eingeloggten Nutzern ein Pseudonym, welches direkt verwendet werden kann.
+								(Hash der OpenID-Identity-URL. Wenn es Angreifern gelingt, OpenID-Antworten zu fälschen,
+								sie aber nicht die Identity-URL eines Nutzers kennen, können sie sich so nicht als dieser Nutzer einloggen.
+								Die Identity-URL sollte aus diesem Grund nirgendwo verwendet oder angezeigt werden und wird daher nicht bereitgestellt.)
+\end{itemize}
+
+Selbstverständlich muss der zurückgegebene Button nicht genutzt werden.
+Das Login-Verfahren kann in dem Fall wie im nächsten Abschnitt beschrieben eingeleitet werden.
+Ein Logout erfolgt über den Aufruf der Funktion \texttt{PiratenID::logout()}.
+
+\subsubsection{Nutzung über \texttt{PiratenID::handle()}}
+\label{sec:client-usage-advanced}
+Wenn mehr Kontrolle über den Authentifizierungsprozess gewünscht ist, können die Funktionen
+\texttt{PiratenID::initSession()}, \texttt{PiratenID::handle()}, \texttt{PiratenID::makeOpenIDURL()} und \texttt{PiratenID::button(...)}
+separat genutzt werden.
+
+\textbf{Falls \texttt{PiratenID::button(...)} genutzt werden soll, muss der Parameter \texttt{PiratenID::\$handleLogout} deaktiviert werden!}
+Geschieht dies nicht, wird in eingeloggtem Zustand dauernd die folgende Fehlermeldung angezeigt:
+"`WRONG USAGE OF PIRATENID LIBRARY. Tried to generate button with \$handleLogout\=true without correctly initialized session."'
+
+\texttt{PiratenID::initSession()} initialisiert die Session auf sichere Art und Weise.
+Wird ein eigenes Session Handling durchgeführt, muss diese Funktion nicht genutzt werden.
+
+\texttt{PiratenID::makeOpenIDURL()} liefert die URL zum ID-System, die den Login-Prozess mit den derzeitigen Einstellungen einleitet.
+Ein eigener Login-Button sollte auf diese URL verweisen.
+Die einzelnen OpenID-Felder können auch per \texttt{PiratenID::getOpenIDRequest()} als Array abgerufen werden.
+
+\texttt{PiratenID::handle()} verarbeitet die indirekte Antwort des PiratenID-Servers unter der Return-URL.
+Bei einem POST auf die Return-URL mit dem Feld \texttt{openid\_mode} sollte diese Funktion aufgerufen werden.
+Der Rückgabewert ist ein assoziatives Array mit den Feldern 
+\begin{itemize}
+	\item \texttt{authenticated}: Boolean, gibt an, ob ein Loginvorgang erfolgreich war
+	\item \texttt{attributes}: (nur bei erfolgreichem Login) assoziatives Array mit den Attributen, die der Server geliefert hat
+	\item \texttt{pseudonym}: (nur bei erfolgreichem Login mit Pseudonym) Pseudonym-String (Hash der OpenID-Identity-URL, siehe oben)
+	\item \texttt{rawIdentityURL}: (nur bei erfolgreichem Login mit Pseudonym) Die OpenID-Identity-URL - sollte nicht genutzt werden, siehe oben!
+	\item \texttt{error}: Enthält den aufgeretenen Fehler (oder null, wenn kein Fehler aufgetreten ist)
+\end{itemize}
+
+\texttt{PiratenID::button(\$logout, \$errortext = null)} erzeugt den HTML-Code für einen Login- bzw. Logout-Button.
+Der Boolean-Parameter \$logout bestimmt, ob es sich um einen Logout-Button handelt.
+Wird ein Fehlertext (\$errortext) übergehen, funktioniert der Button zwar weiter als Login/Logout-Button,
+zeigt jedoch den angegebenen Fehler an.
+\texttt{PiratenID::\$handleLogout} darf nicht aktiv sein, damit diese Funktion einwandfrei funktioniert.
+
+Wenn für den Login-Status die von \texttt{PiratenID::run()} genutzte Session-Variable genutzt wird,
+kann \texttt{PiratenID::logout()} zum Ausloggen des Nutzers verwendet werden und
+\texttt{PiratenID::autoButton(\$errortext)} liefert automatisch den richtigen Buttontyp
+(Session wird initialisiert, falls noch nicht geschehen).
