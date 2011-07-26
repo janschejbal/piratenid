@@ -2,23 +2,35 @@
 
 class PiratenID {
 	// Set these parameters before calling run() - no need to modify this file, see example.php if unsure
-	public static $realm = null;        // OpenID realm to use. MANDATORY. Most often set to the site root, i.e. 'https://www.example.com/'.
-	                                    // Security critical, must be under your exclusive control, do NOT use values from $_SERVER!
-	                                    // See documentation for format restrictions.
-	public static $returnurl = null;    // OpenID return_to URL. Optional, must start with realm if set. Otherwise, will be auto-detected.
-	public static $imagepath = '';      // String to prepend in front of button image URLs, i.e. '', '/', '/piratenid/' or 'https://images.example.com/'
-	public static $attributes = '';     // Comma-separated list of attributes to request. See documentation for list of attributes.
-	                                    // Note that 'mitgliedschaft-bund' has a special meaning (requesting it also allows non-member logins)
-	public static $usePseudonym = true; // True if the pseudonym should be requested, false for anonymous authentication (useful only in very special cases).
+	public static $realm = null;          // OpenID realm to use. MANDATORY. Most often set to the site root, i.e. 'https://www.example.com/'.
+											// Security critical, must be under your exclusive control, do NOT use values from $_SERVER!
+											// See documentation for format restrictions.
+	public static $returnurl = null;      // OpenID return_to URL. Optional, must start with realm if set. Otherwise, will be auto-detected.
+	public static $imagepath = '';        // String to prepend in front of button image URLs, i.e. '', '/', '/piratenid/' or 'https://images.example.com/'
+	public static $attributes = '';       // Comma-separated list of attributes to request. See documentation for list of attributes.
+	                                      // Note that 'mitgliedschaft-bund' has a special meaning (requesting it also allows non-member logins)
+	public static $usePseudonym = true;   // True if the pseudonym should be requested, false for anonymous authentication (useful only in very special cases).
 	
-	public static $logouturl = null;    // URL to which the logout button directs the user. Defaults to realm.
-	                                    // See also $handleLogout.
-	public static $handleLogout = true; // If true, run() will generate a random token once the user logs in.
-										// A GET parameter (piratenid_logout) containing that token will be appended to the logout URL.
-										// run() will look for that parameter and log the user out if the correct value is detected.
-										// The parameter will be removed from the $_GET array.
-	                                    // As long as you use the default button and make sure that run() is called on requests to the logout URL,
-										// this will take care of your entire logout handling.
+	public static $logouturl = null;      // URL to which the logout button directs the user. Defaults to realm.
+											// See also $handleLogout.
+	public static $handleLogout = true;   // If true, run() will generate a random token once the user logs in.
+											// A GET parameter (piratenid_logout) containing that token will be appended to the logout URL.
+											// run() will look for that parameter and log the user out if the correct value is detected.
+											// The parameter will be removed from the $_GET array.
+											// As long as you use the default button and make sure that run() is called on requests to the logout URL,
+											// this will take care of your entire logout handling.
+										
+	public static $loginCallback = null;  // Allows to specify a login callback.
+											// run() will call this in case of a successful login before actually performing the login.
+											// The array returned by handle() will be passed as a parameter
+											// The callback should return null to allow the login, or an error message.
+											// If a non-null value is returned, the login is not performed and the error message is shown.
+											// This can be used for example to implement a user blacklist or more specific attribute requirements.
+											
+	public static $logoutCallback = null; // Allows to specify a logout callback.
+											// run() will call this in case of a successful logout just before actually performing the logout.
+											// No parameters are passed; the return value is ignored.
+	
 	
 	// For cookies, will be set by initParams().
 	private static $realm_domain = null; 
@@ -56,25 +68,34 @@ class PiratenID {
 		$logouterror = false;
 		if (self::$handleLogout && isset($_GET['piratenid_logout'])) {
 			if (!empty($_SESSION['piratenid_user']['logouttoken']) && $_GET['piratenid_logout'] === $_SESSION['piratenid_user']['logouttoken']) {
+				if (is_callable(self::$logoutCallback)) {
+					call_user_func(self::$logoutCallback);
+				}
 				$_SESSION['piratenid_user'] = array('authenticated' => false);
-				// TODO logout-callback hier einbauen
 			} else {
 				$logouterror = true;
 			}
 			unset($_GET['piratenid_logout']);
 		}
 		
-		$loggedin = false;
 		if (isset($_POST['openid_mode'])) {
 			$result = self::handle();
 			if ($result['error'] === null && $result['authenticated'] === true) {
+				
+				// Login-Callback
+				if (is_callable(self::$loginCallback)) {
+					$callbackerror = call_user_func(self::$loginCallback, $result);
+					if ($callbackerror !== null) {
+						return self::error($callbackerror);
+					}
+				}
+				
 				// successful authentication, copy information to session
 				$_SESSION['piratenid_user']['authenticated'] = true;
 				$_SESSION['piratenid_user']['attributes'] = $result['attributes'];
 				if (self::$usePseudonym) {
 					$_SESSION['piratenid_user']['pseudonym'] = $result['pseudonym'];
 				}
-				$loggedin = true;
 				// the logout token generation may not be very secure, but should be good enough for this purpose
 				// and is as good as it gets without breaking compatibility
 				$_SESSION['piratenid_user']['logouttoken'] = substr(md5(mt_rand().mt_rand().mt_rand().mt_rand()),0,16); 
@@ -83,8 +104,6 @@ class PiratenID {
 				return self::error($result['error']);
 			}
 		}
-		
-		// TODO login-callback hier einbauen
 		
 		if ($logouterror) {
 			return self::error('logout failed - wrong token');

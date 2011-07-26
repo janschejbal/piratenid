@@ -2,15 +2,18 @@
 
 require_once('techheader.inc.php'); //include the "technical" header that sets settings, http headers etc.
 
-
-
-?>
-<!DOCTYPE HTML>
+// Avoid newline before DOCTYPE:
+?><!DOCTYPE HTML>
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>PiratenID</title>
-	<link rel="stylesheet" type="text/css" href="/static/style.css">
+	<?php
+	if (empty($PAGETITLE)) {
+		echo '<title>PiratenID</title>';
+	} else {
+		echo '<title>PiratenID - '.htmlspecialchars($PAGETITLE).'</title>';
+	}
+	?>	<link rel="stylesheet" type="text/css" href="/static/style.css">
 	<link rel="shortcut icon" href="/static/icon32.png" />
 </head>
 <body>

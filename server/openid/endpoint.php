@@ -57,6 +57,7 @@ function printOpenIDFields($reqfields) {
 // returns: nothing
 function sendIndirectResponse($fields, $target, $isError = false) {
 	$fields['openid.ns'] = 'http://specs.openid.net/auth/2.0';
+	$PAGETITLE = 'Authentifikation abgeschlossen';
 	include('../includes/header.inc.php');
 	if (!$isError) {
 		?>
@@ -170,6 +171,7 @@ function getOpenIDFields(&$error) {
 //   $reason: Optional text that will be displayed
 // returns: nothing
 function handleFieldsError($reason = "") {
+	$PAGETITLE = 'Fehler';
 	include('../includes/header.inc.php');
 	?>
 		<h2>OpenID-Fehler</h2>
@@ -311,6 +313,7 @@ function handleCheckidSetup($reqfields, $errormessage = null) {
 				$attribhtml .= "\t\t\t<li>".$attribtext ."</li>\n";
 			}
 		}
+		$PAGETITLE = 'Login';
 		include('../includes/header.inc.php');
 		?>
 		<h2>Identifizierungsanfrage</h2>
@@ -412,6 +415,7 @@ function handleUserConfirm($reqfields) {
 	
 	// verify input (in case of attacks - errors by mistake are already caught when the data first arrives in handleCheckidSetup()
 	if (!evaluateFields($reqfields, $error, $usePseudonym, $implicitMembership, $attribarray)) {
+		$PAGETITLE = 'Fehler';
 		include('../includes/header.inc.php');
 		?>
 		<h2>Fehler</h2>

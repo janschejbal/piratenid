@@ -1,4 +1,5 @@
 <?PHP
+$PAGETITLE = "Kennwort ändern";
 require("../includes/header.inc.php");
 
 function changePassword(&$error) {

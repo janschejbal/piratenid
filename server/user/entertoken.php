@@ -1,4 +1,5 @@
 <?PHP
+$PAGETITLE = 'Token eingeben';
 require("../includes/header.inc.php");
 
 

@@ -68,7 +68,7 @@ Nachdem die Datei eingebunden wurde, müssen vor der Nutzung einige Parameter ge
 											'/piratenid-buttons/' oder 'https://images.example.com/piratenid/' sein.
 
 	\item \texttt{PiratenID::\$attributes} - Die anzufragenden Attribute als durch Kommata getrennte Liste. Standardmäßig leer.
-											Mögliche Attribute siehe Abschnitt \ref{attribute}.
+											Mögliche Attribute siehe Abschnitt \ref{sec:attribute}.
 											Wenn hier  \texttt{mitgliedschaft-bund} aufgeführt wird, können sich auch Nichtmitglieder einloggen,
 											die Webanwendung prüft die Mitgliedschaft selbst (explizite Prüfung der Mitgliedschaft).
 											Wird dieses Attribut nicht abgefragt, können sich nur Mitglieder einloggen.
@@ -78,11 +78,6 @@ Nachdem die Datei eingebunden wurde, müssen vor der Nutzung einige Parameter ge
 											Damit kann sichergestellt werden, dass sich gerade ein Pirat eingeloggt hat.
 											Nutzer können jedoch nicht wiedererkannt werden, d.h. Doppelaccounts können nicht verhindert werden.
 											Diese Option ist daher nur in Sonderfällen nützlich.
-								
-											Mögliche Attribute siehe Abschnitt \ref{attribute}.
-											Wenn hier  \texttt{mitgliedschaft-bund} aufgeführt wird, können sich auch Nichtmitglieder einloggen,
-											die Webanwendung prüft die Mitgliedschaft selbst (explizite Prüfung der Mitgliedschaft).
-											Wird dieses Attribut nicht abgefragt, können sich nur Mitglieder einloggen.
 	
 	\item \texttt{PiratenID::\$logouturl} - Die URL, auf die der Logout-Button verweisen soll. Standard: Realm-URL.
 											Siehe auch \texttt{PiratenID::\$handleLogout}.
@@ -98,6 +93,21 @@ Nachdem die Datei eingebunden wurde, müssen vor der Nutzung einige Parameter ge
 											\\\textbf{Vorsicht:
 												Soll statt \texttt{PiratenID::\$run()} direkt \texttt{PiratenID::\$button(...)} aufgerufen werden,
 												so muss dieser Parameter deaktiviert werden! }
+												
+	\item \texttt{PiratenID::\$loginCallback} - Verweis auf eine Funktion\footnote{\url{http://php.net/manual/de/function.is-callable.php}},
+											welche aufgerufen wird, wenn über \texttt{PiratenID::\$run()} ein Login erfolgt.
+											Die Funktion erhält als Parameter das von \texttt{PiratenID::handle()} zurückgegebene Array.
+											Die Funktion muss \texttt{null} zurückgeben, um das Login zu erlauben.
+											Wird ein anderer Wert zurückgegeben, so wird das Login abgebrochen,
+											der zurückgegebene Wert wird als Fehler angezeigt.
+											Dies kann benutzt werden, um Benutzer (nach Pseudonym) zu sperren oder
+											feingliedrige Filter nach anderen Attributen zu implementieren.
+											Die Session ist beim Aufruf der Callback-Funktion initialisiert,
+											das Ergebnis des Login-Vorgangs ist aber noch nicht darin abgelegt.
+	
+	\item \texttt{PiratenID::\$logoutCallback} - Verweis auf eine Funktion\footnote{\url{http://php.net/manual/de/function.is-callable.php}},
+											welche aufgerufen wird, wenn über \texttt{PiratenID::\$run()} ein Logout erfolgt.
+											Die Funktion erhält keine Parameter, der Rückgabewert wird ignoriert.
 
 \end{itemize}
 

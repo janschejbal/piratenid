@@ -1,4 +1,5 @@
 <?PHP
+$PAGETITLE = 'Account erstellen';
 require("../includes/header.inc.php");
 
 $usernameerror = '';

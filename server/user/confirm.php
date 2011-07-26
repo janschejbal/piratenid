@@ -1,4 +1,5 @@
 <?PHP
+$PAGETITLE = "E-Mail bestätigen";
 require("../includes/header.inc.php");
 
 if (prefilter($_GET['key']) === false) {

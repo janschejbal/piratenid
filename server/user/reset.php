@@ -1,4 +1,5 @@
 <?PHP
+$PAGETITLE = 'Kennwort zurücksetzen';
 require("../includes/header.inc.php");
 
 function resetPassword(&$error) {

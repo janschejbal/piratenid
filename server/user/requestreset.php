@@ -1,4 +1,5 @@
 <?PHP
+$PAGETITLE = 'Kennwort vergessen';
 require("../includes/header.inc.php");
 
 function requestReset(&$error) {

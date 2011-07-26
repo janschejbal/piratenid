@@ -1,4 +1,5 @@
 <?PHP
+$PAGETITLE = 'Account löschen';
 require("../includes/header.inc.php");
 
 
@@ -16,9 +17,11 @@ function deleteAccount(&$error) {
 		return false; // error set by getUser()
 	}
 	
+	
 	$randomname = "DELETEDUSER_". generateNonce(16);;
 	if (false !== $db->query("UPDATE users SET username = ?, usersecret = '', pwhash = '', email = '', email_activationkey = '', mitgliedsnr = NULL, realname = NULL, resettoken = NULL, resettime = NULL WHERE username = ?",
 						array($randomname, $userarray['username']))) {
+		// TODO: Benutzer benachrichtigen?
 		?>
 			<h2>Account gelöscht</h2>
 			<p>Der Account wurde erfolgreich gelöscht.</p>
@@ -44,7 +47,12 @@ if (!$success) {
 	<h2>Account löschen</h2>
 	<p>Hier kannst du deinen Account endgültig und unwiderbringlich löschen.
 	Falls bereits ein Token eingetragen war, wird dieses in der Datenbank als gesperrt markiert; es kann <strong>nicht</strong> wieder verwendet werden.
-	Die Accountdaten inklusive eines zum Berechnen der Pseudonyme nötigen Geheimnisses werden gelöscht, die Pseudonyme des Accounts werden somit dauerhaft unbrauchbar.</p>
+	Die Accountdaten inklusive eines zum Berechnen der Pseudonyme nötigen Geheimnisses werden gelöscht, die Pseudonyme des Accounts werden somit dauerhaft unbrauchbar.
+	</p>
+	<p><strong>
+		Wenn du einen Account mit eingetragenem Token löschst, bleibt es gesperrt und dir wird <span style="text-decoration: underline;">kein</span> neues Token ausgestellt.
+		Du verlierst damit <span style="text-decoration: underline;">dauerhaft und unwiderruflich</span> die Möglichkeit, das ID-System zu nutzen!
+	</strong></p>
 	<div class="error"><?PHP safeout($error); ?></div>
 	<form method="POST" action="" accept-charset="utf-8">
 		<table>
