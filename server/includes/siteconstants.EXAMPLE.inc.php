@@ -2,7 +2,7 @@
 // this file defines site-specific constants and secrets
 
 // used for e-mails, X-XRDS-Location header, endpoint location, referer checking etc.
-$sitepath = "https://piratenid.janschejbal.de/"; // "piratenid.janschejbal.de" points to 127.0.0.1
+$sitepath = "https://piratenid.janschejbal.de/"; // do not forget '/' at the end!
 
 // List of domains that may receive extended attributes
 $extendedAttributeRealms = array();
