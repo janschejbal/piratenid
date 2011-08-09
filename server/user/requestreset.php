@@ -51,8 +51,9 @@ function requestReset(&$error) {
 	$resetlink = $sitepath."user/reset.php?key=".$resetkey;
 	$subject = "Passwortreset PiratenID";
 	$text ="Hallo,\n". // Observe max line length, consider variable lengths!
-			"auf dem PiratenID-Server wurde ein Passwort-Reset für dein Benutzerkonto\n".
-			"\"".$username."\" angefordert.\n\n".
+			"auf dem PiratenID-Server wurde ein Passwort-Reset mit deiner Mailadresse\n".
+			"angefordert.\n\n".
+			"Der Benutzername lautet: ".$username."\n\n".
 			"Um ein neues Kennwort zu setzen, klicke auf den folgenden Link:\n\n".
 			$resetlink."\n\n".
 			"Solltest du diese Mail nicht angefordert haben, ignoriere sie bitte.\n".

@@ -6,8 +6,8 @@ function suppressErrors($errno, $errstr) {
 	  echo "Es ist ein Fehler aufgetreten.";
 	  die();
 } 
-// DEBUG TODO ENABLE
-//set_error_handler("suppressErrors");
+
+set_error_handler("suppressErrors");
 
 
 require_once('siteconstants.inc.php');
