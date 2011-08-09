@@ -21,7 +21,7 @@ require('includes/header.inc.php');
 </p>
 <p>
 	Möchtest du dir im Detail anschauen, wie das System funktioniert?
-	Dann lade dir doch den Quellcode herunter! TODO FIX LINK
+	Dann <a href="https://github.com/janschejbal/piratenid">schau dir doch den Quellcode an</a>!
 </p>
 <p>
 	Hast du Fragen oder hast eine Sicherheitslücke entdeckt?

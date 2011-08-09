@@ -59,10 +59,7 @@ function requestReset(&$error) {
 			"Dein Kennwort bleibt dann erhalten.\n\n".
 			"Bei Fragen wende dich bitte an die IT der Piratenpartei unter:\n".
 			"piratenid@helpdesk.piratenpartei.de\n\n";
-	// TODO DEBUG send mail
-	echo("<pre>Text der Mail:\n\n$text</pre>"); // TODO DEBUG REMOVE
-	// $success = mail($email, $subject, $text);
-	$success = true; // TODO DEBUG REMOVE
+	$success = mail($email, $subject, $text, 'From: PiratenID <noreply@piratenpartei.de>'); // TODO from/reply-to?
 	return $success;
 }
 
