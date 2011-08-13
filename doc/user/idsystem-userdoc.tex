@@ -1,0 +1,246 @@
+\documentclass[parskip=half]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\definecolor{lnkcol}{rgb}{0.0,0.0,0.6}
+\hypersetup{
+	pdfstartview=FitH,
+	colorlinks=true,
+	urlcolor=lnkcol,
+	citecolor=lnkcol,
+	linkcolor=lnkcol,
+	filecolor=lnkcol
+}
+
+\title{PiratenID: Handbuch für Benutzer}
+\author{Jan Schejbal}
+\date{}
+
+\bibliographystyle{unsrt}
+
+\setcounter{secnumdepth}{2}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}Dieses Dokument enthält eine Anleitung für Nutzer des PiratenID-Systems.
+Für Entwickler von Webanwendungen existiert eine separate Anleitung\footnote{TODO}.
+Technische Details zum ID-System finden sich in der technischen Dokumentation\footnote{TODO}.
+\end{abstract}
+
+
+\section{Einführung}
+Das PiratenID-System erlaubt es Piraten, ihren Mitgliedschaftsstatus gegenüber von Dritten betriebenen Webseiten nachzuweisen,
+ohne dass diese Websites Zugriff auf die Mitgliederdatenbank bekommen und ohne mehr Daten als nötig offenzulegen.
+
+Das PiratenID-System ist unter \url{https://id.piratenpartei.de/} zu erreichen (das "`https"' muss mit eingegeben werden!).
+Bei einem Login über das ID-System leitet eine Website dich als den Nutzer auf das ID-System um, du loggst dich dort ein,
+und das ID-System bestätigt das Login und leitet die von dir freigegebenen Informationen an die Website weiter.
+
+\subsection{Teilnahme}
+Die Teilnahme am ID-System ist freiwillig.
+
+Bei der Accounterstellung wählst du einen Nutzernamen, ein Kennwort, und gibst deine E-Mail-Adresse ein.
+Jeder Pirat erhält ein Token - mit diesem kannst du deinen Account voll aktivieren.
+Über die Eingabe des Tokens wird der Account pseudonym mit den Gliederungen verknüpft, in denen du Mitglied bist.
+Das ID-System erfährt hierbei weder deinen Namen noch die Mitgliedsnummer!
+Die Zuordnung zwischen Token und Mitgliedern ist nur in der Mitgliederdatenbank der Piratenpartei gespeichert.
+
+\subsection{Nutzung}
+Webseiten können dich dazu auffordern, dass du dich über das ID-System einloggst, und dabei bestimmte Informationen über dich abfragen.
+Du wirst dabei auf die Seite des ID-Systems umgeleitet und bekommst dort angezeigt, welche Seite anfragt und welche Informationen übermittelt werden sollen.
+Wenn du mit der Übermittlung einverstanden bist, bestätigst du dies, indem du deinen Benutzernamen und dein Kennwort eingibst.
+Du wirst daraufhin wieder zurück zur Website geleitet und solltest dort nun eingeloggt sein.
+
+Webseiten können folgende Informationen über dich anfordern:
+\begin{itemize}
+	\item Mitgliedschaft in der Piratenpartei - diese wird immer abgefragt, denn der Zweck des Systems ist, dir die Möglichkeit zu geben, dich als Pirat "`auszuweisen"'.
+		Entweder diese wird implizit abgefragt, dann kannst du dich nur einloggen, wenn du Pirat bist und ein Token eingetragen hast,
+		oder explizit, dann können sich auch Nichtpiraten einloggen, die Website bekommt aber mitgeteilt, ob du Pirat bist.
+	
+	\item Mitgliedschaften in weiteren Gliederungen (LV, BZV, KV, OV) - diese können optional angefordert werden.
+		Sind für eine Gliederungsstufe keine Informationen vorhanden (Anfangs werden voraussichtlich nur LVs angegeben),
+		oder bist du in keinem Verband der entsprechenden Stufe Mitglied,
+		wird ein leeres oder als "`keine Mitgliedschaft"' gekennzeichnetes Feld übermittelt.
+		
+	\item Pseudonym - ein zufälliges Pseudonym, zu dem im folgenden Abschnitt mehr erläutert wird
+\end{itemize}
+
+\subsection{Das Pseudonym}
+Damit eine Website dich wiedererkennen kann, z. B. damit du in einer Umfrage nur einmal abstimmen kannst, kann sie ein Pseudonym abfragen.
+Dies ist ein zufälliger Wert, der für jede Website und jeden Nutzer anders ist.
+Wenn du dich also bei zwei Websites über das ID-System einloggst, hast du für jede Website ein eigenes Pseudonym.
+Die Websites haben auch keine Möglichkeit, diese Pseudonyme miteinander zu verknüpfen.
+Website A kann also nicht feststellen, ob ein Nutzer X der gleiche Pirat ist wie Nutzer Y auf Website B - auch nicht, wenn die beiden Websites zusammenarbeiten.
+
+Solange das entsprechende Benutzerkonto im ID-System existiert, wäre es den Betreibern des ID-Systems mit einem gewissen Aufwand möglich, ein Pseudonym einem Nutzer zuzuordnen.
+Ohne Zugriff auf die Datenbank des ID-Systems sowie einen weiteren geheimen Wert ist eine solche Zuordnung nicht möglich.
+
+\newpage
+\section{Sicherheit}
+Um das ID-System sicher nutzen zu können, musst auch du auf einige Dinge achten.
+Viele dieser Ratschläge gelten nicht speziell für das ID-System, sondern allgemein für die sichere Nutzung von PC und Internet.
+
+\subsection{Login nur beim ID-System}
+Dein Kennwort darfst du nur auf der Seite des ID-Systems eingeben.
+Nachdem du von einer Website zur Login-Seite weitergeleitet wurdest, mussst du also vor der Eingabe des Kennworts \textbf{immer} prüfen,
+ob du dich tatsächlich auf der echten Seite befindest.
+Die Adresse muss mit \url{https://id.piratenpartei.de/} beginnen. Tut sie dies nicht, darfst du dein Kennwort nicht eingeben!
+(Melde solche Vorfälle bitte immer der BundesIT!)
+
+Die Verbindung zum ID-System erfolgt immer verschlüsselt über das HTTPS-Protokoll, damit das Kennwort nicht abgehört werden kann.
+Dies wird je nach verwendetem Browser durch entsprechende Symbole gekennzeichnet, meist zusammen mit dem Servernamen (id.piratenpartei.de).
+Du solltest lernen, wie dein Browser das anzeigt!
+
+Google Chrome zeigt ein grünes Schlosssymbol neben der Adresse und hebt "`https"' grün und den Servernamen schwarz hervor.
+Mozilla Firefox 4 zeigt die Domain (piratenpartei.de) in einem blauen Kasten neben der Adresse.
+Alternativ kann (bei beiden Browsern) der Name des Seiteninhabers (Piratenpartei Deutschland) auf grünem Grund neben der Adresse angezeigt werden.
+(Dies passiert, wenn die Verbindung mit einer besonders sicheren Art von Zertifikat abgesichert wird.)
+
+\subsection{Sicheres Kennwort}
+Das Kennwort schützt dein Benutzerkonto vor unbefugtem Zugriff.
+Du solltest es daher nie anderen Personen mitteilen - das bedeutet auch, dass du das gleiche Kennwort nicht bei mehreren Webseiten nutzen solltest!
+Ein sicheres Kennwort kannst du beispielsweise bilden, indem du 4 Wörter aneinanderreihst:
+"`\texttt{lastwagen elefant geldbörse buch}"' wäre beispielsweise ein sehr sicheres Kennwort.
+
+Wenn du dir dein Kennwort irgendwo aufschreibst, musst du den Zettel sicher verwahren!
+Sollten andere Personen dein Kennwort erfahren haben, ändere es, sobald du kannst.
+
+\subsection{Sicherer Client}
+Du solltest das ID-System nur von Geräten (PCs, Smartphones, ...) aus nutzen, die sicher und vertrauenswürdig sind.
+
+Die wichtigste Maßnahme zum Absichern eines Geräts ist, sämtliche enthaltene Software aktuell zu halten.
+Dazu gehört zunächst das Betriebssystem.
+Unter Windows musst du die Windows-Updates über das eingebaute Updatesystem durchführen. Andere Betriebssysteme haben ähnliche Möglichkeiten.
+
+Auch dein Browser muss regelmäßig aktualisiert werden, um bekanntgewordene Sicherheitslücken zu schließen.
+Die meisten aktuellen Browser enthalten eine eingebaute Updatefunktion.
+Den Internet Explorer solltest du nicht benutzen, da Sicherheitslücken oft erst mit großer Verzögerung geschlossen werden.
+Empfohlene Browser sind z. B. Mozilla Firefox\footnote{\url{https://www.mozilla.com/de/firefox/}}
+oder Google Chrome\footnote{\url{http://www.google.com/chrome/intl/de/landing_tv.html}}.
+Veraltete Versionen von Internet Explorer werden vom ID-System nicht unterstützt.
+
+Für bestimmte Dateiformate werden oft Plug-Ins installiert.
+Die bekanntesten sind der Adobe Reader(für das Öffnen von PDF-Dateien),
+Flash (für das Abspielen von Animationen) sowie
+Java (für in Webseiten eingebettete Programme).
+Diese Plugins sind zugleich beliebte Einfallstore für Schadsoftware (Viren).
+Daher musst du auch diese Plugins immer aktuell halten, wenn sie installiert sind.
+Verwende dazu am Besten die eingebaute Updatefunktion.
+
+Ein aktuell gehaltenes Virenschutzprogramm kann die Sicherheit des Systems weiter erhöhen,
+bietet jedoch keinen 100\%-igen Schutz und kann das Aktualisieren des Systems auf keinen Fall ersetzen!
+
+Software sollte nur aus vertrauenswürdigen Quellen bezogen und installiert werden.
+Neuere Windows-Versionen zeigen beim Starten von aus dem Internet heruntergeladenen Dateien an, von welchem Herausgeber diese stammen.
+Achte auf diese Information. Bei Software von großen Firmen steht fast nie "`Herausgeber: Unbekannt"' in diesem Dialogfeld.
+
+\subsection{Sichere E-Mail-Adresse}
+Wenn du dein Kennwort vergisst, kannst du dir einen Rücksetzlink per E-Mail schicken lassen.
+Darüber kannst du dann ein neues Kennwort setzen.
+Wenn also jemand Unbefugtes Zugriff auf dein E-Mail-Postfach bekommt,
+kann er das Kennwort zurücksetzen und sich so Zugang verschaffen!
+Das gilt nicht nur für das ID-System, sondern auch für zahlreiche andere Dienste.
+Die hier genannten Sicherheitsmaßnahmen (sicheres Kennwort, sicherer Computer, ...) solltest du also auch für den Zugang zum E-Mail-Postfach einhalten!
+
+\newpage
+\section{Anleitung}
+Dieser Abschnitt erklärt Schritt für Schritt, wie du das ID-System nutzen kannst.
+
+\subsection{Account erstellen}
+Um einen neuen Account (Benutzerkonto) zu erstellen, besuche die Website des ID-Systems \url{https://id.piratenpartei.de/} und klicke auf "`Account erstellen"'.
+Fülle das Formular aus.
+Benutzername und Mailadresse können später nicht mehr geändert werden.
+Gib unbedingt eine Mailadresse ein, die ausschließlich dir gehört, denn wer Zugriff auf das entsprechende Postfach hat, kann das Kennwort des Accounts zurücksetzen.
+Du darfst gerne einen Benutzernamen und eine Mailadresse verwenden, die keine Rückschlüsse auf deine Person zulassen.
+
+Sobald du das Formular abgeschickt hast, solltest du eine E-Mail mit einem Aktivierungslink erhalten.
+Öffne diesen, damit dein Account aktiviert wird.
+Solltest du keine Mail erhalten, schaue auch im Spamordner nach.
+Wenn dein Account nicht innerhalb einer bestimmten Zeit aktiviert wird, wird er wieder gelöscht.
+
+Sobald du deinen Account aktiviert hast, kannst du die weiteren Schritte durchführen.
+Als nächstes solltest du dein Token eintragen, damit das System dich als Mitglied erkennt.
+
+\subsection{Token eintragen}
+Jedes Mitglied erhält ein Token. Darüber kannst du im ID-System deine Piraten- und Gliederungsmitgliedschaften eintragen.
+\textbf{Beachte:} Sobald du dein Token eingetragen hast, ist es für immer an deinen Account gebunden.
+Du kannst das Token in deinem Account nicht mehr ändern oder löschen, und du kannst es auch nicht für einen anderen Account verwenden.
+Wenn du also z. B. einen Tippfehler in deinem Benutzernamen entdeckt hast, solltest du das Token nicht eintragen.
+Auch wenn du deinen Acount löschst, wird dein Token \textbf{nicht} wieder freigegeben (siehe unter "`Account löschen"').
+
+Um ein Token einzutragen, wähle auf der Seite des ID-Systems "`Token eingeben"', fülle das Formular aus und sende es ab.
+
+\subsection{Kennwort ändern}
+Über den entsprechenden Menüpunkt kannst du dein Kennwort ändern.
+Es gelten die gleichen Sicherheitsanforderungen wie beim Erstellen des Benutzerkontos (Mindestens 8 Zeichen, mindestens 2 Arten von Zeichen).
+
+\subsection{Benutzername oder Kennwort vergessen}
+Wenn du deinen Benutzernamen oder dein Kennwort vergessen hast, klicke auf "`Login vergessen"' und gib deine E-Mail-Adresse ein.
+Du erhältst eine Mail mit deinem Benutzernamen sowie einem Link.
+Wenn du ein neues Kennwort setzen möchtest, klicke auf den Link und du erhältst die Möglichkeit, ein neues Kennwort für dein Benutzerkonto zu vergeben.
+
+\subsection{Einloggen}
+Um dich über PiratenID auf einer Website einzuloggen, musst du den Login-Vorgang auf der jeweiligen Website starten.
+Du solltest dann auf die Website des ID-Systems umgeleitet werden.
+Prüfe, dass du dich tatsächlich auf der richtigen Seite befindest (siehe unter "`Sicherheit'"),
+welche Daten abgefragt werden und welche Seite diese haben möchte,
+und gib deinen Benutzernamen und dein Kennwort ein, wenn du mit der Weitergabe einverstanden bist.
+Du wirst dann auf die Seite zurückgeleitet und solltest eingeloggt sein.
+
+Wenn du dich ausloggen möchtest, musst du das über die Website machen, die du verwendest.
+
+\subsection{Account löschen}
+Wenn du deinen Account löschen möchtest, kannst du dies über den entsprechenden Menüpunkt tun.
+Lies sorgfältig den entsprechenden Warnhinweis!
+
+Wenn du deinen Account löschst, verlierst du sämtliche Pseudonyme und kannst dich mit diesen somit nicht mehr einloggen.
+Falls in deinem Account bereits ein Token eingetragen ist, bleibt dieses als verbraucht markiert.
+Dir wird \textbf{kein} neues Token ausgestellt.
+\textbf{Wenn du einen Account mit eingetragenem Token löschst, verlierst du dauerhaft die Möglichkeit, das ID-System als Pirat zu nutzen.}
+
+Solltest du deinen Account mit eingetragenem Token versehentlich gelöscht haben, kontaktiere \textbf{umgehend} die BundesIT.
+Wenn du Glück hast, existiert noch ein Backup, aus dem dein Benutzerkonto wiederhergestellt werden kann.
+
+\newpage
+\section{Sonstiges}
+\subsection{Token verloren}
+Solltest du dein Token verloren haben, muss zwischen zwei Fällen unterschieden werden:
+
+Wenn du dein Token noch nicht benutzt hast, kannst du dir ein neues Token ausstellen lassen.
+Wende dich hierzu bitte an deinen Landes-GenSek. Dieser muss dein altes Token sperren,
+und bei der IT die Bestätigung einholen, dass es noch nicht verwendet wurde.
+Anschließend kann dir ein neues Token ausgestellt werden.
+
+Wenn du dein Token bereits benutzt hast, benötigst du es eigentlich nicht mehr.
+Es kann dir auch kein neues Token ausgestellt werden.
+Sofern du die Zugangsdaten für deinen Account noch kennst, kannst du ihn ganz normal benutzen.
+Hast du deinen Benutzernamen und/oder dein Kennwort vergessen, gehe wie unter "`Benutzername oder Kennwort vergessen"' beschrieben vor.
+Falls du auch so keinen Zugriff mehr auf deinen Account bekommst,
+z. B. weil du nicht mehr weißt, welche E-Mail-Adresse du verwendet hast oder du nicht mehr auf dein Postfach zugreifen kannst,
+kann dein Landes-GenSek der IT auf deinen Wunsch hin den Hash des Tokens mitteilen.
+Darüber kann die IT deinen Account dir zuordnen und z. B. eine neue Adresse setzen.
+
+Beide Szenarien sind mit viel Arbeit für dich, deinen GenSek und die IT verbunden.
+Versuche also bitte, dein Token und deinen Account nicht verlieren.
+
+\subsection{Sicherheitslücken, Angriffe}
+Sollten dir Sicherheitslücken im ID-System auffallen oder solltest du Angriffsversuche (z. B. Phishing) auf das ID-System beobachten,
+kontaktiere bitte die IT auf dem unten angegebenen Weg.
+
+\subsection{Kontakt}
+Bei weiteren Fragen kontaktiere bitte die BundesIT der Piratenpartei.
+Wie das geht, wird unter \url{http://wiki.piratenpartei.de/IT/Kontakt} beschrieben.
+
+TODO Mailqueue für PiratenID?
+
+\end{document}
