@@ -211,15 +211,15 @@ function printLoginFields() {
 			Gebe folgende Ziffern ein:<br><?php safeout($clickjackprompt) ?>
 		</td>
 		<td style="padding-top: <?php safeout($toppadding); ?>px; padding-bottom: <?php safeout($botpadding); ?>px;">
-			<input type="text" id="clickjackprotectInput" name="clickjackprotect2"><br>
+			<input type="text" id="clickjackprotect2" name="clickjackprotect2"><br>
 			Da JavaScript deaktiviert ist, musst du diese Zahlen eingeben, um Clickjacking zu erschweren.
 		</td>
 	</tr>
+	<input type="hidden" name="clickjackprotect1" id="clickjackprotect1" value="<?php safeout($clickjackcode) ?>">
 	<script>
-		document.getElementById('clickjackprotectInput').value = "<?php safeout($clickjackcode) ?>";
+		document.getElementById('clickjackprotect2').value = document.getElementById('clickjackprotect1').value; // TODO test
 		document.getElementById('clickjackprompt').style.display = 'none';
 	</script>
-	<input type="hidden" name="clickjackprotect1" value="<?php safeout($clickjackcode) ?>">
 	<?php
 }
 

@@ -75,13 +75,7 @@ function sendIndirectResponse($fields, $target, $isError = false) {
 		Mit einem Klick auf den unten stehenden Button gelangst du zurück zur anfragenden Seite.
 		Solltest du nach dem Klick auf den Button z. B. aufgefordert werden, ein Kennwort einzugeben, stammt diese Aufforderung nicht mehr vom ID-System!
 	</p>
-	<script>function setCookie(c_name,value,exdays)
-{
-var exdate=new Date();
-exdate.setDate(exdate.getDate() + exdays);
-var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
-document.cookie=c_name + "=" + c_value;
-}
+	<script>
 		function updateSkipSetting(sourcebox) {
 			document.cookie="piratenid_noexitwarning="+sourcebox.checked+"; expires=Mon Feb 01 2038 00:00:00 GMT;";
 		}
