@@ -7,6 +7,10 @@ $sitepath = "https://piratenid.janschejbal.de/"; // do not forget '/' at the end
 // List of domains that may receive extended attributes
 $extendedAttributeRealms = array();
 
+// IP address of the remote client (to allow trusted reverse proxies to provide the real client address).
+$remoteClientIP = $_SERVER['REMOTE_ADDR'];
+//$remoteClientIP = $_SERVER['HTTP_X_FORWARDED_FOR']; // use this if and only if working behind a trusted reverse proxy that sets the header (or in a similar setup)
+
 // Database login data (if compromised, change. no DB access from outside should be possible, and user should have very limited rights)
 function getDatabasePDO() {
 	return new PDO('mysql:dbname=piratenid;host=127.0.0.1', "root", "");

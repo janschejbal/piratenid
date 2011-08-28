@@ -1,25 +1,27 @@
--- phpMyAdmin SQL Dump
--- version 3.3.9
--- http://www.phpmyadmin.net
---
--- Host: localhost
--- Erstellungszeit: 14. Juli 2011 um 15:52
--- Server Version: 5.5.8
--- PHP-Version: 5.3.5
+/*
+SQLyog Community v9.20 
+MySQL - 5.5.8 : Database - piratenid
+*********************************************************************
+*/
 
-SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
+/*!40101 SET NAMES utf8 */;
 
---
--- Datenbank: `piratenid`
---
+/*!40101 SET SQL_MODE=''*/;
 
--- --------------------------------------------------------
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+/*Table structure for table `loginfailures` */
 
---
--- Tabellenstruktur für Tabelle `openid`
---
+CREATE TABLE `loginfailures` (
+  `ip` varchar(255) COLLATE utf8_bin NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-CREATE TABLE IF NOT EXISTS `openid` (
+/*Table structure for table `openid` */
+
+CREATE TABLE `openid` (
   `nonce` varchar(255) COLLATE utf8_bin NOT NULL,
   `hmac` varchar(255) COLLATE utf8_bin NOT NULL,
   `createtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -27,13 +29,9 @@ CREATE TABLE IF NOT EXISTS `openid` (
   UNIQUE KEY `hmac` (`hmac`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
--- --------------------------------------------------------
+/*Table structure for table `tokens` */
 
---
--- Tabellenstruktur für Tabelle `tokens`
---
-
-CREATE TABLE IF NOT EXISTS `tokens` (
+CREATE TABLE `tokens` (
   `token` varchar(255) COLLATE utf8_bin NOT NULL,
   `mitgliedschaft-bund` varchar(255) COLLATE utf8_bin NOT NULL,
   `mitgliedschaft-land` varchar(255) COLLATE utf8_bin NOT NULL,
@@ -43,13 +41,9 @@ CREATE TABLE IF NOT EXISTS `tokens` (
   PRIMARY KEY (`token`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
--- --------------------------------------------------------
+/*Table structure for table `users` */
 
---
--- Tabellenstruktur für Tabelle `users`
---
-
-CREATE TABLE IF NOT EXISTS `users` (
+CREATE TABLE `users` (
   `username` varchar(255) COLLATE utf8_bin NOT NULL,
   `usersecret` varchar(255) COLLATE utf8_bin NOT NULL,
   `pwhash` varchar(255) COLLATE utf8_bin NOT NULL,
@@ -66,3 +60,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `token` (`token`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;

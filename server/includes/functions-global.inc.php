@@ -118,6 +118,7 @@ class DB {
 	public function cleanup() {
 		$this->query("UPDATE users SET resettoken = NULL, resettime = NULL WHERE resettime < TIMESTAMPADD(DAY,-2,NOW())", array());
 		$this->query("DELETE FROM users WHERE email_verified = 0 AND token <=> NULL AND createtime < TIMESTAMPADD(DAY,-2,NOW())", array());
+		$this->query("DELETE FROM loginfailures WHERE timestamp < TIMESTAMPADD(DAY,-1,NOW())", array());
 		$this->query("DELETE FROM openid WHERE createtime < TIMESTAMPADD(HOUR,-1,NOW())", array());
 	}
 	
@@ -136,6 +137,14 @@ class DB {
  returns the user array containing all information about the user. Otherwise returns false.
 */
 function getUser(&$error) {
+	global $remoteClientIP;
+	$ip = $remoteClientIP;
+
+	if (empty($ip)) {
+		$error = "Login fehlgeschlagen: Konfigurationsfehler";
+		return false;
+	}
+	
 	if (strlen($_POST['clickjackprotect1']) !== 3 || ($_POST['clickjackprotect1'] !==$_POST['clickjackprotect2'])) {
 		$error = "Login fehlgeschlagen: Clickjacking-Schutz falsch ausgefüllt";
 		return false;
@@ -155,6 +164,16 @@ function getUser(&$error) {
 	}
 	
 	$db = DB::get();
+	$result = $db->query("SELECT COUNT(*) FROM loginfailures WHERE ip = ?", array($ip));
+	if ($result === false || count($result) !== 1) {
+		$error = "Login fehlgeschlagen: Datenbankfehler";
+		return false;
+	}
+	if ($result[0][0] >= 10) {
+		$error = "Login fehlgeschlagen: Zu viele Fehlversuche. Bitte 24 Stunden warten.";
+		return false;
+	}
+	
 	$pwhash = hashPassword($username, $pw);
 	$result = $db->query("SELECT * FROM users LEFT JOIN tokens ON users.token = tokens.token WHERE username = ? AND pwhash = ?", array($username, $pwhash));
 	if ($result === false) {
@@ -162,7 +181,8 @@ function getUser(&$error) {
 		return false;
 	}
 	if (count($result) !== 1) {
-		$error = "Login fehlgeschlagen: Benutzername oder Kennwort falsch.";
+		$result = $db->query("INSERT INTO loginfailures (IP) VALUES (?)", array($ip));
+		$error = "Login fehlgeschlagen: Benutzername oder Kennwort falsch." . (($result === false) ? " Datenbankfehler." : "");
 		return false;
 	}
 	if ($result[0]['email_verified'] !== '1') {
