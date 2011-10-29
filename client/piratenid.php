@@ -144,8 +144,8 @@ class PiratenID {
 			if (self::$handleLogout) {
 				if (!empty($_SESSION['piratenid_user']['logouttoken'])) {
 					$anchor = '';
-					if (preg_match('/(#.*)$/', $targeturl, $matches)) { // remove anchor (will be re-added)
-						$targeturl = preg_replace('/(#.*)$/', '', $targeturl);
+					if (preg_match('/(#.*)$/D', $targeturl, $matches)) { // remove anchor (will be re-added)
+						$targeturl = preg_replace('/(#.*)$/D', '', $targeturl);
 						$anchor = $matches[1];
 					}
 					$separator = (strpos($targeturl, '?') === false) ? '?' : '&';
@@ -281,7 +281,7 @@ class PiratenID {
 				$result['error'] = 'local: claimed_id / identity mismatch';
 				return $result;
 			}
-			if (preg_match('|^'.str_replace('.','\\.',self::serverroot).'openid/pseudonym\\.php\\?id=[0-9a-f]{64}$|', $postFields['openid.identity'])) {
+			if (preg_match('|^'.preg_quote(self::serverroot).'openid/pseudonym\\.php\\?id=[0-9a-f]{64}$|D', $postFields['openid.identity'])) {
 				$pseudonym = hash('sha256', $postFields['openid.identity']);
 				$rawIdentityURL = $postFields['openid.identity'];
 				if (strlen($pseudonym) !== 64) die('Pseudonym hashing failed');
@@ -411,17 +411,17 @@ class PiratenID {
 	private static function initParams() {
 		if (self::$realm == null) return 'local: realm not set';
 		// Find base (domain) in realm, and verify realm
-		if (!preg_match('%^(https://[a-zA-Z0-9.-]+)(/(?:[a-zA-Z0-9$_.+!*\'(),/;:-]+/)?)$%', self::$realm, $matches)) return 'local: invalid realm';
+		if (!preg_match('%^(https://[a-zA-Z0-9.-]+)(/(?:[a-zA-Z0-9$_.+!*\'(),/;:-]+/)?)$%D', self::$realm, $matches)) return 'local: invalid realm';
 		self::$realm_domain = $matches[1];
 		self::$realm_path = $matches[2];
 		if (self::$returnurl == null) {
 			$uri = $_SERVER['REQUEST_URI'];
 			if (self::$handleLogout) {
-				$uri = preg_replace('/[?&]piratenid_logout=[a-f0-9]{16}$/',"",$uri);
+				$uri = preg_replace('/[?&]piratenid_logout=[a-f0-9]{16}$/D',"",$uri);
 			}
 			self::$returnurl = $matches[1].$uri; // request_uri may be malicious, but all outputs are escaped.
 		}
-		if (!preg_match('%^([a-z-]+)?(,([a-z-]+))*$%', self::$attributes)) return 'local: invalid attribute list';
+		if (!preg_match('%^([a-z-]+)?(,([a-z-]+))*$%D', self::$attributes)) return 'local: invalid attribute list';
 		if (self::$logouturl === null) self::$logouturl = self::$realm;
 		return null;
 	}

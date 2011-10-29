@@ -211,7 +211,7 @@ function evaluateFields(&$reqfields, &$error, &$usePseudonym, &$implicitMembersh
 	}
 	
 	// realm must start with https:// and end with slash, must NOT contain query parameters (?param1=value1&param2=value2) or fragment (#anchor)
-	if (!preg_match('%^https://[a-zA-Z0-9$_.+!*\'(),/;:-]+/$%', $reqfields['openid.realm']) ) {
+	if (!preg_match('%^https://[a-zA-Z0-9$_.+!*\'(),/;:-]+/$%D', $reqfields['openid.realm']) ) {
 		$error = "realm must start with https:// and end with slash, must NOT contain query parameters or fragment (#anchor)";
 		return false;
 	}
@@ -223,15 +223,15 @@ function evaluateFields(&$reqfields, &$error, &$usePseudonym, &$implicitMembersh
 	}
 	
 	// check referer
-	if ( !empty($_SERVER['HTTP_REFERER']) ) {
+	// just an additional check to make CSRF and similar more annoying to try (the password in each request is the real protection)
+	// referer headers can be spoofed, but usually not without a decent amount of control over the client
+	if ( !empty($_SERVER['HTTP_REFERER']) ) { // do not reject clients that refuse to send a referer
 		
 		// ignore port number on realm for referer checking (required for example for JanRain)
-		$cleanedRealm = preg_replace('|(https://[^/]+):443/|', "$1/", $reqfields['openid.realm']);
+		$cleanedRealm = preg_replace('|(https://[^/]+):443/|D', "$1/", $reqfields['openid.realm']);
 		
 		global $sitepath;
 		if ( strpos($_SERVER['HTTP_REFERER'], $cleanedRealm) !== 0 && strpos($_SERVER['HTTP_REFERER'], $sitepath) !== 0) {
-			// just an additional check to make CSRF and similar more annoying to try (the password in each request is the real protection)
-			// referer headers can be spoofed, but usually not without a decent amount of control over the client
 			$error = "referer exists but is invalid - must come from specified domain (or ID system) and be HTTPS";
 			return false;
 		}
@@ -244,7 +244,7 @@ function evaluateFields(&$reqfields, &$error, &$usePseudonym, &$implicitMembersh
 	// check attribute list
 	if ( isset($reqfields['openid.ax.mode']) && $reqfields['openid.ax.mode'] === 'fetch_request' ) {
 		// precheck
-		if ( !isset($reqfields['openid.ax.required']) || !preg_match('%^[a-z_-]+(,[a-z_-]+)*$%', $reqfields['openid.ax.required']) ) {
+		if ( !isset($reqfields['openid.ax.required']) || !preg_match('%^[a-z_-]+(,[a-z_-]+)*$%D', $reqfields['openid.ax.required']) ) {
 			$error = "invalid AX attribute list";
 			return false;
 		}
@@ -522,7 +522,7 @@ function handleCheckAuth($reqfields) {
 function validURL(&$url) {
 	if ( empty($url) ) return false;
 	if ( strpos($url, "https://") !== 0 ) return false;	// ensures https AND avoids "javascript:" urls
-	if ( !preg_match('|^[a-zA-Z0-9$_.+!*\'(),/?=&#;:%-]+$|', $url) ) return false;
+	if ( !preg_match('|^[a-zA-Z0-9$_.+!*\'(),/?=&#;:%-]+$|D', $url) ) return false;
 	if( !filter_var($url, FILTER_VALIDATE_URL) ) return false;
 	return true;
 }

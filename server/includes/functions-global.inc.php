@@ -4,7 +4,7 @@ require_once('siteconstants.inc.php');
 // TODO HTML validieren
 // TODO Startseite
 // TODO Hilfe, Doku
-// TODO full test again, especially clickjacking protection with/without JS (regular case/attack case), IE6 blocker, extendedAttributeDomains (in siteconstants)
+// TODO full test again, especially clickjacking protection with/without JS (regular case/attack case), IE6 blocker, extendedAttributeDomains (in siteconstants), login ip block
 // TODO encodings checken (vor allem db-daten)
 // TODO-later? stored procedures
 // TODO-later? PGP/GPG support
@@ -118,7 +118,7 @@ class DB {
 	public function cleanup() {
 		$this->query("UPDATE users SET resettoken = NULL, resettime = NULL WHERE resettime < TIMESTAMPADD(DAY,-2,NOW())", array());
 		$this->query("DELETE FROM users WHERE email_verified = 0 AND token <=> NULL AND createtime < TIMESTAMPADD(DAY,-2,NOW())", array());
-		$this->query("DELETE FROM loginfailures WHERE timestamp < TIMESTAMPADD(DAY,-1,NOW())", array());
+		$this->query("DELETE FROM loginfailures WHERE timestamp < TIMESTAMPADD(MINUTE,-30,NOW())", array());
 		$this->query("DELETE FROM openid WHERE createtime < TIMESTAMPADD(HOUR,-1,NOW())", array());
 	}
 	
@@ -145,6 +145,15 @@ function getUser(&$error) {
 		return false;
 	}
 	
+	// Make CSRF login attempts that could lock the user out (due to bruteforce protection) more difficult
+	global $sitepath;
+	if ( !empty($_SERVER['HTTP_REFERER']) ) {
+		if (strpos($_SERVER['HTTP_REFERER'], $sitepath) !== 0) {
+			$error = "Login fehlgeschlagen: Unzulässiger Referer";
+			return false;
+		}
+	}
+	
 	if (strlen($_POST['clickjackprotect1']) !== 3 || ($_POST['clickjackprotect1'] !==$_POST['clickjackprotect2'])) {
 		$error = "Login fehlgeschlagen: Clickjacking-Schutz falsch ausgefüllt";
 		return false;
@@ -155,7 +164,7 @@ function getUser(&$error) {
 		return false;
 	}
 	
-	$username = prefilter($_POST['username']);
+	$username = strtolower(prefilter($_POST['username'])); // a 'false' from prefilter will create "" will be considered invalid
 	$pw = prefilter($_POST['password']);
 	
 	if ($username === false || $pw === false) {
@@ -169,8 +178,8 @@ function getUser(&$error) {
 		$error = "Login fehlgeschlagen: Datenbankfehler";
 		return false;
 	}
-	if ($result[0][0] >= 10) {
-		$error = "Login fehlgeschlagen: Zu viele Fehlversuche. Bitte 24 Stunden warten.";
+	if ($result[0][0] >= 3) {
+		$error = "Login fehlgeschlagen: Zu viele Fehlversuche. Bitte 30 Minuten warten.";
 		return false;
 	}
 	
@@ -284,7 +293,7 @@ function checkMail($mail, &$mailerror) {
 	}
 	
 	//  valid (regexp)
-	if (!preg_match('/^[a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?~]+@(?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.?)+$/', $mail)) {
+	if (!preg_match('/^[a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?~]+@(?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.?)+$/D', $mail)) {
 		$mailerror .= 'Ungültige E-Mail-Adresse';
 		return false;
 	} 

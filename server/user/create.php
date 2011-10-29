@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
 	
 	// username checks
 		//  valid (regexp)
-	if (!preg_match('/^[a-z0-9._-]{3,30}$/', $username)) {
+	if (!preg_match('/^[a-z0-9._-]{3,30}$/D', $username)) {
 		$usernameerror = 'Ungültiger Benutzername';
 	} else {
 		//  check: name is not yet used (db)

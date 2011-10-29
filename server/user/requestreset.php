@@ -11,7 +11,7 @@ function requestReset(&$error) {
 	}
 	
 	//  valid (regexp)
-	if (!preg_match('/^[a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?~]+@(?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.?){1,200}$/', $email)) {
+	if (!preg_match('/^[a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?~]+@(?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.?){1,200}$/D', $email)) {
 		$error .= 'Ungültige E-Mail-Adresse';
 		return false;
 	} 
