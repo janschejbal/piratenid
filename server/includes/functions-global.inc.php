@@ -1,7 +1,6 @@
 <?php
 require_once('siteconstants.inc.php');
 
-// TODO HTML validieren
 // TODO Startseite
 // TODO Hilfe, Doku
 // TODO full test again, especially clickjacking protection with/without JS (regular case/attack case), IE6 blocker, extendedAttributeDomains (in siteconstants), login ip block
@@ -9,10 +8,7 @@ require_once('siteconstants.inc.php');
 // TODO-later? stored procedures
 // TODO-later? PGP/GPG support
 
-
 // TODO search for TODOs (also in client!)
-
-
 
 /* use instead of echo. escapes all output and avoids notice if variable is unset/empty.
    returns: false if variable was empty, true otherwise.

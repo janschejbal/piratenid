@@ -1,7 +1,7 @@
 <!--<![endif]-->  <!-- end block IE 6 -->
 </div> <!-- end main content -->
 <div id="footer">
-	PiratenID ist ein Dienst der <a href="http://www.piratenpartei.de/">Piratenpartei Deutschland</a> (<a href="http://www.piratenpartei.de/impressum">Impressum</a>),
+	<a href="/">PiratenID</a> ist ein Dienst der <a href="http://www.piratenpartei.de/">Piratenpartei Deutschland</a> (<a href="http://www.piratenpartei.de/impressum">Impressum</a>),
 	betrieben von der <a href="http://wiki.piratenpartei.de/IT">BundesIT</a>.
 </div>
 </div> <!-- end container -->

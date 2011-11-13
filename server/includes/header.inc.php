@@ -22,10 +22,10 @@ require_once('techheader.inc.php'); //include the "technical" header that sets s
 	<div id="banner-inner">
 		<?php
 			$banners = array(
-				'<img width="728" height="90" src="/static/banner/ssl.png">',
-				'<img width="728" height="90" src="/static/banner/updates.png">',
-				'<img width="728" height="90" src="/static/banner/passwort.png">',
-				'<img width="728" height="90" src="/static/banner/emailsecurity.png">'
+				'<img width="728" height="90" src="/static/banner/ssl.png" alt="Sicherheitsbanner SSL">',
+				'<img width="728" height="90" src="/static/banner/updates.png" alt="Sicherheitsbanner Updates">',
+				'<img width="728" height="90" src="/static/banner/passwort.png" alt="Sicherheitsbanner Passwort">',
+				'<img width="728" height="90" src="/static/banner/emailsecurity.png" alt="Sicherheitsbanner Mailaccount">'
 			);
 			shuffle($banners);
 			echo implode($banners); // safe, source is a constant
@@ -51,7 +51,7 @@ require_once('techheader.inc.php'); //include the "technical" header that sets s
 
 <div id="sidebar">
 	<div id="logo">
-		<img src="/static/icon128.png" style="vertical-align: middle" width="128" height="128">
+		<img src="/static/icon128.png" style="vertical-align: middle" width="128" height="128" alt="PiratenID-Logo">
 		<h1><a href="/">PiratenID</a></h1>
 	</div>
 	<a href="/user/create.php">Account erstellen</a>

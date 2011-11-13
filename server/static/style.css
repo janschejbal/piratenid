@@ -92,6 +92,6 @@ body {
 }
 
 table td {
-	border: 1px solid grey;
+	background-color: #ddd;
 	padding: 5px;
 }
