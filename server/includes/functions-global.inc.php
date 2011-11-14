@@ -5,6 +5,7 @@ require_once('siteconstants.inc.php');
 // TODO Hilfe, Doku
 // TODO full test again, especially clickjacking protection with/without JS (regular case/attack case), IE6 blocker, extendedAttributeDomains (in siteconstants), login ip block
 // TODO encodings checken (vor allem db-daten)
+// TODO ipv6 blacklist?
 // TODO-later? stored procedures
 // TODO-later? PGP/GPG support
 
@@ -136,8 +137,8 @@ function getUser(&$error) {
 	global $remoteClientIP;
 	$ip = $remoteClientIP;
 
-	if (empty($ip)) {
-		$error = "Login fehlgeschlagen: Konfigurationsfehler";
+	if (empty($ip) || !preg_match('/^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$/D')) { // TODO-later: when implementing IPv6 support, normalize IP and truncate to /64!
+		$error = "Login fehlgeschlagen: Konfigurationsfehler (ungültige IP)";
 		return false;
 	}
 	

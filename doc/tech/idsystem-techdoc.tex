@@ -332,10 +332,30 @@ Benutzerkonten mit sicheren Kennwörtern sollten weiterhin wie beim Angreifer mi
 Um Angriffe, die Fehler des Nutzers ausnutzen, zu erschweren, werden die Nutzer durch gut sichtbare Banner auf wichtige Sicherheitsmaßnahmen hingewiesen.
 Dazu zählt die sichere Verwendung von HTTPS, Sicherheit des verwendeten Computers, Passwortsicherheit, sowie die Absicherung des E-Mail-Accounts.
 
+\subsubsection{Brute-Force-Angriffe}
+Um Brute-Force-Angriffe zu verhindern, werden aufgrund falscher Logindaten fehlgeschlagene Loginversuche protokolliert.
+Vor jedem Login wird geprüft, wie viele Einträge zu der entsprechenden IP bereits existieren.
+Sind mehr als 3 Fehlversuche protokolliert, wird das Login abgelehnt (IP-Sperre).
+
+Die protokollierten Fehlversuche werden im Rahmen des Datenbank-Cleanups beim Öffnen der Datenbankverbindung jeweils nach 30 Minuten gelöscht.
+Die IP ist also genau dann gesperrt, wenn es von ihr innerhalb der letzten 30 Minuten drei Fehlversuche gab,
+nicht z. B. 30 Minuten nach dem letzten Versuch.
+
 \subsubsection{Cross-site request forgery, Session-basierte Angriffe}
 Der Server des ID-Systems arbeitet vollständig ohne Sessions. CSRF sowie andere Session-basierte Angriffe sind somit nicht möglich.
 Der Nutzer muss zur Bestätigung von Transaktionen jedes mal seine Logindaten eingeben.
 Der Zugriff auf Nutzerdaten wird wo möglich über einer Funktion gekapselt, die die Logindaten prüft, um Programmierfehler auszuschließen.
+
+Mittels CSRF-Versuchen auf die Login-Funktion wäre es jedoch möglich, die IP des Nutzers für Brute-Force-Versuche zu nutzen
+und/oder den Brute-Force-Schutz auszulösen und den Nutzer so temporär auszusperren.
+Um das zu erschweren, wird bei Loginversuchen der Referer geprüft.
+Stammt dieser nicht vom ID-System, wird der Loginversuch abgelehnt, ohne ihn zu zählen.
+Wenn der Nutzer einen leeren Referer überträgt (Referer abgeschaltet/gefiltert), wird die Refererprüfung übersprungen,
+damit auch Nutzer mit aus Datenschutzgründen gefilterten Referern sich einloggen können.
+
+Diese Überprüfung bietet keinen vollständigen Schutz.
+Falls entsprechende Angriffe beobachtet werden, muss der Schutz auf Kosten der Nutzerfreundlichkeit erhöht werden,
+indem leere Referer zurückgewiesen werden und/oder ein Cookie-basiertes Token verwendet wird.
 
 \subsubsection{SQL-Injection/Truncation}
 Zum Schutz vor SQL-Injection werden Prepared Statements benutzt.
@@ -370,7 +390,7 @@ Dadurch werden Brute-Force-Versuche so stark ausgebremst, dass sie unpraktisch w
 Anzumerken ist, dass diese Schutzmaßnahmen nur für den unwahrscheinlichen Fall benötigt werden, dass es einem Angreifer gelingt, die Benutzerdatenbank zu kopieren.
 Da die Verlangsamung durch das strengthening auch auf den Server selbst zutrifft,
 wird bei Online-Brute-Force-Versuchen die Geschwindigkeit durch die CPU-Leistung des Servers selbst dann wirksam begrenzt,
-wenn andere (gegen DoS-Attacken gerichtete) Schutzmaßnahmen versagen.
+wenn andere Schutzmaßnahmen versagen.
 
 \subsubsection{Hashing}
 Auch andere Informationen werden wo möglich nur gehasht gespeichert,
@@ -402,7 +422,8 @@ Dadurch ist die hohe Qualität und Nichtvorhersagbarkeit der Zufallszahlen siche
 
 \subsubsection{HTTPS}
 Sämtliche Kommunikation mit dem ID-System erfolgt über HTTPS.
-Um Nutzer, die versuchen, die Adresse mit "`http"' statt "`https"' einzugeben, zu schützen, wird der \texttt{Strict-Transport-Security}-Header genutzt.
+Die Nutzer werden darauf hingewiesen, immer die vollständige URL inkl. "`https"' zu verwenden.
+Um Nutzer zu schützen, welche die Adresse trotzdem mit "`http"' statt "`https"' eingeben, wird der \texttt{Strict-Transport-Security}-Header genutzt.
 Dieser weist moderne Browser an, die Seite ausschließlich über HTTPS abzurufen und verhindert so,
 dass Nutzer es über HTTP versuchen und sich so der Gefahr von MitM-Attacken aussetzen.
 
