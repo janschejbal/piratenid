@@ -5,7 +5,6 @@ require_once('siteconstants.inc.php');
 // TODO Hilfe, Doku
 // TODO full test again, especially clickjacking protection with/without JS (regular case/attack case), IE6 blocker, extendedAttributeDomains (in siteconstants), login ip block
 // TODO encodings checken (vor allem db-daten)
-// TODO ipv6 blacklist?
 // TODO-later? stored procedures
 // TODO-later? PGP/GPG support
 

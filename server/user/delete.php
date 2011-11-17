@@ -21,7 +21,7 @@ function deleteAccount(&$error) {
 	$randomname = "DELETEDUSER_". generateNonce(16);;
 	if (false !== $db->query("UPDATE users SET username = ?, usersecret = '', pwhash = '', email = '', email_activationkey = '', mitgliedsnr = NULL, realname = NULL, resettoken = NULL, resettime = NULL WHERE username = ?",
 						array($randomname, $userarray['username']))) {
-		// TODO: Benutzer benachrichtigen?
+		// TODO: Benutzer benachrichtigen!
 		?>
 			<h2>Account gelöscht</h2>
 			<p>Der Account wurde erfolgreich gelöscht.</p>

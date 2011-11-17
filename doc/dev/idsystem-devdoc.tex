@@ -1,0 +1,202 @@
+ \documentclass[parskip=half]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\definecolor{lnkcol}{rgb}{0.0,0.0,0.6}
+\hypersetup{
+	pdfstartview=FitH,
+	colorlinks=true,
+	urlcolor=lnkcol,
+	citecolor=lnkcol,
+	linkcolor=lnkcol,
+	filecolor=lnkcol
+}
+
+\title{PiratenID: Handbuch für Webentwickler}
+\author{Jan Schejbal}
+\date{}
+
+\bibliographystyle{unsrt}
+
+\setcounter{secnumdepth}{2}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}\noindent
+Dieses Dokument enthält eine Anleitung für Webseitenbetreiber, die das PiratenID-System in ihre Website einbinden möchten.
+Für reguläre Nutzer existiert eine separate Anleitung\footnote{TODO}.
+Technische Details zum ID-System finden sich in der technischen Dokumentation\footnote{TODO}.
+\end{abstract}
+
+
+\section{Einführung}
+Das PiratenID-System soll es Mitgliedern der Piratenpartei ermöglichen, ihren Mitgliedschaftsstatus gegenüber von Dritten betriebenen Webseiten nachzuweisen,
+ohne dass Zugriff auf die Mitgliederdatenbank nötig ist und ohne mehr Daten als nötig offenlegen zu müssen.
+
+Somit ermöglicht PiratenID es Websitebetreibern unter anderem, Dienste nur für Piraten anzubieten und sicherzustellen, dass pro Pirat nur ein Account angelegt wird.
+Für die Nutzung von PiratenID ist keine Anmeldung oder Genehmigung notwendig.
+
+Das PiratenID-System basiert auf OpenID 2.0 \footnote{\url{http://openid.net/specs/openid-authentication-2_0.html}} (mit gewissen Einschränkungen)
+mit Attribute Exchange 1.0 \footnote{\url{http://openid.net/specs/openid-attribute-exchange-1_0.html}}.
+
+Für PHP wird Code bereitgestellt, der neben der Anbindung an PiratenID auch Teile des Session-Handlings übernehmen kann.
+Alternativ kann das PiratenID-System mit kompatiblen OpenID 2.0-Libraries genutzt werden.
+Welche Punkte dabei zu beachten sind, wird in den jeweiligen Abschnitten erläutert.
+
+Zusätzlich zu dieser Anleitung könnte die technische Dokumentation\footnote{TODO},
+in welcher die technischen Hintergründe ausführlicher erklärt werden, interessant sein.
+
+\newpage
+\section{Was bietet PiratenID?}
+Websites und Webanwendungen können PiratenID nutzen, um Benutzer zu identifizieren und ihren Mitgliedsstatus in der Piratenpartei zu prüfen.
+Hierzu erstellt die Website eine Identifizierunganfrage und leitet den Nutzer auf die Seite des PiratenID-Systems um.
+Dort prüft der Nutzer, welche Daten abgefragt werden, meldet sich mit mit seiner PiratenID-Benutzerkennung an und gibt die Daten somit frei.
+Der Nutzer wird auf die anfragende Website zurückgeleitet und die Website erhält die freigegebenen Daten.
+Personenbezogene Daten wie Name und Mitgliedsnummer können \textbf{nicht} abgefragt werden.
+
+Neben dem Mitgliedschaftsstatus (inkl. Untergliederungen) kann optional auch ein Pseudonym abgefragt werden.
+Das Pseudonym ermöglicht es einer Webanwendung, einen Benutzer wiederzuerkennen.
+Es handelt sich hierbei nicht um einen vom Nutzer gewählten Namen, sondern um einen berechneten Wert.
+Die Pseudonyme sind für jede Website (genauer: für jedes OpenID-Realm) anders.
+Pro Website (Realm) hat jeder Nutzer aber genau ein unveränderliches Pseudonym.
+
+Eine anonyme Anmeldung ohne Pseudonymabfrage ist z. B. sinnvoll, um den Zugang zu einem Downloadbereich auf Piraten zu beschränken.
+Sollen Nutzer wiedererkannt werden (z. B. um eine Mehrfachteilnahme an Umfragen zu verhindern), muss das Pseudonym abgefragt werden.
+
+\subsection{Nutzungsarten}
+Für klassische Webanwendungen, die Benutzerkonten benötigen, kann das PiratenID-System auf zwei verschiedene Arten genutzt werden.
+Der angebotene PHP-Client unterstützt beide.
+
+\subsubsection{Login via PiratenID}
+Die einfachste Möglichkeit ist, das Login komplett von PiratenID übernehmen zu lassen.
+Wird die Anwendung in PHP entwickelt, kann diese Nutzungsart mittels des angebotenen PHP-Clients mit wenigen Zeilen Code realisiert werden.
+Alternativ kann OpenID verwendet werden (ggf. wird das von manchen Anwendungen nativ unterstützt).
+
+Möchte sich ein Nutzer einloggen, wird eine PiratenID-Authentifikation durchgeführt.
+Der Pirat loggt sich nur bei PiratenID ein, die Webanwendung bekommt bei Erfolg das Pseudonym mitgeteilt und kann dieses wie eine Benutzer-ID verwenden.
+Die Webanwendung verwaltet selbst keine Passwörter, was bei Eigenentwicklungen viel Arbeit (und sicherheitskritischen Code) spart.
+Soll ein Nutzer gesperrt werden, kann dies über das Pseudonym geschehen.
+
+Bei fertigen Anwendungen mit eigener Nutzerverwaltung kann diese Möglichkeit meist dennoch genutzt werden, indem die vorhandene Loginfunktion entsprechend angepasst wird:
+Bei der Rückkehr von einer erfolgreichen PiratenID-Anfrage wird der Nutzer eingeloggt, zu dem das Pseudonym passt
+(dieses/ein Hash davon ist der Benutzername oder in einer eigenen Spalte der Benutzertabelle gespeichert).
+Sollte kein solcher Nutzer existieren, wird er angelegt, ggf. nötige Daten werden abgefragt (z. B. anzuzeigender Nickname).
+
+Neben der einfachen Implementierung hat dieses Verfahren den Vorteil, dass der Nutzer kein weiteres Kennwort braucht (Single-Sign-On).
+Außerdem wird bei jedem Login geprüft, ob der Nutzer noch Pirat ist. Ist er z. B. ausgetreten, bekommt die Anwendung das spätestens beim nächsten Login mit.
+Die Anwendung kann bei dieser Variante oft darauf verzichten, personenbezogene Daten wie eine E-Mail-Adresse zu sammeln.
+
+Obwohl das System vor allem zur Verwendung durch Piraten gedacht ist, können auch Nichtpiraten einen PiratenID-Account anlegen.
+Auch Anwendungen, die nicht nur Piraten offen stehen, können daher diese Anmeldevariante nutzen.
+
+Ein Nachteil dieses Verfahrens ist die Abhängigkeit vom PiratenID-System (fällt dieses aus, ist kein Login mehr möglich).
+Da das Login immer über das ID-System erfolgt, bekommt der ID-Server mit, wann sich welcher Nutzer am Dienst anmeldet.
+
+
+\subsubsection{Eigenes Login mit Verifikation über PiratenID}
+Alternativ kann die Webanwendung auch ihre eigene Benutzerverwaltung nutzen.
+Dies kann bei bereits existierenden Anwendungen, einer bestehenden Nutzerbasis oder Anwendungen mit vielen externen Nutzern sinnvoller sein.
+
+Möchte ein Pirat innerhalb der Anwendung als Pirat erkannt werden, loggt er sich zunächst in der Anmeldung ein.
+Die Anwendung prüft die Piratenmitgliedschaft anschließend, indem sie (über den PHP-Client oder eine OpenID-Library) eine PiratenID-Authentifizierung durchführt.
+Soll sichergestellt werden, dass jeder Pirat nur ein Benutzerkonto anlegen kann, wird zusätzlich das Pseudonym abgefragt und gespeichert.
+
+Sollte der Nutzer aus der Partei austreten, wird die Anwendung darüber \textbf{nicht} benachrichtigt!
+Daher muss die Überprüfung in regelmäßigen Abständen wiederholt werden.
+
+Der Vorteil ist die Unabhängigkeit vom PiratenID-System, Nachteile sind der erhöhte Programmieraufwand bei Eigenentwicklungen,
+separate Benutzerkonten und die verzögerte Erkennung von Parteiaustritten.
+
+\subsection{Abfragbare Daten}
+\label{sec:attribute}
+Neben dem Pseudonym können zu jedem Nutzer die folgenden Attribute angefragt werden.
+Der Nutzer muss die Übermittlung der Daten jeweils ausdrücklich bestätigen.
+
+\begin{itemize}
+	\item \texttt{mitgliedschaft-bund}
+	\item \texttt{mitgliedschaft-land}
+	\item \texttt{mitgliedschaft-bezirk}
+	\item \texttt{mitgliedschaft-kreis}
+	\item \texttt{mitgliedschaft-ort}
+\end{itemize}
+
+Ist ein Attribut in der Antwort leer, kann dies daran liegen, dass kein gültiges Piraten-Token eingetragen ist oder der Wert unbekannt ist.
+Um absichtlich leere Attributfelder zu kennzeichnen (z. B. Pirat ist in keinem Ortsverband) werden drei Bindestriche (TODO WERT) verwendet.
+
+Das Attribut "`\texttt{mitgliedschaft-bund}"' hat eine besondere Bedeutung:
+Wird es \textbf{nicht} abgefragt, können sich nur Piraten einloggen (implizite Mitgliedschaftsprüfung).
+Wird es abgefragt, können sich auch Nutzer einloggen, die keine Piraten sind - der Mitgliedschaftsstatus wird aber angegeben (explizite Mitgliedschaftsprüfung).
+Ein Nutzer ist genau dann Mitglied, wenn in diesem Feld "`ja"' steht.
+Andere Antworten (insbes. leeres Feld) bedeuten, dass der Nutzer kein Pirat ist (oder seine Mitgliedschaft nicht durch Eingabe des Tokens im ID-System eingetragen hat).
+
+
+Das Pseudonym sollte als zusätzliche Sicherheitsmaßnahme möglichst verdeckt bleiben, also insbesondere dem Nutzer nicht angezeigt werden.
+Sollte ein Angriff auf das ID-System gelingen, kann ein Angreifer die Identität des Nutzers nicht vortäuschen, wenn er sein Pseudonym nicht ermitteln kann.
+(Technisch versierte Nutzer können das eigene Pseudonym durch Beobachtung des Loginvorgangs ermitteln.)
+Am sinnvollsten ist es hierzu, das Pseudonym direkt nach Erhalt zu hashen (der bereitgestellte PHP-Client tut dies automatisch) und nur den Hash zu verwenden.
+
+
+\newpage
+\section{Verwendung über den PHP-Client}
+\input{../tech/idsystem-clientdoc-shared}
+
+\newpage
+\section{Verwendung über eine OpenID-Library}
+PiratenID ist kompatibel mit OpenID 2.0 mit Attribute Exchange 1.0. Ältere OpenID-Versionen wird nicht unterstützt.
+Sämtliche OpenID-Transaktionen finden ausschließlich über HTTPS statt.
+Der Endpoint ist \url{https://id.piratenpartei.de/openid/endpoint.php}, die XRDS-URL ist \url{https://id.piratenpartei.de/openid/xrds.php}.
+Weitere Details finden sich auch in der technischen Dokumentation im Abschnitt Authentifizierung.
+
+Bei der Verwendung mittels einer OpenID-Library ist darauf zu achten, dass die Library das SSL-Zertifikat des Servers ordnungsgemäß prüft.
+Viele Libraries verzichten hier auf eine ordnungsgemäße Prüfung (z. B. werden Servername oder Herausgeber nicht geprüft), wodurch sie unsicher sind!
+Nach Möglichkeit sollte die Library ausdrücklich angewiesen werden, welche Zertifikate akzeptiert werden sollen.
+Dazu kann das Zertifikat verwendet werden, was dem PHP-Client beiliegt (Datei certificate.pem).
+
+Weiterhin muss sichergestellt werden, dass OpenID-Logins nur über PiratenID, nicht aber über andere OpenID-Server, akzeptiert werden.
+Es ist nicht ausreichend, die Anfrage-URL im OpenID-Request fest einzuprogrammieren,
+da OpenID-Libraries oft auch Antworten verarbeiten, die sie gar nicht angefordert haben.
+
+Bei der OpenID-Anfrage unterliegt das Realm einer recht strengen Prüfung, es muss sich um eine HTTPS-URL auf einen Ordner handeln, genauer:
+Die URL muss mit einem Schrägstrich enden und darf keine Query-Parameter oder Anker enthalten.
+Sowohl die anfragende Seite als auch die Return-URL müssen innerhalb dieses Realms liegen.
+Das Realm wird zur Berechnung des Pseudonyms verwendet und dem Nutzer als der Name der Seite, bei der er sich anmeldet, angezeigt.
+
+Für reguläre Authentifikation mit Pseudonym wird der identifier\_select-Modus verwendet.
+Standardkonforme OpenID 2.0-Libraries sollten diesen automatisch wählen, wenn als OpenID-Identitäts-URL \url{https://id.piratenpartei.de/} angegeben wird.
+Sollte dies nicht funktionieren, klappt es unter Umständen, wenn die Endpoint- oder XRDS-URL angegeben werden.
+Bei identifier\_select haben die OpenID-Felder \texttt{claimed\_id} und \texttt{identity} den Wert \texttt{http://specs.openid.net/auth/2.0/identifier\_select}.
+
+Bei einer Authentifikation mit Pseudonym liefert das ID-System eine Identity-URL der Form
+\verb@https://id.piratenpartei.de/openid/pseudonym.php?id=4e2b9b5163[...]faced7@\\
+wobei der Teil nach "`id="' das Pseudonym ist. Vor der weiteren Verwendung sollte das Pseudonym nochmals gehasht werden.
+
+Für eine anonyme Authentifikation (ohne Pseudonym) dürfen im OpenID-Request \texttt{claimed\_id} und \texttt{identity} nicht mitgeschickt werden.
+Nicht alle Libraries unterstützen dies.
+
+Für die Abfrage von Attributen wird Attribute Exchange verwendet.
+Die Attribute müssen mit ihren Namen (Liste siehe oben) als Alias abgefragt werden,
+als Attributtyp ist jeweils "`https://id.piratenpartei.de/openid/schema/NAME"' anzugeben, wobei NAME durch den Namen des Attributs zu ersetzen ist.
+
+Wird mit einer gewöhnlichen OpenID-Library ohne besondere Optionen eine Authentifizierung durchgeführt,
+so findet eine \textbf{pseudonyme} Anmeldung ohne Abfrage weiterer Attribute statt.
+Die Mitgliedschaft wird dabei \textbf{implizit} geprüft - nur Piraten können sich einloggen.
+(Achtung, das bedeutet, dass ein Pirat sich nach seinem Austritt nicht mehr einloggen kann!)
+Anwendungen, die OpenID bereits unterstützen, können so in der Regel mit minimalen Veränderungen (Beschränkung auf den PiratenID-Server, Zertifikate) direkt verwendet werden.
+
+
+\newpage
+\section{Sicherheit}
+
+TODO verweis auf guidelines?
+
+\end{document}
