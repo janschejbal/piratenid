@@ -19,9 +19,20 @@ function deleteAccount(&$error) {
 	
 	
 	$randomname = "DELETEDUSER_". generateNonce(16);;
-	if (false !== $db->query("UPDATE users SET username = ?, usersecret = '', pwhash = '', email = '', email_activationkey = '', mitgliedsnr = NULL, realname = NULL, resettoken = NULL, resettime = NULL WHERE username = ?",
-						array($randomname, $userarray['username']))) {
-		// TODO: Benutzer benachrichtigen!
+	// keep email_verified = 1, otherwise account might be deleted during cleanup of non-activated accounts
+	$result = $db->query("UPDATE users SET username = ?, usersecret = '', pwhash = '', email = NULL, email_activationkey = '', mitgliedsnr = NULL, realname = NULL, resettoken = NULL, resettime = NULL, createtime = NULL WHERE username = ?",
+						array($randomname, $userarray['username']));
+	if (false !== $result) {
+		$subject = "PiratenID Accountloeschung";
+		$text ="Hallo,\n". // Observe max line length, consider variable lengths!
+				"dein PiratenID-Account wurde wie angefordert geloescht.\n\n".
+				"Der Benutzername lautete: ".$userarray['username']."\n\n".
+				"Beachte: Verbrauchte Token werden NICHT neu ausgestellt!\n".
+				"Solltest du das nicht gewollt haben, kontaktiere SOFORT die IT.\n".
+				"Eventuell kann dein Account aus einem Backup wiederhergestellt werden.\n\n".
+				"Bei Fragen wende dich bitte an die IT der Piratenpartei unter:\n".
+				"piratenid@helpdesk.piratenpartei.de\n\n";
+		$success = mail($userarray['email'], $subject, $text, 'From: PiratenID <noreply@piratenpartei.de>'); // TODO from/reply-to?
 		?>
 			<h2>Account gelöscht</h2>
 			<p>Der Account wurde erfolgreich gelöscht.</p>

@@ -3,9 +3,9 @@ error_reporting(E_ALL);
 
 // make sure that all unnormal activity including warnings and notices are fatal
 function suppressErrors($errno, $errstr) {
-	  echo "Es ist ein Fehler aufgetreten.";
-	  die();
-} 
+	echo "Es ist ein Fehler aufgetreten.";
+	die();
+}
 
 set_error_handler("suppressErrors");
 

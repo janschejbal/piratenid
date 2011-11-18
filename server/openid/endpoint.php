@@ -224,7 +224,6 @@ function evaluateFields(&$reqfields, &$error, &$usePseudonym, &$implicitMembersh
 	
 	// check referer
 	// just an additional check to make CSRF and similar more annoying to try (the password in each request is the real protection)
-	// referer headers can be spoofed, but usually not without a decent amount of control over the client
 	if ( !empty($_SERVER['HTTP_REFERER']) ) { // do not reject clients that refuse to send a referer
 		
 		// ignore port number on realm for referer checking (required for example for JanRain)
@@ -427,7 +426,7 @@ function handleUserConfirm($reqfields) {
 		return;
 	}
 	
-	if ( $implicitMembership !== false && (empty($userdata['mitgliedschaft-bund']) || $userdata['mitgliedschaft-bund'] !== 'ja') ) { // TODO column data type?
+	if ( $implicitMembership !== false && (empty($userdata['mitgliedschaft-bund']) || $userdata['mitgliedschaft-bund'] !== 'ja') ) {
 		handleCheckidSetup($reqfields, "Dieses Benutzerkonto kann nicht zum Anmelden bei dieser Seite benutzt werden: ".
 										"Du bist kein Pirat oder dein Token ist nicht richtig eingetragen");
 		return;

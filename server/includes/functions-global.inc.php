@@ -3,7 +3,7 @@ require_once('siteconstants.inc.php');
 
 // TODO Startseite
 // TODO Hilfe, Doku
-// TODO full test again, especially clickjacking protection with/without JS (regular case/attack case), IE6 blocker, extendedAttributeDomains (in siteconstants), login ip block
+// TODO full test again, especially clickjacking protection with/without JS (regular case/attack case), IE6 blocker, extendedAttributeDomains (in siteconstants)
 // TODO encodings checken (vor allem db-daten)
 // TODO-later? stored procedures
 // TODO-later? PGP/GPG support
@@ -26,6 +26,14 @@ function prefilter(&$param, &$error = null, $allowEmpty = false) {
 		$error .= "Ungültiger Parameter. ";
 		return false;
 	}
+	return $param;
+}
+
+function logPrefilter(&$param) {
+	if (!isset($param)) return "<none>";
+	if (!is_string($param)) return "<notString>";
+	if (empty($param)) return "<empty>";
+	if (strlen($param)>230) return "<truncated> ".substr($param,0,230);
 	return $param;
 }
 
@@ -115,6 +123,7 @@ class DB {
 		$this->query("UPDATE users SET resettoken = NULL, resettime = NULL WHERE resettime < TIMESTAMPADD(DAY,-2,NOW())", array());
 		$this->query("DELETE FROM users WHERE email_verified = 0 AND token <=> NULL AND createtime < TIMESTAMPADD(DAY,-2,NOW())", array());
 		$this->query("DELETE FROM loginfailures WHERE timestamp < TIMESTAMPADD(MINUTE,-30,NOW())", array());
+		$this->query("DELETE FROM loginfailures_log WHERE timestamp < TIMESTAMPADD(WEEK,-4,NOW())", array());
 		$this->query("DELETE FROM openid WHERE createtime < TIMESTAMPADD(HOUR,-1,NOW())", array());
 	}
 	
@@ -136,7 +145,7 @@ function getUser(&$error) {
 	global $remoteClientIP;
 	$ip = $remoteClientIP;
 
-	if (empty($ip) || !preg_match('/^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$/D')) { // TODO-later: when implementing IPv6 support, normalize IP and truncate to /64!
+	if (empty($ip) || !preg_match('/^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$/D', $ip)) { // TODO-later: when implementing IPv6 support, normalize IP and truncate to /64!
 		$error = "Login fehlgeschlagen: Konfigurationsfehler (ungültige IP)";
 		return false;
 	}
@@ -186,7 +195,10 @@ function getUser(&$error) {
 		return false;
 	}
 	if (count($result) !== 1) {
-		$result = $db->query("INSERT INTO loginfailures (IP) VALUES (?)", array($ip));
+		$db->query("INSERT INTO loginfailures (ip) VALUES (?)", array($ip));
+		$useragent = logPrefilter($_SERVER["HTTP_USER_AGENT"]);
+		$referer   = logPrefilter($_SERVER["HTTP_REFERER"]);
+		$db->query("INSERT INTO loginfailures_log (ip,useragent,referer) VALUES (?,?,?)", array($ip, $useragent, $referer));
 		$error = "Login fehlgeschlagen: Benutzername oder Kennwort falsch." . (($result === false) ? " Datenbankfehler." : "");
 		return false;
 	}
@@ -242,7 +254,7 @@ function printLoginFields() {
 	</tr>
 	<input type="hidden" name="clickjackprotect1" id="clickjackprotect1" value="<?php safeout($clickjackcode) ?>">
 	<script>
-		document.getElementById('clickjackprotect2').value = document.getElementById('clickjackprotect1').value; // TODO test
+		document.getElementById('clickjackprotect2').value = document.getElementById('clickjackprotect1').value;
 		document.getElementById('clickjackprompt').style.display = 'none';
 	</script>
 	<?php
