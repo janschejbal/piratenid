@@ -509,6 +509,7 @@ Diese Datei enthält die globalen Funktionen:
 \begin{itemize}
 	\item \texttt{safeout(\&\$text)} - Gibt eine Variable mit korrektem HTML-Escaping aus. Ist die Variable undefiniert, wird nichts ausgegeben, aber keine Warnung erzeugt
 	\item \texttt{prefilter(...)} - Prüft einen Wert (z. B. GET/POST-Parameter) auf Existenz, Typ und Länge
+	\item \texttt{logPrefilter(...)} - Bereitet einen Wert für die Speicherung im loginfailures\_log vor.
 	\item \texttt{generateNonce(\$entropy)} - Erzeugt die angegebene Anzahl sicherer Zufallsbytes (Hex-encoded)
 	\item \texttt{hashPassword(\$username, \$pw)} - Berechnet den Passwort-Hash, siehe Abschnitt \ref{sec:pwhash} Passwort-Hashverfahren
 	\item \texttt{class DB} - Die DB-Klasse kapselt Datenbankzugriffe über ein Singleton.
@@ -519,12 +520,18 @@ Diese Datei enthält die globalen Funktionen:
 		\item \texttt{cleanup()} löscht veraltete Daten und wird automatisch beim Erstellen einer neuen Instanz aufgerufen
 	\end{itemize}
 	\item \texttt{getUser(...)} - Wenn in den POST-Variablen ein gültiges Login (inkl. Clickjacking-Schutz) liegt, wird der dazugehörige User mit allen Daten zurückgegeben.
-	                           Zugriffe auf Benutzerdaten erfolgen über den Rückgabewert dieser Funktion, um sicherzustellen, dass immer ein Login erforderlich ist.
+								Hier wird auch die Beschränkung der Fehlversuche pro IP und das Logging von Fehlversuchen durchgeführt.
+								Zugriffe auf Benutzerdaten erfolgen über den Rückgabewert dieser Funktion, um sicherzustellen, dass immer ein Login erforderlich ist.
 	\item \texttt{printLoginFields()} - Gibt Felder für ein Loginformular inkl. Clickjacking-Schutz aus (die mit getUser() kompatibel sind)
 	\item \texttt{checkPassword(...)} - Prüft, ob ein Passwort inkl. Wiederholung in Ordnung sind, d.h. das Passwort setzt werden kann.
 										Prüft \textbf{nicht} ob ein Login gültig ist, dafür ist getUser da!
 	\item \texttt{checkMail(...)} - Prüft, ob eine E-Mail-Adresse gültig und noch nicht verwendet (d.h. für das Anlegen eines Accounts zulässig) ist
 \end{itemize}
+
+\subsubsection{/includes/tokenimport.inc.php}
+Diese Datei wird weder vom Rest des Codes genutzt, noch nutzt sie andere Teile des Codes.
+Sie enthält eine Funktion (PiratenIDImport\_import) zum Import von Token-Daten.
+Eine genaue Beschreibung ist in der Datei enthalten.
 
 \subsubsection{/includes/.htaccess}
 Diese Datei verhindert direkten Zugriff auf die Include-Files.
@@ -641,7 +648,7 @@ Diese Tabelle enthält die Benutzerkonten. Folgende Felder sind vorhanden:
 
 \subsection{Tabelle "`tokens"'}
 Diese Tabelle enthält die Zuordnungen zwischen Token(hashes) und Verbandsmitgliedschaften.
-Sie sollte regelmäßig geleert und neu aus der Mitgliederverwaltung importiert werden.
+Sie sollte regelmäßig geleert und neu aus der Mitgliederverwaltung importiert werden. (Siehe /includes/tokenimport.inc.php)
 Folgende Felder sind vorhanden:
 \begin{itemize}
 	\item \texttt{token} - Das (gehashte) Token (Primärschlüssel)
@@ -655,10 +662,27 @@ Folgende Felder sind vorhanden:
 Bezüglich der Bedeutung und möglicher Werte für die Mitgliedschaftsfelder sei auf Abschnitt \ref{sec:attribute} verwiesen.
 
 \subsection{Tabelle "`openid"'}
-- drei tabellen
-- erklärung import
-- erklärung felder
+Diese Tabelle enthält die ausgegebenen Nonces der OpenID-Antworten inkl. der dazugehörigen Hashes.
+Sie wird verwendet, um bei der Verifikationsanfrage die Echtheit jeder Antwort genau einmal zu bestätigen.
+\begin{itemize}
+	\item \texttt{nonce} - Die Nonce aus der Antwort
+	\item \texttt{hmac} - Der authentifizierte Hash der OpenID-Antwort
+	\item \texttt{createtime} - Die Zeit der Antwort
+\end{itemize}
 
+\subsection{Tabellen "`loginfailures"' und "`loginfailures\_log"'}
+Diese Tabellen speichern fehlgeschlagene Loginversuche.
+Die Tabelle "`loginfailures\_log"' speichert diese Versuche vier Wochen lang, um langfristig angelegte Angriffe erkennen zu können.
+Sie kann manuell oder durch zusätzliche Tools analysiert werden und wird vom Programm ansonsten nicht verwendet.
+Es werden folgende Werte gespeichert:
+\begin{itemize}
+	\item \texttt{ip} - Die IP, von der die Anfrage kam
+	\item \texttt{timestamp} - Die Uhrzeit, um die die Anfrage kam
+	\item \texttt{useragent} - Der bei der Loginanfrage mitgeschickte Referer-Header, formatiert mit logPrefilter
+	\item \texttt{referer} - Der bei der Loginanfrage mitgeschickte Referer-Header, formatiert mit logPrefilter
+\end{itemize}
+
+Die Tabelle "`loginfailures"' speichert nur IP und Timestamp für die Dauer von 30 Minuten und wird für die IP-Sperre verwendet.
 
 \section{Client (PHP)}
 \input{idsystem-clientdoc-shared}
