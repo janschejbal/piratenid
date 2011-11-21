@@ -4,7 +4,7 @@
 // used for e-mails, X-XRDS-Location header, endpoint location, referer checking etc.
 $sitepath = "https://piratenid.janschejbal.de/"; // do not forget '/' at the end!
 
-// List of domains that may receive extended attributes
+// List of domains that may receive extended attributes (NOTE: Code is currently disabled!)
 $extendedAttributeRealms = array();
 
 // IP address of the remote client (to allow trusted reverse proxies to provide the real client address).

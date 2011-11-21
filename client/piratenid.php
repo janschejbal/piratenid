@@ -40,9 +40,9 @@ class PiratenID {
 	private static $hasRun = false;
 	
 	// OpenID endpoint to use (TODO)
-	const serverCN   = 'localhost';
-	const serverroot = 'https://piratenid.janschejbal.de/';
-	const endpoint   = 'https://piratenid.janschejbal.de/openid/endpoint.php';
+	const serverCN   = 'idtest.piratenpartei.de';
+	const serverroot = 'https://idtest.piratenpartei.de/';
+	const endpoint   = 'https://idtest.piratenpartei.de/openid/endpoint.php';
 
 	
 	
@@ -453,14 +453,15 @@ class PiratenID {
 					'verify_depth'      => 9,     // OpenSSL default, only to prevent problems in case of insane PHP defaults
 					'allow_self_signed' => false,
 					'capture_peer_cert' => false, // Change to be able to inspect certificate
-					'ciphers'           => "aRSA+kEDH+TLSv1+HIGH", // only high-security TLSv1 ciphers featuring ephemeral keys and RSA authentication allowed
+					//'ciphers'           => "aRSA+kEDH+TLSv1+HIGH", // only high-security TLSv1 ciphers featuring ephemeral keys and RSA authentication allowed
+					'ciphers'           => "aRSA+TLSv1+HIGH", // TODO CHANGE allow other ciphers for testing
 					'cafile'            => __DIR__."/certificate.pem" // This file shall contain the cert of the server or the CA used for that cert
 				)
 			);
 		$context = stream_context_create($options);
 		$response = @file_get_contents(self::endpoint, false, $context);
 		if (!$response) {
-			$error = "could not get response from server";
+			$error = "could not get response from server (maybe TLS issues?)";
 			return false;
 		}
 		

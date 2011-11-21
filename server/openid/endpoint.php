@@ -249,7 +249,17 @@ function evaluateFields(&$reqfields, &$error, &$usePseudonym, &$implicitMembersh
 		}
 		
 		// attribute whitelist and type checking
-		$supported = array('mitgliedschaft-bund','mitgliedschaft-land','mitgliedschaft-bezirk','mitgliedschaft-kreis','mitgliedschaft-ort'/*,'realname','mitgliedsnummer'*/); // Die Abfrage von Realidentitätsdaten ist fürs Erste deaktiviert.
+		$supported = array('mitgliedschaft-bund','mitgliedschaft-land','mitgliedschaft-bezirk','mitgliedschaft-kreis','mitgliedschaft-ort');
+		
+		// Die Abfrage von Realidentitätsdaten ist fürs Erste deaktiviert.
+		/*
+		global $extendedAttributeRealms;
+		if (in_array($reqfields['openid.realm'], $extendedAttributeRealms, true)) {
+			$supported[] = 'realname';				
+			$supported[] = 'mitgliedsnummer';				
+		}
+		*/
+		
 		$attrarray = explode(',', $reqfields['openid.ax.required']);
 		foreach ($attrarray as $attrname) {
 			if (!in_array($attrname, $supported, true)) {
@@ -299,8 +309,8 @@ function handleCheckidSetup($reqfields, $errormessage = null) {
 					case 'mitgliedschaft-bezirk': $attribtext = 'Die Information, in welchem Bezirksverband du Mitglied bist'; break;
 					case 'mitgliedschaft-kreis': $attribtext = 'Die Information, in welchem Kreisverband du Mitglied bist'; break;
 					case 'mitgliedschaft-ort': $attribtext = 'Die Information, in welchem Ortsverband du Mitglied bist'; break;
-					case 'realname': $attribtext = '<span class="attribut-kritsch">Dein voller Name</span>'; break;
-					case 'mitgliedsnummer': $attribtext = '<span class="attribut-kritsch">Deine Mitgliedsnummer bei der Piratenpartei</span>'; break;
+					case 'realname': $attribtext = '<span class="attribut-kritisch">Dein voller Name</span>'; break;
+					case 'mitgliedsnummer': $attribtext = '<span class="attribut-kritisch">Deine Mitgliedsnummer bei der Piratenpartei</span>'; break;
 					default: die("FEHLER - UNBEKANNTES ATTRIBUT. BITTE VORGANG ABBRECHEN UND DER IT MELDEN."); break; // should not be able to happen, attribs are verified
 				}
 				$attribhtml .= "\t\t\t<li>".$attribtext ."</li>\n";
@@ -353,19 +363,13 @@ function handleCheckidSetup($reqfields, $errormessage = null) {
 //   $error: On error, an error message will be put into this variable
 // returns: true on success, false if some attributes could not be added
 function addAXAttributes(&$response, $attribarray, $userdata, &$error) {
-	global $extendedAttributeRealms;
 	$response["openid.ns.ax"] = "http://openid.net/srv/ax/1.0";
 	$response["openid.ax.mode"] = "fetch_response";
 	$response["openid.signed"] .= ",ax.mode,ns.ax";
 	foreach ($attribarray as $attrib) {
 		switch ($attrib) {
 			case 'realname': // falltrough
-			case 'mitgliedsnummer':
-				if (!in_array($realm, $extendedAttributeRealms, true)) {
-					$error = "Diese Seite darf keine Personendaten abfragen";
-					return false;				
-				}
-				// falltrough!
+			case 'mitgliedsnummer': // falltrough!
 			case 'mitgliedschaft-bund': // falltrough
 			case 'mitgliedschaft-land': // falltrough
 			case 'mitgliedschaft-bezirk': // falltrough

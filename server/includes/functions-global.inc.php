@@ -3,8 +3,7 @@ require_once('siteconstants.inc.php');
 
 // TODO Startseite
 // TODO Hilfe, Doku
-// TODO full test again, especially clickjacking protection with/without JS (regular case/attack case), IE6 blocker, extendedAttributeDomains (in siteconstants)
-// TODO encodings checken (vor allem db-daten)
+// TODO From/Reply-To
 // TODO-later? stored procedures
 // TODO-later? PGP/GPG support
 
