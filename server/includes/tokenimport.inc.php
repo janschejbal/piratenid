@@ -35,6 +35,7 @@ function PiratenIDImport_verifyEntry($entry) {
 	for ($i = 0; $i<6; $i++) {
 		if (!is_string($entry[$i])) die("Invalid data: value not a string");
 		if (strlen($entry[$i]) > 100) die("Invalid data: value too long");
+		if (strpos($entry[$i], "\xC3\x83") !== false) die("Invalid data: looks like double UTF-8 encoding");
 		if (!mb_detect_encoding($entry[$i], 'UTF-8', true)) die("Invalid data: value not UTF-8");
 		if (!mb_check_encoding($entry[$i], 'UTF-8')) die("Invalid data: invalid UTF-8 sequence");
 		
@@ -97,27 +98,4 @@ $data = array(
 PiratenIDImport_import($db, $data, true); 
 
 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
