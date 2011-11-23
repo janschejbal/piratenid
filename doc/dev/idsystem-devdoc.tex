@@ -1,33 +1,6 @@
- \documentclass[parskip=half]{scrartcl}
-
-\usepackage[utf8]{inputenc}
-\usepackage[ngerman]{babel}
-\usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{amssymb}
-\usepackage{color}
-\usepackage{hyperref}
-\usepackage{graphicx}
-\usepackage{epstopdf}
-\usepackage{listings}
-\usepackage{fancyvrb}
-\definecolor{lnkcol}{rgb}{0.0,0.0,0.6}
-\hypersetup{
-	pdfstartview=FitH,
-	colorlinks=true,
-	urlcolor=lnkcol,
-	citecolor=lnkcol,
-	linkcolor=lnkcol,
-	filecolor=lnkcol
-}
+\input{../tech/tex-header.tex}
 
 \title{PiratenID: Handbuch für Webentwickler}
-\author{Jan Schejbal}
-\date{}
-
-\bibliographystyle{unsrt}
-
-\setcounter{secnumdepth}{2}
 
 \begin{document}
 \maketitle
@@ -46,8 +19,8 @@ ohne dass Zugriff auf die Mitgliederdatenbank nötig ist und ohne mehr Daten als
 Somit ermöglicht PiratenID es Websitebetreibern unter anderem, Dienste nur für Piraten anzubieten und sicherzustellen, dass pro Pirat nur ein Account angelegt wird.
 Für die Nutzung von PiratenID ist keine Anmeldung oder Genehmigung notwendig.
 
-Das PiratenID-System basiert auf OpenID 2.0 \footnote{\url{http://openid.net/specs/openid-authentication-2_0.html}} (mit gewissen Einschränkungen)
-mit Attribute Exchange 1.0 \footnote{\url{http://openid.net/specs/openid-attribute-exchange-1_0.html}}.
+Das PiratenID-System basiert auf OpenID 2.0\footnote{\url{http://openid.net/specs/openid-authentication-2_0.html}} (mit gewissen Einschränkungen)
+mit Attribute Exchange 1.0\footnote{\url{http://openid.net/specs/openid-attribute-exchange-1_0.html}}.
 
 Für PHP wird Code bereitgestellt, der neben der Anbindung an PiratenID auch Teile des Session-Handlings übernehmen kann.
 Alternativ kann das PiratenID-System mit kompatiblen OpenID 2.0-Libraries genutzt werden.
@@ -135,7 +108,7 @@ Um absichtlich leere Attributfelder zu kennzeichnen (z. B. Pirat ist in keinem O
 
 Das Attribut "`\texttt{mitgliedschaft-bund}"' hat eine besondere Bedeutung:
 Wird es \textbf{nicht} abgefragt, können sich nur Piraten einloggen (implizite Mitgliedschaftsprüfung).
-Wird es abgefragt, können sich auch Nutzer einloggen, die keine Piraten sind - der Mitgliedschaftsstatus wird aber angegeben (explizite Mitgliedschaftsprüfung).
+Wird es abgefragt, können sich auch Nutzer einloggen, die keine Piraten sind -- der Mitgliedschaftsstatus wird aber angegeben (explizite Mitgliedschaftsprüfung).
 Ein Nutzer ist genau dann Mitglied, wenn in diesem Feld "`ja"' steht.
 Andere Antworten (insbes. leeres Feld) bedeuten, dass der Nutzer kein Pirat ist (oder seine Mitgliedschaft nicht durch Eingabe des Tokens im ID-System eingetragen hat).
 
@@ -176,7 +149,7 @@ Standardkonforme OpenID 2.0-Libraries sollten diesen automatisch wählen, wenn a
 Sollte dies nicht funktionieren, klappt es unter Umständen, wenn die Endpoint- oder XRDS-URL angegeben werden.
 Bei identifier\_select haben die OpenID-Felder \texttt{claimed\_id} und \texttt{identity} den Wert \texttt{http://specs.openid.net/auth/2.0/identifier\_select}.
 
-Bei einer Authentifikation mit Pseudonym liefert das ID-System eine Identity-URL der Form
+Bei einer Authentifikation mit Pseudonym liefert das ID-System eine Identity-URL der Form:\\
 \verb@https://id.piratenpartei.de/openid/pseudonym.php?id=4e2b9b5163[...]faced7@\\
 wobei der Teil nach "`id="' das Pseudonym ist. Vor der weiteren Verwendung sollte das Pseudonym nochmals gehasht werden.
 
@@ -189,7 +162,7 @@ als Attributtyp ist jeweils "`https://id.piratenpartei.de/openid/schema/NAME"' a
 
 Wird mit einer gewöhnlichen OpenID-Library ohne besondere Optionen eine Authentifizierung durchgeführt,
 so findet eine \textbf{pseudonyme} Anmeldung ohne Abfrage weiterer Attribute statt.
-Die Mitgliedschaft wird dabei \textbf{implizit} geprüft - nur Piraten können sich einloggen.
+Die Mitgliedschaft wird dabei \textbf{implizit} geprüft -- nur Piraten können sich einloggen.
 (Achtung, das bedeutet, dass ein Pirat sich nach seinem Austritt nicht mehr einloggen kann!)
 Anwendungen, die OpenID bereits unterstützen, können so in der Regel mit minimalen Veränderungen (Beschränkung auf den PiratenID-Server, Zertifikate) direkt verwendet werden.
 

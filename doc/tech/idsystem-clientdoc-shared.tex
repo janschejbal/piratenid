@@ -50,7 +50,7 @@ Dabei kann es sich entweder um das Zertifikat des Servers selbst, oder um das ei
 \subsubsection{Parameter}
 Nachdem die Datei eingebunden wurde, müssen vor der Nutzung einige Parameter gesetzt werden:
 \begin{itemize}
-	\item \texttt{PiratenID::\$realm} - Das OpenID-Realm, den Bereich, für welchen die Authentifizierung erfolgt. Muss gesetzt werden!
+	\item \texttt{PiratenID::\$realm} -- Das OpenID-Realm, den Bereich, für welchen die Authentifizierung erfolgt. Muss gesetzt werden!
 										Dieser Bereich muss sich unter alleiniger Kontrolle der Webanwendung befinden.
 										Diese Angabe ist sicherheitskritisch und sollte fest eingetragen werden.
 										Variablen aus \texttt{\$\_SERVER} können z. T. gefälscht werden und dürfen daher hier nicht genutzt werden!
@@ -59,30 +59,30 @@ Nachdem die Datei eingebunden wurde, müssen vor der Nutzung einige Parameter ge
 										Sowohl die anfragende Seite als auch die Return-URL müssen innerhalb dieses Realms liegen.
 										Das Realm wird auch für den Gültigkeitsbereich des Cookies verwendet.
 										
-	\item \texttt{PiratenID::\$returnurl} - Die URL, zu der der PiratenID-Server den Nutzer nach der Authentifizierung zurückschickt.
+	\item \texttt{PiratenID::\$returnurl} -- Die URL, zu der der PiratenID-Server den Nutzer nach der Authentifizierung zurückschickt.
 											Falls gesetzt, muss diese URL innerhalb des Realms liegen, d.h. sie muss mit der Realm-URL beginnen.
 											Wird automatisch erkannt (Adresse der aktuellen Seite), falls nicht gesetzt.
 
-	\item \texttt{PiratenID::\$imagepath} - Der öffentliche Pfad zu den Buttongrafiken. Standardmäßig leer (d.h. aktuelles Verzeichnis).
+	\item \texttt{PiratenID::\$imagepath} -- Der öffentliche Pfad zu den Buttongrafiken. Standardmäßig leer (d.h. aktuelles Verzeichnis).
 											Dieser Wert wird vor die Button-URLs eingefügt und kann ein relativer oder absoluter Pfad wie '/',
 											'/piratenid-buttons/' oder 'https://images.example.com/piratenid/' sein.
 
-	\item \texttt{PiratenID::\$attributes} - Die anzufragenden Attribute als durch Kommata getrennte Liste. Standardmäßig leer.
-											Mögliche Attribute siehe Abschnitt \ref{sec:attribute}.
+	\item \texttt{PiratenID::\$attributes} -- Die anzufragenden Attribute als durch Kommata getrennte Liste. Standardmäßig leer.
+											Mögliche Attribute siehe Abschnitt \fullref{sec:attribute}.
 											Wenn hier  \texttt{mitgliedschaft-bund} aufgeführt wird, können sich auch Nichtmitglieder einloggen,
 											die Webanwendung prüft die Mitgliedschaft selbst (explizite Prüfung der Mitgliedschaft).
 											Wird dieses Attribut nicht abgefragt, können sich nur Mitglieder einloggen.
 
-	\item \texttt{PiratenID::\$usePseudonym} - boolean-Wert (Standard: true), welcher angibt, ob ein Pseudonym angefragt werden soll.
+	\item \texttt{PiratenID::\$usePseudonym} -- boolean-Wert (Standard: true), welcher angibt, ob ein Pseudonym angefragt werden soll.
 											Ist dieser Wert false, erfolgt ein anonymes Login.
 											Damit kann sichergestellt werden, dass sich gerade ein Pirat eingeloggt hat.
 											Nutzer können jedoch nicht wiedererkannt werden, d.h. Doppelaccounts können nicht verhindert werden.
 											Diese Option ist daher nur in Sonderfällen nützlich.
 	
-	\item \texttt{PiratenID::\$logouturl} - Die URL, auf die der Logout-Button verweisen soll. Standard: Realm-URL.
+	\item \texttt{PiratenID::\$logouturl} -- Die URL, auf die der Logout-Button verweisen soll. Standard: Realm-URL.
 											Siehe auch \texttt{PiratenID::\$handleLogout}.
 
-	\item \texttt{PiratenID::\$handleLogout} - Boolean, gibt an, ob das integrierte Logout-Handling verwendet werden soll.
+	\item \texttt{PiratenID::\$handleLogout} -- Boolean, gibt an, ob das integrierte Logout-Handling verwendet werden soll.
 											Wenn true, wird beim Login eine Zufallszahl erzeugt und in der Sitzung gespeichert.
 											Diese wird an die Logout-URL automatisch in einem Parameter (\texttt{piratenid\_logout}) angehängt.
 											\texttt{PiratenID::\$run()} erkennt diesen Parameter und loggt den Nutzer aus,
@@ -94,7 +94,7 @@ Nachdem die Datei eingebunden wurde, müssen vor der Nutzung einige Parameter ge
 												Soll statt \texttt{PiratenID::\$run()} direkt \texttt{PiratenID::\$button(...)} aufgerufen werden,
 												so muss dieser Parameter deaktiviert werden! }
 												
-	\item \texttt{PiratenID::\$loginCallback} - Verweis auf eine Funktion\footnote{\url{http://php.net/manual/de/function.is-callable.php}},
+	\item \texttt{PiratenID::\$loginCallback} -- Verweis auf eine Funktion\footnote{\url{http://php.net/manual/de/function.is-callable.php}},
 											welche aufgerufen wird, wenn über \texttt{PiratenID::\$run()} ein Login erfolgt.
 											Die Funktion erhält als Parameter das von \texttt{PiratenID::handle()} zurückgegebene Array.
 											Die Funktion muss \texttt{null} zurückgeben, um das Login zu erlauben.
@@ -105,7 +105,7 @@ Nachdem die Datei eingebunden wurde, müssen vor der Nutzung einige Parameter ge
 											Die Session ist beim Aufruf der Callback-Funktion initialisiert,
 											das Ergebnis des Login-Vorgangs ist aber noch nicht darin abgelegt.
 	
-	\item \texttt{PiratenID::\$logoutCallback} - Verweis auf eine Funktion\footnote{\url{http://php.net/manual/de/function.is-callable.php}},
+	\item \texttt{PiratenID::\$logoutCallback} -- Verweis auf eine Funktion\footnote{\url{http://php.net/manual/de/function.is-callable.php}},
 											welche aufgerufen wird, wenn über \texttt{PiratenID::\$run()} ein Logout erfolgt.
 											Die Funktion erhält keine Parameter, der Rückgabewert wird ignoriert.
 
@@ -159,7 +159,7 @@ Der Rückgabewert ist ein assoziatives Array mit den Feldern
 	\item \texttt{authenticated}: Boolean, gibt an, ob ein Loginvorgang erfolgreich war
 	\item \texttt{attributes}: (nur bei erfolgreichem Login) assoziatives Array mit den Attributen, die der Server geliefert hat
 	\item \texttt{pseudonym}: (nur bei erfolgreichem Login mit Pseudonym) Pseudonym-String (Hash der OpenID-Identity-URL, siehe oben)
-	\item \texttt{rawIdentityURL}: (nur bei erfolgreichem Login mit Pseudonym) Die OpenID-Identity-URL - sollte nicht genutzt werden, siehe oben!
+	\item \texttt{rawIdentityURL}: (nur bei erfolgreichem Login mit Pseudonym) Die OpenID-Identity-URL -- sollte nicht genutzt werden, siehe oben!
 	\item \texttt{error}: Enthält den aufgeretenen Fehler (oder null, wenn kein Fehler aufgetreten ist)
 \end{itemize}
 

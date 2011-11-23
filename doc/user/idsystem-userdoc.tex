@@ -1,33 +1,6 @@
-\documentclass[parskip=half]{scrartcl}
-
-\usepackage[utf8]{inputenc}
-\usepackage[ngerman]{babel}
-\usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{amssymb}
-\usepackage{color}
-\usepackage{hyperref}
-\usepackage{graphicx}
-\usepackage{epstopdf}
-\usepackage{listings}
-\usepackage{fancyvrb}
-\definecolor{lnkcol}{rgb}{0.0,0.0,0.6}
-\hypersetup{
-	pdfstartview=FitH,
-	colorlinks=true,
-	urlcolor=lnkcol,
-	citecolor=lnkcol,
-	linkcolor=lnkcol,
-	filecolor=lnkcol
-}
+\input{../tech/tex-header.tex}
 
 \title{PiratenID: Handbuch für Benutzer}
-\author{Jan Schejbal}
-\date{}
-
-\bibliographystyle{unsrt}
-
-\setcounter{secnumdepth}{2}
 
 \begin{document}
 \maketitle
@@ -51,7 +24,7 @@ und das ID-System bestätigt das Login und leitet die von dir freigegebenen Info
 Die Teilnahme am ID-System ist freiwillig.
 
 Bei der Accounterstellung wählst du einen Nutzernamen, ein Kennwort, und gibst deine E-Mail-Adresse ein.
-Jeder Pirat erhält ein Token - mit diesem kannst du deinen Account voll aktivieren.
+Jeder Pirat erhält ein Token -- mit diesem kannst du deinen Account voll aktivieren.
 Über die Eingabe des Tokens wird der Account pseudonym mit den Gliederungen verknüpft, in denen du Mitglied bist.
 Das ID-System erfährt hierbei weder deinen Namen noch die Mitgliedsnummer!
 Die Zuordnung zwischen Token und Mitgliedern ist nur in der Mitgliederdatenbank der Piratenpartei gespeichert.
@@ -64,16 +37,16 @@ Du wirst daraufhin wieder zurück zur Website geleitet und solltest dort nun ein
 
 Webseiten können folgende Informationen über dich anfordern:
 \begin{itemize}
-	\item Mitgliedschaft in der Piratenpartei - diese wird immer abgefragt, denn der Zweck des Systems ist, dir die Möglichkeit zu geben, dich als Pirat "`auszuweisen"'.
+	\item Mitgliedschaft in der Piratenpartei -- diese wird immer abgefragt, denn der Zweck des Systems ist, dir die Möglichkeit zu geben, dich als Pirat "`auszuweisen"'.
 		Entweder diese wird implizit abgefragt, dann kannst du dich nur einloggen, wenn du Pirat bist und ein Token eingetragen hast,
 		oder explizit, dann können sich auch Nichtpiraten einloggen, die Website bekommt aber mitgeteilt, ob du Pirat bist.
 	
-	\item Mitgliedschaften in weiteren Gliederungen (LV, BZV, KV, OV) - diese können optional angefordert werden.
+	\item Mitgliedschaften in weiteren Gliederungen (LV, BZV, KV, OV) -- diese können optional angefordert werden.
 		Sind für eine Gliederungsstufe keine Informationen vorhanden (Anfangs werden voraussichtlich nur LVs angegeben),
 		oder bist du in keinem Verband der entsprechenden Stufe Mitglied,
 		wird ein leeres oder als "`keine Mitgliedschaft"' gekennzeichnetes Feld übermittelt.
 		
-	\item Pseudonym - ein zufälliges Pseudonym, zu dem im folgenden Abschnitt mehr erläutert wird
+	\item Pseudonym -- ein zufälliges Pseudonym, zu dem im folgenden Abschnitt mehr erläutert wird
 \end{itemize}
 
 \subsection{Das Pseudonym}
@@ -81,7 +54,7 @@ Damit eine Website dich wiedererkennen kann, z. B. damit du in einer Umfrage nur
 Dies ist ein zufälliger Wert, der für jede Website und jeden Nutzer anders ist.
 Wenn du dich also bei zwei Websites über das ID-System einloggst, hast du für jede Website ein eigenes Pseudonym.
 Die Websites haben auch keine Möglichkeit, diese Pseudonyme miteinander zu verknüpfen.
-Website A kann also nicht feststellen, ob ein Nutzer X der gleiche Pirat ist wie Nutzer Y auf Website B - auch nicht, wenn die beiden Websites zusammenarbeiten.
+Website A kann also nicht feststellen, ob ein Nutzer X der gleiche Pirat ist wie Nutzer Y auf Website B -- auch nicht, wenn die beiden Websites zusammenarbeiten.
 
 Solange das entsprechende Benutzerkonto im ID-System existiert, wäre es den Betreibern des ID-Systems mit einem gewissen Aufwand möglich, ein Pseudonym einem Nutzer zuzuordnen.
 Ohne Zugriff auf die Datenbank des ID-Systems sowie einen weiteren geheimen Wert ist eine solche Zuordnung nicht möglich.
@@ -109,7 +82,7 @@ Alternativ kann (bei beiden Browsern) der Name des Seiteninhabers (Piratenpartei
 
 \subsection{Sicheres Kennwort}
 Das Kennwort schützt dein Benutzerkonto vor unbefugtem Zugriff.
-Du solltest es daher nie anderen Personen mitteilen - das bedeutet auch, dass du das gleiche Kennwort nicht bei mehreren Webseiten nutzen solltest!
+Du solltest es daher nie anderen Personen mitteilen -- das bedeutet auch, dass du das gleiche Kennwort nicht bei mehreren Webseiten nutzen solltest!
 Auch die IT wird dich \textbf{nicht} nach deinem Kennwort fragen. Gib es nur auf der Seite des ID-Systems ein.
 Ein sicheres Kennwort kannst du beispielsweise bilden, indem du 4 zufällig gewählte Wörter aneinanderreihst:
 "`\texttt{lastwagen elefant schwimmen buch}"' wäre beispielsweise ein sehr sicheres Kennwort.

@@ -1,33 +1,6 @@
-\documentclass[parskip=half]{scrartcl}
-
-\usepackage[utf8]{inputenc}
-\usepackage[ngerman]{babel}
-\usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{amssymb}
-\usepackage{color}
-\usepackage{hyperref}
-\usepackage{graphicx}
-\usepackage{epstopdf}
-\usepackage{listings}
-\usepackage{fancyvrb}
-\definecolor{lnkcol}{rgb}{0.0,0.0,0.6}
-\hypersetup{
-	pdfstartview=FitH,
-	colorlinks=true,
-	urlcolor=lnkcol,
-	citecolor=lnkcol,
-	linkcolor=lnkcol,
-	filecolor=lnkcol
-}
+\input{tex-header.tex}
 
 \title{PiratenID: Technische Dokumentation}
-\author{Jan Schejbal}
-\date{}
-
-\bibliographystyle{unsrt}
-
-\setcounter{secnumdepth}{2}
 
 \begin{document}
 \maketitle
@@ -58,8 +31,8 @@ da dieser sowohl den Browser als auch die Webanwendung (Client des ID-Systems) b
 Die Parteien werden im Folgenden als ID-System, Browser und Webanwendung bezeichnet.
 
 \section{Authentifizierung}
-Statt eines ursprünglich geplaten Protokolls wird OpenID 2.0 \footnote{\url{http://openid.net/specs/openid-authentication-2_0.html}} (mit gewissen Einschränkungen)
-mit Attribute Exchange 1.0 \footnote{\url{http://openid.net/specs/openid-attribute-exchange-1_0.html}} verwendet.
+Statt eines ursprünglich geplaten Protokolls wird OpenID 2.0\footnote{\url{http://openid.net/specs/openid-authentication-2_0.html}} (mit gewissen Einschränkungen)
+mit Attribute Exchange 1.0\footnote{\url{http://openid.net/specs/openid-attribute-exchange-1_0.html}} verwendet.
 Die serverseitige Implementierung ist eine vollständige Eigenentwicklung, da die Libraries eine zu hohe Komplexität haben, um sie vollständig zu reviewen,
 und eine kurze Durchsicht einiger Libraries Zweifel an der Sicherheit weckte.
 \footnote{Beispiel: Die PHP-OpenID-Library von Janrain greift bei fehlendem curl auf fopen zurück, was SSL-Zertifikate nicht prüft.}
@@ -104,7 +77,7 @@ Dies könnte z. B. benutzt werden, um Zugang zu Informationen oder Diensten auf 
 Sollen Doppelaccounts verhindert oder Benutzer wiedererkannt werden, muss die pseudonyme Anmeldung benutzt werden.
 
 Unabhängig davon, ob die Anmeldung anonym oder pseudonym stattfindet, wird die Piratenmitgliedschaft des Nutzers entweder implizit oder explizit geprüft:
-Wird das Attribut "`mitgliedschaft-bund"' \textbf{nicht} über Attribute Exchange (siehe nächter Abschnitt) abgefragt findet eine implizite Prüfung statt - 
+Wird das Attribut "`mitgliedschaft-bund"' \textbf{nicht} über Attribute Exchange (siehe nächter Abschnitt) abgefragt findet eine implizite Prüfung statt -- 
 nur Piraten mit gültiger Mitgliedschaft (und korrekt eingetragenem Token) können sich anmelden, alle anderen bekommen nur eine Fehlermeldung.
 Wird es jedoch explizit abgefragt, kann sich jeder anmelden und die Anwendung muss/kann Piraten und Nichtpiraten selbst trennen,
 z. B. um ehemaligen Mitgliedern noch Zugriff auf ihre Accounts zu ermöglichen.
@@ -265,13 +238,13 @@ Der Nutzer muss selbst entscheiden, ob er einem Dienst seine Daten anvertrauen m
 \subsubsection{Datenweitergabe nur mit Einverständnis}
 Im ID-System gespeicherte Daten werden nur mit Einverständnis des Nutzers, bestätigt durch die Eingabe des Kennworts, weitergegeben.
 
-\subsubsection{Ein Pirat - ein Pseudonym (pro Realm)}
+\subsubsection{Ein Pirat -- ein Pseudonym (pro Realm)}
 Jeder Nutzer hat nur ein Pseudonym pro Realm.
 Eine Webanwendung, die Umfragen oder Abstimmungen anbietet, kann sich daher in der Regel darauf verlassen, dass jedes Mitglied nur einmal teilnehmen kann,
 wenn pro Pseudonym nur eine Teilnahme ermöglicht wird und die Mitgliedseigenschaft geprüft wird.
 
 Aus diesem Grund ist es einem Teilnehmer auch nicht möglich, sein Pseudonym zu ändern, allerdings kann jeder mehrere Benutzerkonten haben.
-Die Bindung eines Kontos an eine Person geschieht erst durch die Eingabe eines Tokens - ohne Token ist das Konto nicht als das Konto eines Mitglieds bestätigt.
+Die Bindung eines Kontos an eine Person geschieht erst durch die Eingabe eines Tokens -- ohne Token ist das Konto nicht als das Konto eines Mitglieds bestätigt.
 Um sicherzustellen, dass ein Mitglied (in seiner Eigenschaft als Mitglied) nicht mehrere Konten (und somit mehrere Pseudonyme nutzt),
 wird bei der Eingabe eines Tokens dieses an das entsprechende Konto gebunden.
 
@@ -281,7 +254,7 @@ Wird ein Benutzerkonto gelöscht, bleibt das Token (bzw. ein Hash davon) gespeic
 
 Da mit der Löschung eines Kontos bis auf das Token alle Daten (inkl. Usersecret) gelöscht werden, und ein Token nicht wiederverwendet werden kann,
 bedeutet dies, dass ein Mitglied, welches sein Konto mit eingetragenem Token löscht, das ID-System nicht mehr benutzen kann.
-Die Mitgliederverwaltung darf in diesem Fall \textbf{kein} neues Token ausstellen, da das Prinzip "`Ein Pirat - ein Pseudonym"' damit verletzt würde!
+Die Mitgliederverwaltung darf in diesem Fall \textbf{kein} neues Token ausstellen, da das Prinzip "`Ein Pirat -- ein Pseudonym"' damit verletzt würde!
 
 Nicht verwendete Token können beliebig ausgetauscht werden. Vor der Neuausstellung eines Tokens sollte die Mitgliederverwaltung bestätigen lassen,
 dass das alte Token nicht verwendet wurde, und dieses sperren lassen.
@@ -494,12 +467,12 @@ Diese Datei enthält das Ende jeder ausgegebenen HTML-Seite:
 \subsubsection{/includes/siteconstants.inc.php}
 Diese Datei enthält (z.T. geheime!) Konstanten, die bei der Installation des Servers gesetzt werden müssen:
 \begin{itemize}
-	\item \texttt{\$sitepath} - Die absolute Adresse des ID-Systems. Wird z. B. beim Versand von E-Mails verwendet.
-	\item \texttt{\$extendedAttributeRealms} - Die Liste der Realms, die erweiterte Attribute (Realname, Mitgliedsnummer) anfragen können.
-	\item \texttt{getDatabasePDO()} - Hier werden die Datenbank-Zugangsdaten eingetragen
-	\item \texttt{\$pseudonymsecret} - Ein zusätzliches Salt zur Berechnung der Pseudonyme, siehe Abschnitt \ref{sec:pseudo} Pseudonyme.
-	\item \texttt{\$passwordsaltsecret} - Ein zusätzliches Salt zur Berechnung der Passwort-Hashes, siehe Abschnitt \ref{sec:pwhash} Passwort-Hashverfahren.
-	\item \texttt{\$openid\_hmacsecret} - Das zur Berechnung der OpenID-Signaturen verwendete secret. 
+	\item \texttt{\$sitepath} -- Die absolute Adresse des ID-Systems. Wird z. B. beim Versand von E-Mails verwendet.
+	\item \texttt{\$extendedAttributeRealms} -- Die Liste der Realms, die erweiterte Attribute (Realname, Mitgliedsnummer) anfragen können.
+	\item \texttt{getDatabasePDO()} -- Hier werden die Datenbank-Zugangsdaten eingetragen
+	\item \texttt{\$pseudonymsecret} -- Ein zusätzliches Salt zur Berechnung der Pseudonyme, siehe Abschnitt \fullref{sec:pseudo}.
+	\item \texttt{\$passwordsaltsecret} -- Ein zusätzliches Salt zur Berechnung der Passwort-Hashes, siehe Abschnitt \fullref{sec:pwhash}.
+	\item \texttt{\$openid\_hmacsecret} -- Das zur Berechnung der OpenID-Signaturen verwendete secret. 
 \end{itemize}
 Maßnahmen, die zu treffen sind, wenn eine der geheimen Konstanten kompromittiert wird, sind in der Datei selbst dokumentiert.
 
@@ -507,25 +480,25 @@ Maßnahmen, die zu treffen sind, wenn eine der geheimen Konstanten kompromittier
 \subsubsection{/includes/functions-global.inc.php}
 Diese Datei enthält die globalen Funktionen:
 \begin{itemize}
-	\item \texttt{safeout(\&\$text)} - Gibt eine Variable mit korrektem HTML-Escaping aus. Ist die Variable undefiniert, wird nichts ausgegeben, aber keine Warnung erzeugt
-	\item \texttt{prefilter(...)} - Prüft einen Wert (z. B. GET/POST-Parameter) auf Existenz, Typ und Länge
-	\item \texttt{logPrefilter(...)} - Bereitet einen Wert für die Speicherung im loginfailures\_log vor.
-	\item \texttt{generateNonce(\$entropy)} - Erzeugt die angegebene Anzahl sicherer Zufallsbytes (Hex-encoded)
-	\item \texttt{hashPassword(\$username, \$pw)} - Berechnet den Passwort-Hash, siehe Abschnitt \ref{sec:pwhash} Passwort-Hashverfahren
-	\item \texttt{class DB} - Die DB-Klasse kapselt Datenbankzugriffe über ein Singleton.
+	\item \texttt{safeout(\&\$text)} -- Gibt eine Variable mit korrektem HTML-Escaping aus. Ist die Variable undefiniert, wird nichts ausgegeben, aber keine Warnung erzeugt
+	\item \texttt{prefilter(...)} -- Prüft einen Wert (z. B. GET/POST-Parameter) auf Existenz, Typ und Länge
+	\item \texttt{logPrefilter(...)} -- Bereitet einen Wert für die Speicherung im loginfailures\_log vor.
+	\item \texttt{generateNonce(\$entropy)} -- Erzeugt die angegebene Anzahl sicherer Zufallsbytes (Hex-encoded)
+	\item \texttt{hashPassword(\$username, \$pw)} -- Berechnet den Passwort-Hash, siehe Abschnitt \fullref{sec:pwhash}
+	\item \texttt{class DB} -- Die DB-Klasse kapselt Datenbankzugriffe über ein Singleton.
 	\begin{itemize}
 		\item Die Felder connection, statement und error sind zwecks leichtem Zugriff public.
 		\item \texttt{query(...)} führt eine Datenbankabfrage (mit Längenprüfung der Parameter) durch. Die Felder statement und ggf. error werden gesetzt.
 		\item \texttt{get()} liefert die Singleton-Instanz
 		\item \texttt{cleanup()} löscht veraltete Daten und wird automatisch beim Erstellen einer neuen Instanz aufgerufen
 	\end{itemize}
-	\item \texttt{getUser(...)} - Wenn in den POST-Variablen ein gültiges Login (inkl. Clickjacking-Schutz) liegt, wird der dazugehörige User mit allen Daten zurückgegeben.
+	\item \texttt{getUser(...)} -- Wenn in den POST-Variablen ein gültiges Login (inkl. Clickjacking-Schutz) liegt, wird der dazugehörige User mit allen Daten zurückgegeben.
 								Hier wird auch die Beschränkung der Fehlversuche pro IP und das Logging von Fehlversuchen durchgeführt.
 								Zugriffe auf Benutzerdaten erfolgen über den Rückgabewert dieser Funktion, um sicherzustellen, dass immer ein Login erforderlich ist.
-	\item \texttt{printLoginFields()} - Gibt Felder für ein Loginformular inkl. Clickjacking-Schutz aus (die mit getUser() kompatibel sind)
-	\item \texttt{checkPassword(...)} - Prüft, ob ein Passwort inkl. Wiederholung in Ordnung sind, d.h. das Passwort setzt werden kann.
+	\item \texttt{printLoginFields()} -- Gibt Felder für ein Loginformular inkl. Clickjacking-Schutz aus (die mit getUser() kompatibel sind)
+	\item \texttt{checkPassword(...)} -- Prüft, ob ein Passwort inkl. Wiederholung in Ordnung sind, d.h. das Passwort setzt werden kann.
 										Prüft \textbf{nicht} ob ein Login gültig ist, dafür ist getUser da!
-	\item \texttt{checkMail(...)} - Prüft, ob eine E-Mail-Adresse gültig und noch nicht verwendet (d.h. für das Anlegen eines Accounts zulässig) ist
+	\item \texttt{checkMail(...)} -- Prüft, ob eine E-Mail-Adresse gültig und noch nicht verwendet (d.h. für das Anlegen eines Accounts zulässig) ist
 \end{itemize}
 
 \subsubsection{/includes/tokenimport.inc.php}
@@ -595,17 +568,17 @@ Die einzelnen Funktionen sind innerhalb der Datei kommentiert, nur die wichtigst
 in der Reihenfolge, in der sie in einem normalen Authentifizierungsvorgang eine Rolle spielen.
 
 \begin{itemize}
-	\item \texttt{getOpenIDFields} - liest die OpenID-Werte aus der GET- oder POST-Anfrage aus. Umgeht dabei ein PHP-"`Feature"', welches Feldnamen umbenennt.
-	\item \texttt{evaluateFields} - prüft die übergebenen OpenID-Werte von Anfragen (wird von handleCheckidSetup und handleUserConfirm genutzt/aufgerufen)
-	\item \texttt{handleCheckidSetup} - liefert das Login-Formular, wenn eine OpenID-Authentifizerungsanfrage ankommt oder handleUserConfirm einen Fehler entdeckt.
-	\item \texttt{handleUserConfirm} - verarbeitet die Antwort auf das Login-Formular (d.h. die Bestätigung der Anfrage durch den Nutzer)
-	\item \texttt{addAXAttributes} - fügt einer von handleUserConfirm vorbereiteten OpenID-Antwort die zusätzlichen Attributfelder hinzu, falls nötig.
-	\item \texttt{sendIndirectResponse} - liefert eine HTML-Seite mit einer indirekten OpenID-Antwort (wird von handleUserConfirm aufgerufen)
+	\item \texttt{getOpenIDFields} -- liest die OpenID-Werte aus der GET- oder POST-Anfrage aus. Umgeht dabei ein PHP-"`Feature"', welches Feldnamen umbenennt.
+	\item \texttt{evaluateFields} -- prüft die übergebenen OpenID-Werte von Anfragen (wird von handleCheckidSetup und handleUserConfirm genutzt/aufgerufen)
+	\item \texttt{handleCheckidSetup} -- liefert das Login-Formular, wenn eine OpenID-Authentifizerungsanfrage ankommt oder handleUserConfirm einen Fehler entdeckt.
+	\item \texttt{handleUserConfirm} -- verarbeitet die Antwort auf das Login-Formular (d.h. die Bestätigung der Anfrage durch den Nutzer)
+	\item \texttt{addAXAttributes} -- fügt einer von handleUserConfirm vorbereiteten OpenID-Antwort die zusätzlichen Attributfelder hinzu, falls nötig.
+	\item \texttt{sendIndirectResponse} -- liefert eine HTML-Seite mit einer indirekten OpenID-Antwort (wird von handleUserConfirm aufgerufen)
 											(d.h. einem HTML-Formular, welches an die anfragende Webanwendung zurückgePOSTed wird und die OpenID-Antwort enthält.
 											Enthält eine Warnung, dass der Nutzer nun zur ursprünglichen Seite zurückkehrt,
 											um Phishing z. B. durch das Anfordern von HTTP Basic Auth (während der Nutzer noch die ID-Seite sieht) zu verhindern.
-	\item \texttt{handleCheckAuth} - verarbeitet die Verifizierungsanfrage der Webanwendung (Prüfung der indirekten Antwort)
-	\item \texttt{sendDirectResponse} - beantwortet eine direkte OpenID-Anfrage (für die Überprüfung der übermittelten Daten, wird von handleCheckAuth aufgerufen)
+	\item \texttt{handleCheckAuth} -- verarbeitet die Verifizierungsanfrage der Webanwendung (Prüfung der indirekten Antwort)
+	\item \texttt{sendDirectResponse} -- beantwortet eine direkte OpenID-Anfrage (für die Überprüfung der übermittelten Daten, wird von handleCheckAuth aufgerufen)
 \end{itemize}
 
 
@@ -631,18 +604,18 @@ Die Datenbank besteht aus drei Tabellen:
 \subsection{Tabelle "`users"'}
 Diese Tabelle enthält die Benutzerkonten. Folgende Felder sind vorhanden:
 \begin{itemize}
-	\item \texttt{username} - der eindeutige, nicht änderbare Benutzername (Primärschlüssel)
-	\item \texttt{usersecret} - das Benutzer-Secret zur Berechnung der Pseudonyme (siehe Abschnitt \ref{sec:pseudo})
-	\item \texttt{pwhash} - der Hash des Passworts (siehe Abschnitt \ref{sec:pwhash})
-	\item \texttt{email} - die E-Mail-Adresse (z. B. für Passwortresets)
-	\item \texttt{email\_activationkey} - der Hash des Aktivierungsschlüssels zum Bestätigen der Mailadresse
-	\item \texttt{email\_verified} - gibt an, ob die Adresse bestätigt ist
-	\item \texttt{token} - das eingetragene Token (gehasht) - darf nicht mehr verändert oder gelöscht werden!
-	\item \texttt{mitgliedsnr} - Feld zur Aufnahme der Mitgliedsnummer, sofern diese Funktion implementiert wird
-	\item \texttt{realname} - Feld zur Aufnahme des Realnamens, sofern diese Funktion implementiert wird
-	\item \texttt{resettoken} - Hash des Passwort-Reset-Tokens, falls verschickt (sonst NULL)
-	\item \texttt{resettime} - Zeitpunkt, zu dem die Resetmail verschikt wurde
-	\item \texttt{createtime} - Zeitpunkt, zu dem der Account erstellt wurde
+	\item \texttt{username} -- der eindeutige, nicht änderbare Benutzername (Primärschlüssel)
+	\item \texttt{usersecret} -- das Benutzer-Secret zur Berechnung der Pseudonyme (siehe Abschnitt \fullref{sec:pseudo})
+	\item \texttt{pwhash} -- der Hash des Passworts (siehe Abschnitt \fullref{sec:pwhash})
+	\item \texttt{email} -- die E-Mail-Adresse (z. B. für Passwortresets)
+	\item \texttt{email\_activationkey} -- der Hash des Aktivierungsschlüssels zum Bestätigen der Mailadresse
+	\item \texttt{email\_verified} -- gibt an, ob die Adresse bestätigt ist
+	\item \texttt{token} -- das eingetragene Token (gehasht) -- darf nicht mehr verändert oder gelöscht werden!
+	\item \texttt{mitgliedsnr} -- Feld zur Aufnahme der Mitgliedsnummer, sofern diese Funktion implementiert wird
+	\item \texttt{realname} -- Feld zur Aufnahme des Realnamens, sofern diese Funktion implementiert wird
+	\item \texttt{resettoken} -- Hash des Passwort-Reset-Tokens, falls verschickt (sonst NULL)
+	\item \texttt{resettime} -- Zeitpunkt, zu dem die Resetmail verschikt wurde
+	\item \texttt{createtime} -- Zeitpunkt, zu dem der Account erstellt wurde
 \end{itemize}
 
 
@@ -651,7 +624,7 @@ Diese Tabelle enthält die Zuordnungen zwischen Token(hashes) und Verbandsmitgli
 Sie sollte regelmäßig geleert und neu aus der Mitgliederverwaltung importiert werden. (Siehe /includes/tokenimport.inc.php)
 Folgende Felder sind vorhanden:
 \begin{itemize}
-	\item \texttt{token} - Das (gehashte) Token (Primärschlüssel)
+	\item \texttt{token} -- Das (gehashte) Token (Primärschlüssel)
 	\item \texttt{mitgliedschaft-bund}
 	\item \texttt{mitgliedschaft-land}
 	\item \texttt{mitgliedschaft-bezirk}
@@ -659,15 +632,15 @@ Folgende Felder sind vorhanden:
 	\item \texttt{mitgliedschaft-ort}
 \end{itemize}
 
-Bezüglich der Bedeutung und möglicher Werte für die Mitgliedschaftsfelder sei auf Abschnitt \ref{sec:attribute} verwiesen.
+Bezüglich der Bedeutung und möglicher Werte für die Mitgliedschaftsfelder sei auf Abschnitt \fullref{sec:attribute} verwiesen.
 
 \subsection{Tabelle "`openid"'}
 Diese Tabelle enthält die ausgegebenen Nonces der OpenID-Antworten inkl. der dazugehörigen Hashes.
 Sie wird verwendet, um bei der Verifikationsanfrage die Echtheit jeder Antwort genau einmal zu bestätigen.
 \begin{itemize}
-	\item \texttt{nonce} - Die Nonce aus der Antwort
-	\item \texttt{hmac} - Der authentifizierte Hash der OpenID-Antwort
-	\item \texttt{createtime} - Die Zeit der Antwort
+	\item \texttt{nonce} -- Die Nonce aus der Antwort
+	\item \texttt{hmac} -- Der authentifizierte Hash der OpenID-Antwort
+	\item \texttt{createtime} -- Die Zeit der Antwort
 \end{itemize}
 
 \subsection{Tabellen "`loginfailures"' und "`loginfailures\_log"'}
@@ -676,10 +649,10 @@ Die Tabelle "`loginfailures\_log"' speichert diese Versuche vier Wochen lang, um
 Sie kann manuell oder durch zusätzliche Tools analysiert werden und wird vom Programm ansonsten nicht verwendet.
 Es werden folgende Werte gespeichert:
 \begin{itemize}
-	\item \texttt{ip} - Die IP, von der die Anfrage kam
-	\item \texttt{timestamp} - Die Uhrzeit, um die die Anfrage kam
-	\item \texttt{useragent} - Der bei der Loginanfrage mitgeschickte Referer-Header, formatiert mit logPrefilter
-	\item \texttt{referer} - Der bei der Loginanfrage mitgeschickte Referer-Header, formatiert mit logPrefilter
+	\item \texttt{ip} -- Die IP, von der die Anfrage kam
+	\item \texttt{timestamp} -- Die Uhrzeit, um die die Anfrage kam
+	\item \texttt{useragent} -- Der bei der Loginanfrage mitgeschickte Referer-Header, formatiert mit logPrefilter
+	\item \texttt{referer} -- Der bei der Loginanfrage mitgeschickte Referer-Header, formatiert mit logPrefilter
 \end{itemize}
 
 Die Tabelle "`loginfailures"' speichert nur IP und Timestamp für die Dauer von 30 Minuten und wird für die IP-Sperre verwendet.
@@ -690,60 +663,60 @@ Die Tabelle "`loginfailures"' speichert nur IP und Timestamp für die Dauer von 
 \subsection{Dateien}
 Der Client besteht aus folgenden Dateien:
 \begin{itemize}
-	\item \texttt{piratenid.php} -
+	\item \texttt{piratenid.php} --
 		Die Client-Klasse selbst. Die Funktionen werden weiter unten beschrieben.
-	\item \texttt{certificate.pem} - 
+	\item \texttt{certificate.pem} -- 
 		Das Zertifikat, über das der PiratenID-Server authentifiziert wird.
 		Dabei kann es sich entweder um das Zertifikat des Servers selbst,
 		oder um das einer CA (Zertifizierungsstelle) im Zertifikatspfad des Serverzertifikats handeln.
-	\item \texttt{button-*.png} -
+	\item \texttt{button-*.png} --
 		Drei Grafiken für Login/Logout/Fehler-Buttons.
-	\item \texttt{example.php} -
+	\item \texttt{example.php} --
 		Ein Beispiel für die Verwendung des OpenID-Clients. Nicht Teil des eigentlichen Clients, sollte nicht in die Produktivumgebung kopiert werden.
 \end{itemize}
 
 \subsection{Funktionen}
 Die Funktionen sind in der PiratenID-Klasse kommentiert. Fett gedruckte Funktionen sind public.
 \begin{itemize}
-	\item \textbf{\texttt{run()}} -
-		Automatisiert alle relevanten Abläufe, siehe Abschnitt \ref{sec:client-usage-basic}.
+	\item \textbf{\texttt{run()}} --
+		Automatisiert alle relevanten Abläufe, siehe Abschnitt \fullref{sec:client-usage-basic}.
 		Eine Session wird gestartet, OpenID-Antworten und Logout-Wünsche werden bearbeitet.
-	\item \texttt{error(...)} -
+	\item \texttt{error(...)} --
 		Setzt die \$error-Variable und gibt den HTML-Code für einen Fehlerbutton zurück. Wird von \texttt{run()} genutzt.
-	\item \textbf{\texttt{autoButton(...)}} -
+	\item \textbf{\texttt{autoButton(...)}} --
 		Liefert je nach Login-Status den passenden Button (Login oder Logout) zurück. Initialisiert die Session, falls nötig.
-	\item \textbf{\texttt{button(...)}} -
+	\item \textbf{\texttt{button(...)}} --
 		Liefert den HTML-Code für einen Button zurück, welcher auf eine passende URL (Login/Logout etc.) verweist.
-	\item \textbf{\texttt{logout()}} -
+	\item \textbf{\texttt{logout()}} --
 		Loggt den Benutzer aus. Initialisiert die Session, falls nötig.
-	\item \textbf{\texttt{initSession()}} -
+	\item \textbf{\texttt{initSession()}} --
 		Initialisiert die Session und wendet dabei erweiterte Sicherheitsmaßnahmen an.
-	\item \textbf{\texttt{handle()}} -
+	\item \textbf{\texttt{handle()}} --
 		Wertet eine OpenID-Antwort aus (inkl. Verifizierung via \texttt{checkSignature(...)}) und gibt das Ergebnis zurück.
-		Siehe auch Abschnitt  \ref{sec:client-usage-advanced}.
-	\item \textbf{\texttt{makeOpenIDURL()}} -
+		Siehe auch Abschnitt  \fullref{sec:client-usage-advanced}.
+	\item \textbf{\texttt{makeOpenIDURL()}} --
 		Liefert eine URL zum OpenID-Endpoint, welche eine Login-Anfrage mit den aktuellen Parametern enthält.
-		Siehe auch Abschnitt  \ref{sec:client-usage-advanced}.
-	\item \textbf{\texttt{getOpenIDRequest()}} -
+		Siehe auch Abschnitt  \fullref{sec:client-usage-advanced}.
+	\item \textbf{\texttt{getOpenIDRequest()}} --
 		Liefert die OpenID-Felder für eine Login-Anfrage mit den aktuellen Parametern.
-		Siehe auch Abschnitt  \ref{sec:client-usage-advanced}.
-	\item \texttt{initParams()} -
+		Siehe auch Abschnitt  \fullref{sec:client-usage-advanced}.
+	\item \texttt{initParams()} --
 		Prüft und initialisiert die Parameter, errechnet abgeleitete Defaultwerte.
 		Wird von den meisten Funktionen, die Parameter nutzen, aufgerufen.
-	\item \textbf{\texttt{isSSL()}} -
+	\item \textbf{\texttt{isSSL()}} --
 		Gibt eine Vermutung darüber ab, ob die Seite über eine SSL-Verbindung aufgerufen wird.
-	\item \texttt{checkSignature(...)} -
+	\item \texttt{checkSignature(...)} --
 		Prüft die Signatur einer OpenID-Antwort durch SSL-gesicherte Rückfrage beim Endpoint.
-	\item \texttt{getOpenIDFields(...)} - 
+	\item \texttt{getOpenIDFields(...)} -- 
 		Liest die OpenID-Werte aus einer GET- oder POST-Anfrage aus. Umgeht dabei ein PHP-"`Feature"', welches Feldnamen umbenennt.
-	\item \texttt{isValidKeyValue(...)} - 
-		Prüft, ob das übergebene Paar gültige Werte für einen OpenID-Feldnamen und -wert beinhaltet.
+	\item \texttt{isValidKeyValue(...)} -- 
+		Prüft, ob das übergebene Paar gültige Werte für einen OpenID-Feldnamen und --wert beinhaltet.
 	
 
 \end{itemize}
 
 \subsection{Schutzmaßnahmen}
-Besondere Schutzmaßnahmen im Client werden in Abschnitt \ref{sec:security-client} erläutert.
+Besondere Schutzmaßnahmen im Client werden in Abschnitt \nameref{sec:security-client} erläutert.
 
 \end{document}
 

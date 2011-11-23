@@ -1,0 +1,34 @@
+\documentclass[parskip=half]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,textcomp}
+\usepackage[ngerman]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\definecolor{lnkcol}{rgb}{0.0,0.0,0.6}
+\hypersetup{
+	pdfstartview=FitH,
+	colorlinks=true,
+	urlcolor=lnkcol,
+	citecolor=lnkcol,
+	linkcolor=lnkcol,
+	filecolor=lnkcol
+}
+
+\usepackage{microtype}
+\sloppy
+\newcommand{\fullref}[1]{\ref{#1} \nameref{#1}}
+
+\bibliographystyle{unsrt}
+\setcounter{secnumdepth}{2}
+
+\author{Jan Schejbal}
+\date{}
