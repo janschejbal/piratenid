@@ -48,7 +48,7 @@ function requestReset(&$error) {
 	}
 	
 	global $sitepath;
-	$resetlink = $sitepath."user/reset.php?key=".$resetkey;
+	$resetlink = $sitepath."user/doreset.php?key=".$resetkey;
 	$subject = "Passwortreset PiratenID";
 	$text ="Hallo,\n". // Observe max line length, consider variable lengths!
 			"auf dem PiratenID-Server wurde ein Passwort-Reset mit deiner Mailadresse\n".
@@ -61,7 +61,11 @@ function requestReset(&$error) {
 			"Bei Fragen wende dich bitte an die IT der Piratenpartei unter:\n".
 			"piratenid@helpdesk.piratenpartei.de\n\n";
 	$success = mail($email, $subject, $text, 'From: PiratenID <noreply@piratenpartei.de>'); // TODO from/reply-to?
-	return $success;
+	if (!$success) {
+		$error = "Fehler beim Mailversand.";
+		return false;
+	}
+	return true;
 }
 
 

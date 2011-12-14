@@ -7,8 +7,8 @@
 
 \begin{abstract}\noindent
 Dieses Dokument enthält eine Anleitung für Webseitenbetreiber, die das PiratenID-System in ihre Website einbinden möchten.
-Für reguläre Nutzer existiert eine separate Anleitung\footnote{TODO}.
-Technische Details zum ID-System finden sich in der technischen Dokumentation\footnote{TODO}.
+Für reguläre Nutzer existiert eine separate Anleitung\footnote{\url{https://id.piratenpartei.de/doc/idsystem-userdoc.pdf}}.
+Technische Details zum ID-System finden sich in der technischen Dokumentation\footnote{\url{https://id.piratenpartei.de/doc/idsystem-techdoc.pdf}}.
 \end{abstract}
 
 
@@ -26,7 +26,7 @@ Für PHP wird Code bereitgestellt, der neben der Anbindung an PiratenID auch Tei
 Alternativ kann das PiratenID-System mit kompatiblen OpenID 2.0-Libraries genutzt werden.
 Welche Punkte dabei zu beachten sind, wird in den jeweiligen Abschnitten erläutert.
 
-Zusätzlich zu dieser Anleitung könnte die technische Dokumentation\footnote{TODO},
+Zusätzlich zu dieser Anleitung könnte die technische Dokumentation\footnote{\url{https://id.piratenpartei.de/doc/idsystem-techdoc.pdf}},
 in welcher die technischen Hintergründe ausführlicher erklärt werden, interessant sein.
 
 \newpage
@@ -104,7 +104,7 @@ Der Nutzer muss die Übermittlung der Daten jeweils ausdrücklich bestätigen.
 \end{itemize}
 
 Ist ein Attribut in der Antwort leer, kann dies daran liegen, dass kein gültiges Piraten-Token eingetragen ist oder der Wert unbekannt ist.
-Um absichtlich leere Attributfelder zu kennzeichnen (z. B. Pirat ist in keinem Ortsverband) werden drei Bindestriche (TODO WERT) verwendet.
+Um absichtlich leere Attributfelder zu kennzeichnen (z. B. Pirat ist in keinem Ortsverband) werden drei Bindestriche verwendet.
 
 Das Attribut "`\texttt{mitgliedschaft-bund}"' hat eine besondere Bedeutung:
 Wird es \textbf{nicht} abgefragt, können sich nur Piraten einloggen (implizite Mitgliedschaftsprüfung).

@@ -120,7 +120,8 @@ class DB {
 	
 	public function cleanup() {
 		$this->query("UPDATE users SET resettoken = NULL, resettime = NULL WHERE resettime < TIMESTAMPADD(DAY,-2,NOW())", array());
-		$this->query("DELETE FROM users WHERE email_verified = 0 AND token <=> NULL AND createtime < TIMESTAMPADD(DAY,-2,NOW())", array());
+		$this->query("UPDATE users SET deletetoken = NULL, deletetime = NULL WHERE deletetime < TIMESTAMPADD(DAY,-2,NOW())", array());
+		$this->query("DELETE FROM users WHERE email_verified = 0 AND token = NULL AND createtime < TIMESTAMPADD(DAY,-2,NOW())", array());
 		$this->query("DELETE FROM loginfailures WHERE timestamp < TIMESTAMPADD(MINUTE,-30,NOW())", array());
 		$this->query("DELETE FROM loginfailures_log WHERE timestamp < TIMESTAMPADD(WEEK,-4,NOW())", array());
 		$this->query("DELETE FROM openid WHERE createtime < TIMESTAMPADD(HOUR,-1,NOW())", array());

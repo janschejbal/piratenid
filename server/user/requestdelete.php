@@ -4,7 +4,7 @@ require("../includes/header.inc.php");
 
 
 
-function deleteAccount(&$error) {
+function requesetDeletion(&$error) {
 	$db = DB::get();
 
 	if ($_POST['loeschen'] !== "LOESCHEN" && $_POST['loeschen'] !== "'LOESCHEN'") {
@@ -17,32 +17,48 @@ function deleteAccount(&$error) {
 		return false; // error set by getUser()
 	}
 	
+	// Everything ok, create and send token
 	
-	$randomname = "DELETEDUSER_". generateNonce(16);;
-	// keep email_verified = 1, otherwise account might be deleted during cleanup of non-activated accounts
-	$result = $db->query("UPDATE users SET username = ?, usersecret = '', pwhash = '', email = NULL, email_activationkey = '', mitgliedsnr = NULL, realname = NULL, resettoken = NULL, resettime = NULL, createtime = NULL WHERE username = ?",
-						array($randomname, $userarray['username']));
-	if (false !== $result) {
-		$subject = "PiratenID Accountloeschung";
-		$text ="Hallo,\n". // Observe max line length, consider variable lengths!
-				"dein PiratenID-Account wurde wie angefordert geloescht.\n\n".
-				"Der Benutzername lautete: ".$userarray['username']."\n\n".
-				"Beachte: Verbrauchte Token werden NICHT neu ausgestellt!\n".
-				"Solltest du das nicht gewollt haben, kontaktiere SOFORT die IT.\n".
-				"Eventuell kann dein Account aus einem Backup wiederhergestellt werden.\n\n".
-				"Bei Fragen wende dich bitte an die IT der Piratenpartei unter:\n".
-				"piratenid@helpdesk.piratenpartei.de\n\n";
-		$success = mail($userarray['email'], $subject, $text, 'From: PiratenID <noreply@piratenpartei.de>'); // TODO from/reply-to?
+	$deletekey = generateNonce(16);
+	$hashedkey = hash('sha256',$deletekey);
+	
+	global $sitepath;
+	$deletelink = $sitepath."user/dodelete.php?key=".$deletekey;
+
+	if (empty($hashedkey)) {
+		$error .= 'Konnte Key nicht erstellen';
+		return false;
+	}
+	
+	if ( false === $db->query("UPDATE users SET deletetoken = ?, deletetime = NOW() WHERE username = ?",
+							array($hashedkey, $userarray['username'])) ) {
+		$error = "Datenbankfehler";
+		return false;
+	}
+	
+	$subject = "PiratenID Accountloeschung";
+	$text ="Hallo,\n". // Observe max line length, consider variable lengths!
+			"du hast darum gebeten, dass dein Piraten-ID-Account geloescht wird.\n\n".
+			"Der Benutzername lautet: ".$userarray['username']."\n\n".
+			"Beachte: Verbrauchte Token bleiben gesperrt und werden NICHT neu\n".
+			"ausgestellt! Wenn du dir wirklich sicher bist, klicke auf folgenden Link,\n".
+			"um deinen Account zu loeschen:\n\n".
+			$deletelink."\n\n".
+			"Bei Fragen wende dich bitte an die IT der Piratenpartei unter:\n".
+			"piratenid@helpdesk.piratenpartei.de\n\n";
+	$success = mail($userarray['email'], $subject, $text, 'From: PiratenID <noreply@piratenpartei.de>'); // TODO from/reply-to?
+	if ($success) {
 		?>
-			<h2>Account gelöscht</h2>
-			<p>Der Account wurde erfolgreich gelöscht.</p>
+			<h2>E-Mail verschickt</h2>
+			<p>Eine E-Mail mit dem Löschlink wurde an die mit dem Account verknüpfte E-Mail-Adresse verschickt.</p>
 		
 		<?php
 		return true;
 	} else {
-		$error = "Datenbankfehler.";
+		$error = "Fehler beim Mailversand.";
 		return false;
 	}
+
 }
 
 $success = false;
@@ -50,13 +66,13 @@ $error = "";
 
 
 if ($_SERVER['REQUEST_METHOD'] === "POST") {
-	$success = deleteAccount($error);
+	$success = requesetDeletion($error);
 } 
 
 if (!$success) {
 	?>
 	<h2>Account löschen</h2>
-	<p>Hier kannst du deinen Account endgültig und unwiderbringlich löschen.
+	<p>Hier kannst du beantragen, deinen Account endgültig und unwiderbringlich zu löschen.
 	Falls bereits ein Token eingetragen war, wird dieses in der Datenbank als gesperrt markiert; es kann <strong>nicht</strong> wieder verwendet werden.
 	Die Accountdaten inklusive eines zum Berechnen der Pseudonyme nötigen Geheimnisses werden gelöscht, die Pseudonyme des Accounts werden somit dauerhaft unbrauchbar.
 	</p>

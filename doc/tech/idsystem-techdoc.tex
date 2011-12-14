@@ -6,17 +6,20 @@
 \maketitle
 
 \begin{abstract}Dieses Dokument beschreibt das PiratenID-System sowie das darin verwendete Protokoll.
-Es ist relevant für Personen, die die PiratenID-Software nachvollziehen, analysieren oder modifizieren wollen,
+Es ist relevant für Personen, die die PiratenID-Software nachvollziehen, analysieren, betreiben oder modifizieren wollen,
 für Entwickler, welche einen eigenen Client programmieren möchten, sowie für technisch Interessierte, welche einen Blick hinter die Kulissen werfen möchten.
-Gewöhnliche Nutzer des ID-Systems benötigen dieses Dokument nicht und sollten stattdessen die Anleitung für Nutzer\footnote{TODO} lesen.
+Gewöhnliche Nutzer des ID-Systems benötigen dieses Dokument nicht und sollten stattdessen die Anleitung für Nutzer\footnote{\url{https://id.piratenpartei.de/doc/idsystem-userdoc.pdf}} lesen.
 Entwickler von Webanwendungen, die das PiratenID-System mittels fertiger Libraries nutzen möchten, müssen dieses Dokument nicht lesen,
 können dies aber tun, um einen Einblick in Sicherheitsmaßnahmen bei Webanwendungen und ein besseres Verständnis des Systems zu erhalten.
-Für Entwickler von Webanwendungen existiert eine separate Anleitung\footnote{TODO}, die die wichtigsten Punkte zusammenfasst.
+Für Entwickler von Webanwendungen existiert eine separate Anleitung\footnote{\url{https://id.piratenpartei.de/doc/idsystem-devdoc.pdf}}, die die wichtigsten Punkte zusammenfasst.
 \end{abstract}
 
 \newpage
 
+{
+\small
 \tableofcontents
+}
 
 \newpage
 
@@ -29,6 +32,7 @@ beispielsweise ein von Dritten betriebenes Forum oder Umfragetool.
 Um Verwirrung zu vermeiden, wird der Begriff "`Client"' bei der Protokollbeschreibung nicht verwendet,
 da dieser sowohl den Browser als auch die Webanwendung (Client des ID-Systems) bezeichnen könnte.
 Die Parteien werden im Folgenden als ID-System, Browser und Webanwendung bezeichnet.
+
 
 \section{Authentifizierung}
 Statt eines ursprünglich geplaten Protokolls wird OpenID 2.0\footnote{\url{http://openid.net/specs/openid-authentication-2_0.html}} (mit gewissen Einschränkungen)
@@ -104,11 +108,10 @@ Die Attribute müssen mit genau diesen Namen als Alias abgefragt werden.
 Als Attributtyp ist jeweils "`https://id.piratenpartei.de/openid/schema/NAME"' anzugeben, wobei NAME durch den Namen des Attributs zu ersetzen ist.
 
 Ist ein Attribut in der Antwort leer, kann dies daran liegen, dass kein gültiges Token eingetragen oder der Wert unbekannt ist.
-Um absichtlich leere Attributfelder zu kennzeichnen (z. B. Pirat ist in keinem Ortsverband) werden drei Bindestriche (TODO WERT) verwendet.
+Um absichtlich leere Attributfelder zu kennzeichnen (z. B. Pirat ist in keinem Ortsverband) werden drei Bindestriche verwendet.
 
-Das Feld "`mitgliedschaft-bund"' enthält bei Mitgliedern den Wert "`ja"' (TODO WERT),
+Das Feld "`mitgliedschaft-bund"' enthält bei Mitgliedern den Wert "`ja"',
 die restlichen Attribute teilen mit, in welchen Untergliederungen der Nutzer Mitglied ist.
-Für mögliche Werte sei auf die Liste der Untergliederungen\footnote{TODO} verwiesen.
 
 Die Verknüpfung des Useraccounts mit den zugehörigen Daten findet über das Token statt.
 Die Betreiber des ID-Servers können einen Account also nicht einer bestimmten Person zuordnen,
@@ -155,6 +158,7 @@ Für die meisten Webanwendungen sind diese Daten nicht erforderlich.
 Der Großteil der IT möchte diese Daten \textbf{nicht} im System haben.
 
 
+\newpage
 \section{Sicherheitseigenschaften}
 In diesem Abschnitt werden Sicherheitseigenschaften des Systems aufgelistet, sowie die Maßnahmen genannt, die diese Eigenschaften sicherstellen.
 
@@ -299,6 +303,7 @@ Ohne Kenntnis des Pseudonyms kann er gegenüber Webanwendungen nicht vortäusche
 Benutzerkonten mit sicheren Kennwörtern sollten weiterhin wie beim Angreifer mit Datenbankzugriff geschützt sein.
 
 
+\newpage
 \section{Schutzmaßnahmen gegen Angriffe}
 \subsection{Server}
 \subsubsection{Schwachstelle Mensch}
@@ -441,19 +446,65 @@ Gegen absichtlichen Missbrauch ist die Library nicht geschützt, da jeder, der d
 Webanwendungsentwickler erhalten eine Anleitung, welche neben der korrekten Verwendung der PiratenID-Library auch allgemeine Sicherheit von Webanwendungen behandelt.
 
 
+\newpage
+\section{Installation/Deployment des Servers}
+Der Server benötigt ein aktuelles PHP (getestet mit PHP 5.3.3), eine MySQL5-Datenbank sowie einen HTTPS-fähigen Webserver.
+
+Um den Server zu installieren, müssen folgende Schritte durchgeführt werden:
+
+\subsection{Datenbank einrichten}
+Eine MySQL-Datenbank muss erstellt werden.
+In diese Datenbank wird die Datenbankstruktur aus database.sql.txt (im Verzeichnis /doc/tech/) importiert.
+Es sollte ein separater Benutzer für die Nutzung durch den PiratenID-Server angelegt werden.
+Dieser sollte ausschließlich auf die eigene Datenbank zugreifen dürfen.
+Es reichen Rechte für SELECT, INSERT, UPDATE und DELETE. Für die Tabelle "`tokens"' sind Leserechte ausreichend.
+Der MySQL-Server sollte \textbf{nicht} von außen erreichbar sein.
+
+\subsection{Dateien installieren}
+Die Dateien des Servers (im Repository unter /server/) werden in das Webroot des Servers/VHosts gelegt.
+Die Dokumentation (aus den Unterverzeichnissen von /doc/ im Repository) muss mit pdflatex (mehrere Durchläufe nötig!) kompiliert werden.
+Die resultierenden PDF-Dateien kommen im Webroot nach doc/.
+Die Linux-Zugriffsrechte sollten möglichst restriktiv gesetzt werden.
+
+\subsection{Konfiguration}
+Die Datei siteconstants.EXAMPLE.inc.php nach siteconstants.inc.php kopieren und den Inhalt anpassen (insbesondere neue Secrets vergeben).
+Die Datei sollte unbedingt gesichert werden. Ohne die dort eingestellten Secrets ist die Datenbank unbrauchbar. Es kann sinnvoll sein, die Datei read-only zu setzen.
+
+Der Server sollte ausschließlich per HTTPS erreichbar sein.
+Das "`includes"'-Verzeichnis sollte gegen Zugriff von außen geschützt sein.
+Beim Einsatz von nginx wird die .htaccess-Datei ignoriert, sodass eine entsprechende deny-Regel in der Konfigurationsdatei nötig wird!
+Beispielsweise kann folgende Zeile \textbf{vor} die PHP-Konfiguration eingefügt werden:
+\begin{verbatim}
+    location ~ ^/includes/ { deny all; }
+\end{verbatim}
+
+\subsection{Import der Token}
+Die Liste der Token und zugehörigen Daten muss regelmäßig importiert werden.
+tokenimport.inc.php bietet eine Funktion, die für den Import genutzt werden kann.
+
+
+
+\newpage
 \section{Dateien des Servers}
 
 \subsection{Verzeichnis /includes/}
 Dieses Verzeichnis enthält Dateien, die von den anderen Skripten eingebunden werden.
 
 \subsubsection{/includes/header.inc.php}
-Diese Datei enthält den Anfang jeder ausgegebenen HTML-Seite und nimmt auch einige Einstellungen vor.
+Diese Datei enthält den Anfang jeder ausgegebenen HTML-Seite.
+Sie liefert das HTML-Grundgerüst der Seite mit Sicherheitshinweisen, Menü und IE6-Blocker aus.
+Falls die globale Variable \texttt{\$PAGETITLE} gesetzt ist, wird deren Wert mit in das title-Tag aufgenommen.
+Technische Einstellungen wie HTTP-Header werden von der Datei techheader.inc.php vorgenommen, welche inkludiert wird.
+
+
+\subsubsection{/includes/techheader.inc.php}
+Diese Datei nimmt technische Einstellungen vor und wird (direkt oder indirekt) von jedem PHP-Skript (also auch von denen, die kein HTML generieren) inkludiert.
+
 \begin{itemize}
-	\item Ein Error-Handler, der Fehler wie Warnungen zu fatalen Fehlern macht und wenig Informationen über den Fehler mitteilt, wird aktiviert
+	\item Ein Error-Handler, der Fehler wie Warnungen zu fatalen Fehlern macht und wenig Informationen über den Fehler mitteilt, wird aktiviert.
 	\item Es wird sichergestellt, dass \texttt{register\_globals} deaktiviert ist.
-	\item \texttt{siteconstants.inc.php} und \texttt{functions-global.inc.php} werden eingebunden
-	\item Die HTTP-Header \texttt{X-Frame-Options} und \texttt{Strict-Transport-Security}
-	\item Das HTML-Grundgerüst der Seite mit Sicherheitshinweisen, Menü und IE6-Blocker werden ausgeliefert. Das maincontent-DIV wird geöffnet
+	\item \texttt{siteconstants.inc.php} und \texttt{functions-global.inc.php} werden eingebunden.
+	\item Die HTTP-Header \texttt{X-Frame-Options}, \texttt{Strict-Transport-Security} und \texttt{X-XRDS-Location} werden gesetzt.
 \end{itemize}
 
 \subsubsection{/includes/footer.inc.php}
@@ -536,16 +587,21 @@ Sie zeigt das entsprechende Formular an, nimmt die Daten entgegen, prüft sie un
 Diese Datei ermöglicht es dem Nutzer, eine Passwortreset-Mail anzufordern.
 Sie zeigt das entsprechende Formular an, nimmt die Daten entgegen, prüft sie, erstellt ggf. ein Token und trägt es in die Datenbank ein und verschickt die Mail mit dem Link.
 
-\subsubsection{/user/reset.php}
+\subsubsection{/user/doreset.php}
 Diese Datei ermöglicht es dem Nutzer, sein Kennwort über einen via requestreset.php angeforderten Link zurückzusetzen.
 Sie gibt ein Formular zur Eingabe eines neuen Kennworts aus, nimmt die Daten entgegen, prüft das Token und die Daten und ändert ggf. das Kennwort.
 
-\subsubsection{/user/delete.php}
-Diese Datei ermöglicht es dem Nutzer, sein Benutzerkonto zu löschen.
-Sie zeigt das entsprechende Formular an, nimmt die Daten entgegen, prüft sie, und löscht ggf. das Konto.
+\subsubsection{/user/requestdelete.php}
+Diese Datei ermöglicht es dem Nutzer, die Löschung eines Benutzerkontos zu beantragen.
 Der Nutzer muss die Löschung durch Eingabe des Wortes LOESCHEN bestätigen.
+Sie zeigt das entsprechende Formular an, nimmt die Daten entgegen, und prüft sie.
+Im Erfolgsfall wird ein Löschtoken erzeugt, in die Datenbank eingetragen und eine Mail mit dem Bestätigungslink verschickt.
+
+\subsubsection{/user/dodelete.php}
+Diese Datei ermöglicht es dem Nutzer, sein Benutzerkonto über einen via requestdelete.php angeforderten Link zu löschen.
 Um den Account zu löschen, werden bis auf Token(hash), E-Mail-Verifizierungsstatus und Erstellungsdatum alle Daten überschrieben.
 Der Tokenhash bleibt gespeichert, damit das Token nicht wiederverwendet werden kann.
+Der Verifizierungsstatus (immer true) bleibt gespeichert, da nicht verifizierte Konten aus der Datenbank entfernt werden - das darf bei eingetragenem Token nicht geschehen.
 Der Benutzername wird durch einen zufällig generierten Benutzernamen ersetzt.
 
 \subsection{Verzeichnis /openid/}
@@ -596,7 +652,11 @@ Dies wird für die Verwendung mit normalen OpenID-Libraries benötigt.
 \subsection{Verzeichnis /static/}
 Dieses Verzeichnis enthält statische Dateien wie Grafiken, Stylesheets, die Sicherheits-Hinweisbanner etc.
 
+\subsection{Verzeichnis /doc/}
+In dieses Verzeichnis müssen bei der Installation die kompilierten PDF-Dateien der Dokumentation
+(\textbf{idsystem-techdoc.pdf}, \textbf{idsystem-devdoc.pdf} und \textbf{idsystem-userdoc.pdf}) abgelegt werden.
 
+\newpage
 \section{Datenbank}
 Ein SQL-Dump der Datenbankstruktur sollte dieser Dokumentation beiliegen.
 Die Datenbank besteht aus drei Tabellen:
@@ -614,7 +674,9 @@ Diese Tabelle enthält die Benutzerkonten. Folgende Felder sind vorhanden:
 	\item \texttt{mitgliedsnr} -- Feld zur Aufnahme der Mitgliedsnummer, sofern diese Funktion implementiert wird
 	\item \texttt{realname} -- Feld zur Aufnahme des Realnamens, sofern diese Funktion implementiert wird
 	\item \texttt{resettoken} -- Hash des Passwort-Reset-Tokens, falls verschickt (sonst NULL)
-	\item \texttt{resettime} -- Zeitpunkt, zu dem die Resetmail verschikt wurde
+	\item \texttt{resettime} -- Zeitpunkt, zu dem die Resetmail verschickt wurde
+	\item \texttt{deletetoken} -- Hash des Account-Lösch-Tokens, falls verschickt (sonst NULL)
+	\item \texttt{deletetime} -- Zeitpunkt, zu dem die Mail mit dem Accountlöschtoken verschickt wurde
 	\item \texttt{createtime} -- Zeitpunkt, zu dem der Account erstellt wurde
 \end{itemize}
 
@@ -657,6 +719,7 @@ Es werden folgende Werte gespeichert:
 
 Die Tabelle "`loginfailures"' speichert nur IP und Timestamp für die Dauer von 30 Minuten und wird für die IP-Sperre verwendet.
 
+\newpage
 \section{Client (PHP)}
 \input{idsystem-clientdoc-shared}
 
@@ -716,7 +779,7 @@ Die Funktionen sind in der PiratenID-Klasse kommentiert. Fett gedruckte Funktion
 \end{itemize}
 
 \subsection{Schutzmaßnahmen}
-Besondere Schutzmaßnahmen im Client werden in Abschnitt \nameref{sec:security-client} erläutert.
+Besondere Schutzmaßnahmen im Client werden in Abschnitt \fullref{sec:security-client} erläutert.
 
 \end{document}
 

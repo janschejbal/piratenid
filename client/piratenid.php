@@ -453,8 +453,7 @@ class PiratenID {
 					'verify_depth'      => 9,     // OpenSSL default, only to prevent problems in case of insane PHP defaults
 					'allow_self_signed' => false,
 					'capture_peer_cert' => false, // Change to be able to inspect certificate
-					//'ciphers'           => "aRSA+kEDH+TLSv1+HIGH", // only high-security TLSv1 ciphers featuring ephemeral keys and RSA authentication allowed
-					'ciphers'           => "aRSA+TLSv1+HIGH", // TODO CHANGE allow other ciphers for testing
+					'ciphers'           => "ECDHE-RSA-AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-RC4-SHA:AES256-SHA:AES128-SHA:RC4-SHA", // prefer EC-DHE/DHE cipher suites, but offer fallbacks
 					'cafile'            => __DIR__."/certificate.pem" // This file shall contain the cert of the server or the CA used for that cert
 				)
 			);

@@ -64,6 +64,8 @@ CREATE TABLE `users` (
   `realname` varchar(255) COLLATE utf8_bin DEFAULT NULL,
   `resettoken` varchar(255) COLLATE utf8_bin DEFAULT NULL,
   `resettime` timestamp NULL DEFAULT NULL,
+  `deletetoken` varchar(255) COLLATE utf8_bin DEFAULT NULL,
+  `deletetime` varchar(255) COLLATE utf8_bin DEFAULT NULL,
   `createtime` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`username`),
   UNIQUE KEY `email` (`email`),
