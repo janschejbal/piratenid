@@ -17,7 +17,7 @@ require_once('functions-global.inc.php');
 if (ini_get('register_globals')) die("I respectfully refuse. I will not work on a server with such settings. Fix it. (register_globals must be off)");
 
 header("X-Frame-Options: deny"); // clickjacking protection
-header("Strict-Transport-Security: max-age:7776000"); // 90 days
+header("Strict-Transport-Security: max-age=7776000"); // 90 days
 header("X-XRDS-Location: ".$sitepath."/openid/xrds.php");
 
 ?>

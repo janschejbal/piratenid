@@ -59,9 +59,7 @@ require_once('techheader.inc.php'); //include the "technical" header that sets s
 	<a href="/user/changepw.php">Kennwort ändern</a>
 	<a href="/user/requestreset.php">Login vergessen</a>
 	<a href="/user/requestdelete.php">Account löschen</a>
-	<a href="/help/user.php" style="border-top:10px solid #b0b0b0;">Hilfe für Benutzer</a>
-	<a href="/help/dev.php">Hilfe für Entwickler</a>
-	<a href="/help/tech.php">Source und Doku</a>
+	<a href="/" style="border-top:10px solid #b0b0b0;">Infos &amp; Hilfe</a>
 </div>
 
 <div id="maincontent">
