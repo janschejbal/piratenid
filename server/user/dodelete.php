@@ -41,7 +41,9 @@ function performDeletion(&$error) {
 				"Eventuell kann dein Account aus einem Backup wiederhergestellt werden.\n\n".
 				"Bei Fragen wende dich bitte an die IT der Piratenpartei unter:\n".
 				"piratenid@helpdesk.piratenpartei.de\n\n";
-		$success = mail($email, $subject, $text, 'From: PiratenID <noreply@piratenpartei.de>'); // TODO from/reply-to?
+		global $mailheaders;
+		if (empty($mailheaders)) die('e-mail headers not configured');
+		$success = mail($email, $subject, $text, $mailheaders);
 		?>
 			<h2>Account gelöscht</h2>
 			<p>Der Account wurde erfolgreich gelöscht.</p>

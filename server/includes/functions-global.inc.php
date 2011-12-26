@@ -1,9 +1,6 @@
 <?php
 require_once('siteconstants.inc.php');
 
-// TODO Startseite
-// TODO Hilfe, Doku
-// TODO From/Reply-To
 // TODO-later? stored procedures
 // TODO-later? PGP/GPG support
 

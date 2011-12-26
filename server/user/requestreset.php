@@ -60,7 +60,9 @@ function requestReset(&$error) {
 			"Dein Kennwort bleibt dann erhalten.\n\n".
 			"Bei Fragen wende dich bitte an die IT der Piratenpartei unter:\n".
 			"piratenid@helpdesk.piratenpartei.de\n\n";
-	$success = mail($email, $subject, $text, 'From: PiratenID <noreply@piratenpartei.de>'); // TODO from/reply-to?
+	global $mailheaders;
+	if (empty($mailheaders)) die('e-mail headers not configured');	
+	$success = mail($email, $subject, $text, $mailheaders);
 	if (!$success) {
 		$error = "Fehler beim Mailversand.";
 		return false;

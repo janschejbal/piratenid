@@ -4,6 +4,9 @@
 // used for e-mails, X-XRDS-Location header, endpoint location, referer checking etc.
 $sitepath = "https://piratenid.janschejbal.de/"; // do not forget '/' at the end!
 
+// Additional headers (like From/Reply-To) for system e-mails
+$mailheaders = 'From: PiratenID <noreply@piratenpartei.de>'."\r\n".'Reply-To: PiratenID-Support <IDServer@it.piratenpartei.de>';
+
 // List of domains that may receive extended attributes (NOTE: Code is currently disabled!)
 $extendedAttributeRealms = array();
 
@@ -35,6 +38,5 @@ $passwordsaltsecret = "1nNEwuawyI0ZOn7WAt9u";
 // Secret key for response HMAC. If compromised, replace with new random value and clear "openid" table.
 // As every response is cross-verified using that table, even key compromise should not cause issues
 $openid_hmacsecret = "9EU4rWIiRpfQDVtc2W5233Jz6rEUy7uTipRmwfhlkOLTKHC7djIszs5qqHxn";
-
 
 ?>

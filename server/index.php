@@ -25,7 +25,7 @@ require('includes/header.inc.php');
 </p>
 <p>
 	Hast du Fragen oder hast eine Sicherheitslücke entdeckt?
-	Dann kontaktiere bitte die PiratenIT! TODO FIX LINK
+	Dann kontaktiere bitte die PiratenIT unter der folgenden E-Mail-Adresse:<br> <tt>idserver<em>[at]</em>it.piratenpartei.de</tt><br><small>(statt "<tt><em>[at]</em></tt>" bitte "<tt>@</tt>" eingeben)</small>
 </p>
 <?php
 include("includes/footer.inc.php");

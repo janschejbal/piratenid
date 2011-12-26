@@ -61,7 +61,9 @@ if ($valid) {
 				"Das Benutzerkonto wird dann nicht aktiviert.\n\n".
 				"Bei Fragen wende dich bitte an die IT der Piratenpartei unter:\n".
 				"piratenid@helpdesk.piratenpartei.de\n\n";
-		$success = mail($mail, $subject, $text, 'From: PiratenID <noreply@piratenpartei.de>'); // TODO from/reply-to?
+		global $mailheaders;
+		if (empty($mailheaders)) die('e-mail headers not configured');
+		$success = mail($mail, $subject, $text, $mailheaders);
 	}
 	
 	if ($success) {

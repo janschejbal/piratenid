@@ -46,7 +46,9 @@ function requesetDeletion(&$error) {
 			$deletelink."\n\n".
 			"Bei Fragen wende dich bitte an die IT der Piratenpartei unter:\n".
 			"piratenid@helpdesk.piratenpartei.de\n\n";
-	$success = mail($userarray['email'], $subject, $text, 'From: PiratenID <noreply@piratenpartei.de>'); // TODO from/reply-to?
+		global $mailheaders;
+		if (empty($mailheaders)) die('e-mail headers not configured');
+		$success = mail($userarray['email'], $subject, $text, $mailheaders);
 	if ($success) {
 		?>
 			<h2>E-Mail verschickt</h2>
