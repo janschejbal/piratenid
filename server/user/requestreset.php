@@ -17,7 +17,7 @@ function requestReset(&$error) {
 	} 
 	
 	$db = DB::get();
-	$result = $db->query("SELECT username FROM users WHERE email = ? AND email_verified = 1 AND resettoken <=> NULL", array($email));
+	$result = $db->query("SELECT username FROM users WHERE email = ? AND email_verified = 1 AND resettoken IS NULL", array($email));
 	if ($result === false) {
 		$error .= 'Datenbankfehler';
 		return false;
