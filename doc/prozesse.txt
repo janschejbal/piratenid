@@ -1,0 +1,126 @@
+Prozesse:
+
+- Neuer Pirat
+  - Token erstellen (min. 20 Zeichen [a-zA-Z0-9] aus sicherem Zufall, z. B. /dev/random)
+  - Token verschicken
+  - Token-Hash (SHA256) in MV eintragen
+    (Token kann nach dem nächsten Sync MV->PiratenID verwendet werden)
+
+
+- Pirat hat User/PW vergessen
+  - Auffordern, PW-Reset über entsprechenden Menüpunkt zu machen
+    (Username wird dem Nutzer dabei zugemailt)
+
+
+- Pirat hat E-Mail-Adresse vergessen
+  - Er soll sich erinnern
+  - Account ohne Token: Neuen Account erstellen
+  - Account mit Token:
+    - Identität prüfen (lassen), z. B. durch Real-Life-Treffen mit Vorstand/Beauftragtem
+    - Einverständnis zur Deanonymisierung einholen
+    - Token-Hash aus MV verwenden, um Account zu finden (Zusammenarbeit MV/IT)
+    - ggf. neue Mailadresse setzen (siehe unten)
+
+
+- Pirat will Mailadresse ändern
+  - Identität prüfen (lassen), z. B. durch Real-Life-Treffen mit Vorstand/Beauftragtem
+  - Mail an alte Mailadresse "Vorsicht, da will jemand ändern" (Widerspruchsmöglichkeit)
+  - Manuelle Verifikation der neuen Adresse (Zufallswert hinschicken)
+  - E-Mail-Adresse in Datenbank manuell ändern (bzw. durch IT ändern lassen)
+
+
+- Pirat hat unbenutztes Token verschlampt/nicht erhalten
+  - Token-Hash sichern und aus MV entfernen
+  - Sync MV mit PiratenID abwarten
+    -> Token kann jetzt nicht mehr eingetragen werden
+  - erst jetzt: Prüfen lassen (IT), ob Token unbenutzt
+  - Nur wenn ja: Neues Token erstellen, verschicken, Hash in MV eintragen
+  ! ES DARF KEIN NEUES TOKEN ALS ERSATZ FÜR EIN BENUTZTES AUSGESTELLT WERDEN, auch nicht wenn das alte entfernt wird !
+
+
+- Pirat hat benutztes Token verschlampt
+  - egal, Token wird nicht mehr benötigt
+  - Falls zusätzlich Account verschlampt: Accountwiederherstellung siehe "Pirat hat E-Mail-Adresse vergessen"
+  ! ES DARF KEIN NEUES TOKEN ALS ERSATZ FÜR EIN BENUTZTES AUSGESTELLT WERDEN, auch nicht wenn das alte entfernt wird !
+
+
+- Pirat hat Account mit Token gelöscht
+  - Identität prüfen (lassen), z. B. durch Real-Life-Treffen mit Vorstand/Beauftragtem
+  - gelöschten Account auffinden wie unter "Pirat hat E-Mail-Adresse vergessen/Account mit Token" beschrieben
+  - Account durch Eintragen neuer Accountdaten wie Name, E-Mail etc. wiederherstellen (usersecret bleibt!)
+  ! ES DARF KEIN NEUES TOKEN ALS ERSATZ FÜR EIN BENUTZTES AUSGESTELLT WERDEN, auch nicht wenn das alte entfernt wird !
+
+
+- Pirat will Datenschutzrichtlinen einsehen
+  - Auf URL (TODO) verweisen
+
+- Pirat will Account vollständig löschen bzw. auch das Usersecret löschen lassen
+  - schriftlichen Antrag auf Papier mit eigenhändiger Unterschrift verlangen!
+  - wenn möglich, Identität prüfen (lassen), z. B. durch Real-Life-Treffen mit Vorstand/Beauftragtem
+  - Account sollte über Onlinefunktion gelöscht sein, ansonsten besonders sorgfältige Identitätsprüfung!
+  - Token-Hash (ohne Namensnennung) an IT geben, damit Usersecret gelöscht wird
+      - bei nicht online gelöschten Accounts: Gesamten Antrag weiterreichen!
+  - (IT) bei über die Onlinefunktion gelöschten Accounts:
+      - usersecret entfernen
+	  - Token, email_verified und Accountzeile bleiben, da das Token gesperrt bleiben muss!
+  - (IT) bei NICHT über die Onlinefunktion gelöschten Accounts:
+      - Mail an hinterlegte Mailadresse "Vorsicht, da will jemand Löschen" (Widerspruchsmöglichkeit)
+	  - Schriftlichen Antrag gegenprüfen
+	  - Passwort zurücksetzen und Account über Online-Löschfunktion löschen
+	     - Token, email_verified und Accountzeile bleiben, da das Token gesperrt bleiben muss!
+	  - Falls kein Widerspruch auf Mail, usersecret in Datenbank entfernen
+  
+- (IT) Installation/Aufsetzen des Servers
+  - Auskunft der AG Recht fordert, alle Daten verschlüsselt zu speichern -> Full Disk Encryption nutzen!
+  - Benötigt werden Webserver, PHP, MySQL (System-Hardening nach Wunsch)
+  - Logging muss nur anonymisiert werden, falls Betrieb nicht hinter Squid
+  - Datenbank einrichten, Dump importieren (doc/tech/database.sql.txt)
+  - User für PiratenID: SELECT, INSERT, UPDATE, DELETE für alle Tabellen außer tokens, nur SELECT für tokens
+  - User für Import: INSERT, DELETE für tokens
+  - Code aufspielen
+  - Doku-PDFs kompilieren und in Verzeichnis doc aufspielen
+  - In includes: cp siteconstants.EXAMPLE.inc.php siteconstants.inc.php
+  - siteconstants.inc.php bearbeiten und alle Variablen setzen (DB-Zugang, frische secrets!)
+  - Sicheres Backup der siteconstants, ggf. Rechte setzen?
+  - Zugang (nur) über SSL einrichten
+    (falls möglich eigenes Zert, EDH-Ciphersuites bevorzugen, sichere Einstellungen, z. B. SSLv2 aus!)
+  - ggf. Dummyseite "du bist hier falsch" *ohne* Link (Lerneffekt!) auf plain-HTTP auf port 80 anbieten
+  - siehe auch Seite "id02" im internen Wiki
+  - Ggf. Watchdog-Skript einsetzen, was Länge von loginfailures_log regelmäßig prüft und ggf. Alarm schlägt
+
+
+- (IT) Datenaustausch MV (regelmäßig, möglichst täglich)
+  - Export-Skript auf MV-Maschine laufen lassen
+  - Export-Datei drucken
+  - Export-Datei auf ID-Verwaltungs-Maschine scannen, OCR & Fehlerkorrektur/Hashprüfung
+  - Datei an Importscript auf ID-Server übergeben
+  - Sinnvolleres Verfahren ausdenken, implementieren und dokumentieren oder die Skripte schreiben, die diesen Scheiß wirklich machen.
+
+
+
+
+Hinweis zur Token-Neuausstellung:
+ES DARF KEIN NEUES TOKEN ALS ERSATZ FÜR EIN BENUTZTES AUSGESTELLT WERDEN, auch nicht wenn das alte entfernt wird.
+Ein neues Token würde dem Piraten sonst ermöglichen, neue Pseudonyme zu erhalten.
+Somit könnte er z. B. an Abstimmungen, an denen er bereits teilgenommen hat, nochmals teilnehmen.
+
+Bei Accounts mit eingetragenen Token wird das Usersecret daher nur auf schriftlichen Antrag gelöscht.
+So gelöschte Accounts können notfalls wieder hergestellt werden. Eine Neuausstellung sollte also nie nötig sein.
+
+Sollte beschlossen werden, diese Regel zu ändern so sollte folgende Vorgehensweise eingehalten werden, um die Auswirkungen zu minimieren:
+
+  - Vor erster Durchführung: Alle Dienstebetreiber informieren, Wartefrist (siehe unten) nennen!
+    (Dienstebetreiber können lang laufende Umfragen ggf. anpassen oder Gegenargumente bringen)
+
+  - Die Identität des Piraten wird gründlich geprüft (siehe oben)
+  - Es wird geprüft, ob der zum Token gehörende Account gelöscht ist (Über den Token-Hash)
+  - Erst jetzt: Das Datum wird vermerkt.
+    (Ab jetzt ist sichergestellt, dass die alten Pseudonyme nicht mehr benutzt werden können)
+  - Damit z. B. Mehrfachteilnahmen an Umfragen ausgeschlossen sind, muss nun abgewartet werden.
+    In dieser Zeit kann der alte Account nicht mehr genutzt werden (weil gelöscht), der neue ist noch nicht erstellt.
+    Damit können Umfragen, an denen der alte Account teilgenommen haben könnte, zu Ende laufen.
+    In Anlehnung an die Delegationsverfallfrist im LQFB wird empfohlen, diese Wartezeit mindestens 6 Monate laufen zu lassen.
+    Erst nach dieser Zeitspanne kann davon ausgegangen werden, dass die meisten Auswirkungen von Aktionen mit dem alten Account abgeklungen sind.
+  - Nach dieser Wartezeit wird ein neues Token ausgestellt wie bei neuen Piraten
+
+Nochmaliger Hinweis: Dieses Verfahren ist NICHT empfohlen, sondern eine Notlösung, falls die Neuausstellung von Tokens unvermeidbar ist.
