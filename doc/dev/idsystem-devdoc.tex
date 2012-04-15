@@ -101,6 +101,7 @@ Der Nutzer muss die Übermittlung der Daten jeweils ausdrücklich bestätigen.
 	\item \texttt{mitgliedschaft-bezirk}
 	\item \texttt{mitgliedschaft-kreis}
 	\item \texttt{mitgliedschaft-ort}
+	\item \texttt{stimmberechtigt}
 \end{itemize}
 
 Ist ein Attribut in der Antwort leer, kann dies daran liegen, dass kein gültiges Piraten-Token eingetragen ist oder der Wert unbekannt ist.
@@ -112,6 +113,8 @@ Wird es abgefragt, können sich auch Nutzer einloggen, die keine Piraten sind --
 Ein Nutzer ist genau dann Mitglied, wenn in diesem Feld "`ja"' steht.
 Andere Antworten (insbes. leeres Feld) bedeuten, dass der Nutzer kein Pirat ist (oder seine Mitgliedschaft nicht durch Eingabe des Tokens im ID-System eingetragen hat).
 
+Das Feld "`stimmberechtigt"' gibt an, ob das Mitglied nach aktueller Satzung stimmberechtigt ist,
+und kann die Werte "`ja"' (stimmberechtigt) "`nein"' (nicht stimmberechtigt) annehmen oder leer sein (Status unbekannt).
 
 Das Pseudonym sollte als zusätzliche Sicherheitsmaßnahme möglichst verdeckt bleiben, also insbesondere dem Nutzer nicht angezeigt werden.
 Sollte ein Angriff auf das ID-System gelingen, kann ein Angreifer die Identität des Nutzers nicht vortäuschen, wenn er sein Pseudonym nicht ermitteln kann.

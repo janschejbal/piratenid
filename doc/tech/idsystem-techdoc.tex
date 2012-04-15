@@ -99,6 +99,7 @@ Folgende Attribute können über Attribute Exchange abgefragt werden:
 \item mitgliedschaft-bezirk
 \item mitgliedschaft-kreis
 \item mitgliedschaft-ort
+\item stimmberechtigt
 \end{itemize}
 
 Dem Attribut "`mitgliedschaft-bund"' kommt hierbei eine besondere Bedeutung zu,
@@ -112,6 +113,9 @@ Um absichtlich leere Attributfelder zu kennzeichnen (z. B. Pirat ist in keinem O
 
 Das Feld "`mitgliedschaft-bund"' enthält bei Mitgliedern den Wert "`ja"',
 die restlichen Attribute teilen mit, in welchen Untergliederungen der Nutzer Mitglied ist.
+
+Das Feld "`stimmberechtigt"' gibt an, ob das Mitglied nach aktueller Satzung stimmberechtigt ist,
+und kann die Werte "`ja"' (stimmberechtigt) "`nein"' (nicht stimmberechtigt) annehmen oder leer sein (Status unbekannt).
 
 Die Verknüpfung des Useraccounts mit den zugehörigen Daten findet über das Token statt.
 Die Betreiber des ID-Servers können einen Account also nicht einer bestimmten Person zuordnen,
@@ -468,7 +472,8 @@ Die Linux-Zugriffsrechte sollten möglichst restriktiv gesetzt werden.
 
 \subsection{Konfiguration}
 Die Datei siteconstants.EXAMPLE.inc.php nach siteconstants.inc.php kopieren und den Inhalt anpassen (insbesondere neue Secrets vergeben).
-Die Datei sollte unbedingt gesichert werden. Ohne die dort eingestellten Secrets ist die Datenbank unbrauchbar. Es kann sinnvoll sein, die Datei read-only zu setzen.
+Die Datei muss gegen unbefugten Zugriff gesichert und durch Backups vor Verlust geschützt werden. Ohne die dort eingestellten Secrets ist die Datenbank unbrauchbar!
+Es kann sinnvoll sein, die Datei read-only zu setzen.
 
 Der Server sollte ausschließlich per HTTPS erreichbar sein.
 Das "`includes"'-Verzeichnis sollte gegen Zugriff von außen geschützt sein.
@@ -478,11 +483,11 @@ Beispielsweise kann folgende Zeile \textbf{vor} die PHP-Konfiguration eingefügt
     location ~ ^/includes/ { deny all; }
 \end{verbatim}
 
+
 \subsection{Import der Token}
 Die Liste der Token und zugehörigen Daten muss regelmäßig importiert werden.
-tokenimport.inc.php bietet eine Funktion, die für den Import genutzt werden kann.
 
-
+TODO Importverfahren sobald es feststeht
 
 \newpage
 \section{Dateien des Servers}
@@ -692,6 +697,7 @@ Folgende Felder sind vorhanden:
 	\item \texttt{mitgliedschaft-bezirk}
 	\item \texttt{mitgliedschaft-kreis}
 	\item \texttt{mitgliedschaft-ort}
+	\item \texttt{stimmberechtigt}
 \end{itemize}
 
 Bezüglich der Bedeutung und möglicher Werte für die Mitgliedschaftsfelder sei auf Abschnitt \fullref{sec:attribute} verwiesen.

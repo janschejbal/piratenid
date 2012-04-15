@@ -1,6 +1,6 @@
 /*
 SQLyog Community v9.20 
-MySQL - 5.1.49-3 : Database - piratenid
+MySQL - 5.5.8 : Database - piratenid
 *********************************************************************
 */
 
@@ -47,6 +47,7 @@ CREATE TABLE `tokens` (
   `mitgliedschaft-bezirk` varchar(255) COLLATE utf8_bin NOT NULL,
   `mitgliedschaft-kreis` varchar(255) COLLATE utf8_bin NOT NULL,
   `mitgliedschaft-ort` varchar(255) COLLATE utf8_bin NOT NULL,
+  `stimmberechtigt` varchar(255) COLLATE utf8_bin NOT NULL,
   PRIMARY KEY (`token`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
@@ -65,9 +66,10 @@ CREATE TABLE `users` (
   `resettoken` varchar(255) COLLATE utf8_bin DEFAULT NULL,
   `resettime` timestamp NULL DEFAULT NULL,
   `deletetoken` varchar(255) COLLATE utf8_bin DEFAULT NULL,
-  `deletetime` varchar(255) COLLATE utf8_bin DEFAULT NULL,
+  `deletetime` timestamp NULL DEFAULT NULL,
   `createtime` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`username`),
+  UNIQUE KEY `usersecret` (`usersecret`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `token` (`token`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

@@ -76,7 +76,7 @@ if (!$success) {
 	<h2>Account löschen</h2>
 	<p>Hier kannst du beantragen, deinen Account endgültig und unwiderbringlich zu löschen.
 	Falls bereits ein Token eingetragen war, wird dieses in der Datenbank als gesperrt markiert; es kann <strong>nicht</strong> wieder verwendet werden.
-	Die Accountdaten inklusive eines zum Berechnen der Pseudonyme nötigen Geheimnisses werden gelöscht, die Pseudonyme des Accounts werden somit dauerhaft unbrauchbar.
+	Die Pseudonyme des Accounts können nach einer Löschung nicht mehr genutzt werden.
 	</p>
 	<p><strong>
 		Wenn du einen Account mit eingetragenem Token löschst, bleibt es gesperrt und dir wird <span style="text-decoration: underline;">kein</span> neues Token ausgestellt.

@@ -249,7 +249,7 @@ function evaluateFields(&$reqfields, &$error, &$usePseudonym, &$implicitMembersh
 		}
 		
 		// attribute whitelist and type checking
-		$supported = array('mitgliedschaft-bund','mitgliedschaft-land','mitgliedschaft-bezirk','mitgliedschaft-kreis','mitgliedschaft-ort');
+		$supported = array('mitgliedschaft-bund','mitgliedschaft-land','mitgliedschaft-bezirk','mitgliedschaft-kreis','mitgliedschaft-ort', 'stimmberechtigt');
 		
 		// Die Abfrage von Realidentitätsdaten ist fürs Erste deaktiviert.
 		/*
@@ -309,6 +309,7 @@ function handleCheckidSetup($reqfields, $errormessage = null) {
 					case 'mitgliedschaft-bezirk': $attribtext = 'Die Information, in welchem Bezirksverband du Mitglied bist'; break;
 					case 'mitgliedschaft-kreis': $attribtext = 'Die Information, in welchem Kreisverband du Mitglied bist'; break;
 					case 'mitgliedschaft-ort': $attribtext = 'Die Information, in welchem Ortsverband du Mitglied bist'; break;
+					case 'stimmberechtigt': $attribtext = 'Die Information, ob du stimmberechtigt bist'; break;
 					case 'realname': $attribtext = '<span class="attribut-kritisch">Dein voller Name</span>'; break;
 					case 'mitgliedsnummer': $attribtext = '<span class="attribut-kritisch">Deine Mitgliedsnummer bei der Piratenpartei</span>'; break;
 					default: die("FEHLER - UNBEKANNTES ATTRIBUT. BITTE VORGANG ABBRECHEN UND DER IT MELDEN."); break; // should not be able to happen, attribs are verified
@@ -374,7 +375,8 @@ function addAXAttributes(&$response, $attribarray, $userdata, &$error) {
 			case 'mitgliedschaft-land': // falltrough
 			case 'mitgliedschaft-bezirk': // falltrough
 			case 'mitgliedschaft-kreis': // falltrough
-			case 'mitgliedschaft-ort':
+			case 'mitgliedschaft-ort': // falltrough
+			case 'stimmberechtigt':
 				// always available for members, but may be empty. undef/null if no valid token provided.
 				if (!isset($userdata[$attrib]) || $userdata[$attrib] === null) {
 					// Explizite Abfrage von mitgliedschaft-bund wäre sinnlos, wenn wir bei fehlendem Token fehlschlagen lassen
