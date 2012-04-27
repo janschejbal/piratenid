@@ -604,8 +604,11 @@ Im Erfolgsfall wird ein Löschtoken erzeugt, in die Datenbank eingetragen und ei
 
 \subsubsection{/user/dodelete.php}
 Diese Datei ermöglicht es dem Nutzer, sein Benutzerkonto über einen via requestdelete.php angeforderten Link zu löschen.
-Um den Account zu löschen, werden bis auf Token(hash), E-Mail-Verifizierungsstatus und Erstellungsdatum alle Daten überschrieben.
+Es wird zwischen Accounts mit und Accounts ohne Token(hash) unterschieden. Accounts ohne Token(hash) werden sofort gelöscht.
+Bei Accounts mit eingetragenem Token werden bis auf Token(hash), Usersecret, E-Mail-Verifizierungsstatus und Erstellungsdatum
+alle Daten überschrieben.
 Der Tokenhash bleibt gespeichert, damit das Token nicht wiederverwendet werden kann.
+Das Usersecret bleibt gespeichert um z. B. bei missbräuchlicher Löschung gehackter Accounts den Account wiederherstellen zu können.
 Der Verifizierungsstatus (immer true) bleibt gespeichert, da nicht verifizierte Konten aus der Datenbank entfernt werden - das darf bei eingetragenem Token nicht geschehen.
 Der Benutzername wird durch einen zufällig generierten Benutzernamen ersetzt.
 

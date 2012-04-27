@@ -1,5 +1,7 @@
 <?php
 
+// TODO: POST-Support for button
+
 class PiratenID {
 	// Set these parameters before calling run() - no need to modify this file, see example.php if unsure
 	public static $realm = null;          // OpenID realm to use. MANDATORY. Most often set to the site root, i.e. 'https://www.example.com/'.

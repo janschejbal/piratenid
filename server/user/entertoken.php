@@ -80,7 +80,7 @@ if (!$success) {
 		<table>
 			<?php printLoginFields(); ?>
 			<tr>
-				<td>Token (nur A-Teil!)</td>
+				<td>Token</td>
 				<td><input type="text" name="token">
 				</td>
 			</tr>

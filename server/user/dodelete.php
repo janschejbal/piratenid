@@ -1,5 +1,5 @@
 <?PHP
-	// TODO TEST!
+
 $PAGETITLE = 'Account löschen';
 require("../includes/header.inc.php");
 
@@ -27,9 +27,9 @@ function performDeletion(&$error) {
 	$email = $result[0]['email'];
 	
 	$hadToken = false;
-	if (empty($result[0]['token']) {
+	if (empty($result[0]['token'])) {
 		// Deleting account that does not have a token - just delete the entry completely
-		$result = $db->query("DELETE FROM users WHERE username = ?", array($randomname, $username));
+		$result = $db->query("DELETE FROM users WHERE username = ?", array($username));
 	} else {
 		$hadToken = true;
 		// Deleting account with token - entry with token must be kept to ensure that token cannot be reused

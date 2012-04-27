@@ -65,10 +65,10 @@ Prozesse:
 	  - Token, email_verified und Accountzeile bleiben, da das Token gesperrt bleiben muss!
   - (IT) bei NICHT über die Onlinefunktion gelöschten Accounts:
       - Mail an hinterlegte Mailadresse "Vorsicht, da will jemand Löschen" (Widerspruchsmöglichkeit)
-	  - Schriftlichen Antrag gegenprüfen
-	  - Passwort zurücksetzen und Account über Online-Löschfunktion löschen
-	     - Token, email_verified und Accountzeile bleiben, da das Token gesperrt bleiben muss!
-	  - Falls kein Widerspruch auf Mail, usersecret in Datenbank entfernen
+      - Schriftlichen Antrag gegenprüfen
+      - Passwort zurücksetzen und Account über Online-Löschfunktion löschen
+         - Token, email_verified und Accountzeile bleiben, da das Token gesperrt bleiben muss!
+      - Falls kein Widerspruch auf Mail, usersecret in Datenbank entfernen
   
 - (IT) Installation/Aufsetzen des Servers
   - Auskunft der AG Recht fordert, alle Daten verschlüsselt zu speichern -> Full Disk Encryption nutzen!

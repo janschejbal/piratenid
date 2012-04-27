@@ -1,9 +1,6 @@
 <?php
 require_once('siteconstants.inc.php');
 
-// TODO test stimmberechtigung
-// TODO test löschfunktion
-
 // TODO-later? stored procedures
 // TODO-later? PGP/GPG support
 
