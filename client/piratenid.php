@@ -1,7 +1,5 @@
 <?php
 
-// TODO: POST-Support for button
-
 class PiratenID {
 	// Set these parameters before calling run() - no need to modify this file, see example.php if unsure
 	public static $realm = null;          // OpenID realm to use. MANDATORY. Most often set to the site root, i.e. 'https://www.example.com/'.
@@ -16,9 +14,9 @@ class PiratenID {
 	public static $logouturl = null;      // URL to which the logout button directs the user. Defaults to realm.
 											// See also $handleLogout.
 	public static $handleLogout = true;   // If true, run() will generate a random token once the user logs in.
-											// A GET parameter (piratenid_logout) containing that token will be appended to the logout URL.
+											// A POST parameter (piratenid_logout) containing that token will be send to the logout URL on logout.
 											// run() will look for that parameter and log the user out if the correct value is detected.
-											// The parameter will be removed from the $_GET array.
+											// The parameter will be removed from the $_POST array.
 											// As long as you use the default button and make sure that run() is called on requests to the logout URL,
 											// this will take care of your entire logout handling.
 										
@@ -33,6 +31,9 @@ class PiratenID {
 											// run() will call this in case of a successful logout just before actually performing the logout.
 											// No parameters are passed; the return value is ignored.
 	
+	public static $logoutParams = null;   // If handleLogout is false, you can specify the logout behaviour using this parameter
+											// If the value is null, a GET request to the logout url will be sent.
+											// If the value is an associative array, a POST request with the parameters specified by the array will be sent.
 	
 	// For cookies, will be set by initParams().
 	private static $realm_domain = null; 
@@ -46,14 +47,17 @@ class PiratenID {
 	const serverroot = 'https://idtest.piratenpartei.de/';
 	const endpoint   = 'https://idtest.piratenpartei.de/openid/endpoint.php';
 
-	
-	
 	// WARNING: THIS IS NOT AN OpenID CLIENT IMPLEMENTATION
 	// This is a *partial* implementation of the OpenID protocol for usage with a single, hardcoded trusted provider only.
 	// It does not perform all checks required to ensure security when more than one OpenID provider is accepted!
 	// Furthermore, protocol variants not used by the PiratenID software are ignored.
 
-	
+	// Special constants for internal hosts. DO NOT TOUCH UNLESS YOU KNOW EXACTLY WHAT THIS IS!
+	// If this script is running inside the same internal network as the endpoint, use this to specify an alternate URL for reaching the endpoint
+	// Do NOT use under ANY circumstances if your server is not in the same internal network as the endpoint, or you WILL BREAK SECURITY!
+	const INTERNAL_host = null; // to enable, set the host name this is going to run on. used to make sure the config isn't accidentally used elsewhere.
+	const INTERNAL_endpoint = 'http://idtest.piratenpartei.de/openid/endpoint.php'; // the alternate URL to use to contact the endpoint
+		
 	
 	
 	
@@ -68,8 +72,8 @@ class PiratenID {
 		if ($errormsg !== null) return self::error($errormsg);
 		
 		$logouterror = false;
-		if (self::$handleLogout && isset($_GET['piratenid_logout'])) {
-			if (!empty($_SESSION['piratenid_user']['logouttoken']) && $_GET['piratenid_logout'] === $_SESSION['piratenid_user']['logouttoken']) {
+		if (self::$handleLogout && isset($_POST['piratenid_logout'])) {
+			if (!empty($_SESSION['piratenid_user']['logouttoken']) && $_POST['piratenid_logout'] === $_SESSION['piratenid_user']['logouttoken']) {
 				if (is_callable(self::$logoutCallback)) {
 					call_user_func(self::$logoutCallback);
 				}
@@ -77,7 +81,7 @@ class PiratenID {
 			} else {
 				$logouterror = true;
 			}
-			unset($_GET['piratenid_logout']);
+			unset($_POST['piratenid_logout']);
 		}
 		
 		if (isset($_POST['openid_mode'])) {
@@ -135,25 +139,30 @@ class PiratenID {
 	public static function button($logout, $errortext = null) {
 		if (self::initParams() !== null) return null;
 
+		$method = "POST";
 		if (!$logout) {
 			$type = "login";
 			$title = "Nicht eingeloggt. Klicken zum Einloggen per PiratenID.";
-			$targeturl = self::makeOpenIDURL();
+			$targeturl = self::endpoint;
+			$fields = self::getOpenIDRequest();
+			$method = "POST";
 		} else {
 			$type = "logout";
 			$title = "Eingeloggt per PiratenID. Klicken zum Ausloggen.";
 			$targeturl = self::$logouturl;
+			$fields = array();
 			if (self::$handleLogout) {
 				if (!empty($_SESSION['piratenid_user']['logouttoken'])) {
-					$anchor = '';
-					if (preg_match('/(#.*)$/D', $targeturl, $matches)) { // remove anchor (will be re-added)
-						$targeturl = preg_replace('/(#.*)$/D', '', $targeturl);
-						$anchor = $matches[1];
-					}
-					$separator = (strpos($targeturl, '?') === false) ? '?' : '&';
-					$targeturl = $targeturl . $separator . 'piratenid_logout=' . $_SESSION['piratenid_user']['logouttoken'] . $anchor;
+					$fields['piratenid_logout'] = $_SESSION['piratenid_user']['logouttoken'];
+					
 				} else {
 					$errortext = 'WRONG USAGE OF PIRATENID LIBRARY. Tried to generate button with $handleLogout=true without correctly initialized session.';
+				}
+			} else {
+				if (is_array(self::$logoutParams)) {
+					$fields = self::$logoutParams;
+				} else {
+					$method = "GET";
 				}
 			}
 		}
@@ -164,10 +173,24 @@ class PiratenID {
 		}
 		
 		$imgurl = self::$imagepath.'button-'.$type.'.png';
-		return '<a title="'.htmlspecialchars($title).'" href="'.htmlspecialchars($targeturl).'">'.
-			'<img alt="'.htmlspecialchars($title).'" style="border: none;" width="120" height="48" src="'.htmlspecialchars($imgurl).'"></a>';
+		
+		return self::buildFormHTML($targeturl, $fields, $imgurl, $title, $method);
 	}
-
+	
+	public static function buildFormHTML($targeturl, $fields, $imgurl, $title, $method) {
+		self::$error = self::initParams();
+		if (self::$error !== null) return null;
+		
+		$fieldsHTMLs = array();
+		foreach ($fields as $key => $value) {
+			$fieldsHTMLs[] = '<input type="hidden" name="'.htmlspecialchars($key).'" value="'.htmlspecialchars($value).'">';
+		}
+		
+		return '<form method="'.htmlspecialchars($method).'" action="'.htmlspecialchars($targeturl).'">'
+				. implode('', $fieldsHTMLs)
+				. '<input type="image" title="'.htmlspecialchars($title).'" src="'.htmlspecialchars($imgurl).'"></form>';
+	}
+	
 	// Logs the user out, if any is logged in (starting the session if necessary)
 	public static function logout() {
 		if (session_id() == '') self::initSession();
@@ -367,7 +390,8 @@ class PiratenID {
 		
 		return $result;
 	}
-	
+
+    // DEPRECATED - use getOpenIDRequest and buildFormHTML instead
 	// Returns the URL to start the OpenID request. Make sure all settings are set before you call this.
 	public static function makeOpenIDURL() {
 		self::$error = self::initParams();
@@ -377,7 +401,8 @@ class PiratenID {
 	
 		return self::endpoint .'?'. http_build_query($req,'','&');
 	}
-	
+
+
 	// Returns the fields for a OpenID request with the currently set parameters as an associative array (or null if parameters are invalid)
 	public static function getOpenIDRequest() {
 		self::$error = self::initParams();
@@ -418,9 +443,6 @@ class PiratenID {
 		self::$realm_path = $matches[2];
 		if (self::$returnurl == null) {
 			$uri = $_SERVER['REQUEST_URI'];
-			if (self::$handleLogout) {
-				$uri = preg_replace('/[?&]piratenid_logout=[a-f0-9]{16}$/D',"",$uri);
-			}
 			self::$returnurl = $matches[1].$uri; // request_uri may be malicious, but all outputs are escaped.
 		}
 		if (!preg_match('%^([a-z-]+)?(,([a-z-]+))*$%D', self::$attributes)) return 'local: invalid attribute list';
@@ -431,7 +453,11 @@ class PiratenID {
 	// Tests/guesses if the current page is being loaded via HTTPS
 	public static function isSSL() {
 		if ($_SERVER['SERVER_PORT']==443) return true;
-		if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS']==='on') return true;
+		if (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS'])==='on') return true;
+		
+		if (!empty($_SERVER['HTTP_HTTPS']) && strtolower($_SERVER['HTTP_HTTPS'])==='on') return true; // Reverse proxy support
+		if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'])==='https') return true; // Reverse proxy support
+		
 		return false;
 	}
 	
@@ -460,7 +486,18 @@ class PiratenID {
 				)
 			);
 		$context = stream_context_create($options);
-		$response = @file_get_contents(self::endpoint, false, $context);
+		
+		if ( self::INTERNAL_host == null ) {
+			$response = @file_get_contents(self::endpoint, false, $context);
+		} else {
+			if (self::INTERNAL_host === gethostname()) { // Check if user set enabled the internal mode intentionally
+				$response = @file_get_contents(self::INTERNAL_endpoint, false, $context);
+			} else {
+				die("Internal config used on wrong server. Delete piratenid.php and get a clean version if you don't know what this is.");
+			}
+		}
+		
+		
 		if (!$response) {
 			$error = "could not get response from server (maybe TLS issues?)";
 			return false;

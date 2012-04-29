@@ -725,6 +725,7 @@ Es werden folgende Werte gespeichert:
 	\item \texttt{useragent} -- Der bei der Loginanfrage mitgeschickte Referer-Header, formatiert mit logPrefilter
 	\item \texttt{referer} -- Der bei der Loginanfrage mitgeschickte Referer-Header, formatiert mit logPrefilter
 \end{itemize}
+Die verwendeten Benutzernamen werden aus Datenschutzgründen bewusst nicht gespeichert.
 
 Die Tabelle "`loginfailures"' speichert nur IP und Timestamp für die Dauer von 30 Minuten und wird für die IP-Sperre verwendet.
 
@@ -768,6 +769,9 @@ Die Funktionen sind in der PiratenID-Klasse kommentiert. Fett gedruckte Funktion
 		Siehe auch Abschnitt  \fullref{sec:client-usage-advanced}.
 	\item \textbf{\texttt{makeOpenIDURL()}} --
 		Liefert eine URL zum OpenID-Endpoint, welche eine Login-Anfrage mit den aktuellen Parametern enthält.
+		Sollte nicht verwendet werden, da die URLs bei vielen Parametern sehr lang werden und Probleme verursachen können.
+	\item \textbf{\texttt{PiratenID::buildFormHTML(\$targeturl, \$fields, \$imgurl, \$title, \$method)}} --
+		Liefert den HTML-Code für ein Formular mit grafischem Absendebutton mit den genannten Parametern.
 		Siehe auch Abschnitt  \fullref{sec:client-usage-advanced}.
 	\item \textbf{\texttt{getOpenIDRequest()}} --
 		Liefert die OpenID-Felder für eine Login-Anfrage mit den aktuellen Parametern.
@@ -783,9 +787,16 @@ Die Funktionen sind in der PiratenID-Klasse kommentiert. Fett gedruckte Funktion
 		Liest die OpenID-Werte aus einer GET- oder POST-Anfrage aus. Umgeht dabei ein PHP-"`Feature"', welches Feldnamen umbenennt.
 	\item \texttt{isValidKeyValue(...)} -- 
 		Prüft, ob das übergebene Paar gültige Werte für einen OpenID-Feldnamen und --wert beinhaltet.
-	
-
 \end{itemize}
+
+\subsection{Interner Betrieb}
+Wird der Client auf einem Host innerhalb des internen Netzes eingesetzt, kann er den Server nicht unter der normalen URL erreichen.
+Daher kann über die Konstante \texttt{INTERNAL\_endpoint} eine alternative URL genannt werden, die nur für den Verbindungsaufbau genutzt wird.
+
+Um sicherzustellen, dass eine derart modifizierte Variante des Clients nicht versehentlich auf Systeme außerhalb des internen Netzes kopiert wird,
+muss gleichzeitig auch der Hostname des Systems in die Konstante \texttt{INTERNAL\_host} eingetragen werden, damit die Konstante verwendet wird.
+Ist ein falscher Hostname eingetragen, bricht der Client die Verifizierung von OpenID-Antworten ab.
+Dadurch wird verhindert, dass eine für den internen Einsatz gedachte URL ohne HTTPS versehentlich auf externen Servern verwendet wird.
 
 \subsection{Schutzmaßnahmen}
 Besondere Schutzmaßnahmen im Client werden in Abschnitt \fullref{sec:security-client} erläutert.

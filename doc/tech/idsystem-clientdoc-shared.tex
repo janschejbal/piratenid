@@ -109,6 +109,14 @@ Nachdem die Datei eingebunden wurde, müssen vor der Nutzung einige Parameter ge
 											welche aufgerufen wird, wenn über \texttt{PiratenID::\$run()} ein Logout erfolgt.
 											Die Funktion erhält keine Parameter, der Rückgabewert wird ignoriert.
 
+	\item \texttt{PiratenID::\$logoutParams} -- Gibt an, was bei einem Logout gesendet wird.
+											Mögliche Werte sind null (Standard) oder ein assoziatives Array.
+											Falls \texttt{PiratenID::\$handleLogout} gesetzt ist, wird dieser Wert ignoriert.
+											Ist dieser Wert null, wird bei einem Logout ein GET-Request an die Logout-URL geschickt,
+											die mittels \texttt{PiratenID::\$logouturl} festgelegt wurde.
+											Ist dieser Wert ein assoziatives Array, wird beim Logout ein POST-Request
+											mit den im Array angegebenen Werten verwendet.
+
 \end{itemize}
 
 \subsection{Nutzung}
@@ -138,8 +146,8 @@ Ein Logout erfolgt über den Aufruf der Funktion \texttt{PiratenID::logout()}.
 \subsubsection{Nutzung über \texttt{PiratenID::handle()}}
 \label{sec:client-usage-advanced}
 Wenn mehr Kontrolle über den Authentifizierungsprozess gewünscht ist, können die Funktionen
-\texttt{PiratenID::initSession()}, \texttt{PiratenID::handle()}, \texttt{PiratenID::makeOpenIDURL()} und \texttt{PiratenID::button(...)}
-separat genutzt werden.
+\texttt{PiratenID::initSession()}, \texttt{PiratenID::handle()}, \texttt{PiratenID::getOpenIDRequest()}, \texttt{PiratenID::buildFormHTML()}
+und \texttt{PiratenID::button(...)} separat genutzt werden.
 
 \textbf{Falls \texttt{PiratenID::button(...)} genutzt werden soll, muss der Parameter \texttt{PiratenID::\$handleLogout} deaktiviert werden!}
 Geschieht dies nicht, wird in eingeloggtem Zustand dauernd die folgende Fehlermeldung angezeigt:
@@ -148,9 +156,19 @@ Geschieht dies nicht, wird in eingeloggtem Zustand dauernd die folgende Fehlerme
 \texttt{PiratenID::initSession()} initialisiert die Session auf sichere Art und Weise.
 Wird ein eigenes Session Handling durchgeführt, muss diese Funktion nicht genutzt werden.
 
-\texttt{PiratenID::makeOpenIDURL()} liefert die URL zum ID-System, die den Login-Prozess mit den derzeitigen Einstellungen einleitet.
-Ein eigener Login-Button sollte auf diese URL verweisen.
-Die einzelnen OpenID-Felder können auch per \texttt{PiratenID::getOpenIDRequest()} als Array abgerufen werden.
+\texttt{PiratenID::getOpenIDRequest()} liefert ein assoziatives Array mit Werten für den POST-Request,
+mit dem der Login-Prozess mit den derzeitigen Einstellungen eingeleitet wird.
+
+Ein eigener Login-Button sollte einen POST mit diesen Werten auf die URL \texttt{PiratenID::endpoint} erzeugen.
+Soll ein grafischer Button verwendet werden, so kann dieser über \texttt{PiratenID::buildFormHTML(...)} erstellt werden.
+
+\texttt{PiratenID::buildFormHTML(\$targeturl, \$fields, \$imgurl, \$title, \$method)}
+ liefert den HTML-Code für ein Formular mit grafischem Absendebutton.
+\texttt{\$targeturl} gibt die Ziel-URL (action) des Formulars an.
+\texttt{\$fields} ist ein assoziatives Array mit den zu sendenden Werten.
+\texttt{\$imgurl} ist die (relative oder absolute) URL zum Bild, welches die Schaltfläche darstellt.
+\texttt{\$title} ist der Beschreibungstext, der beim mouseover über den Button erscheinen soll
+\texttt{\$method} ist die zu verwendete HTTP-Methode zum Absenden des Formulars (\texttt{POST} oder \texttt{GET})
 
 \texttt{PiratenID::handle()} verarbeitet die indirekte Antwort des PiratenID-Servers unter der Return-URL.
 Bei einem POST auf die Return-URL mit dem Feld \texttt{openid\_mode} sollte diese Funktion aufgerufen werden.
