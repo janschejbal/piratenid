@@ -77,11 +77,20 @@ function sendIndirectResponse($fields, $target, $isError = false) {
 	</p>
 	<script>
 		function updateSkipSetting(sourcebox) {
-			document.cookie="piratenid_noexitwarning="+sourcebox.checked+"; expires=Mon Feb 01 2038 00:00:00 GMT;";
+			try {
+				if (sourcebox.checked) {
+					localStorage.setItem("piratenid_skip_warning",  "1");
+				} else {
+					localStorage.removeItem("piratenid_skip_warning");
+				}
+			} catch (e) {
+				alert("Dein Browser kann das nicht.");
+				sourcebox.checked = false;
+			}
 		}
 	</script>
-	<p>
-		<input type="checkbox" onchange="updateSkipSetting(this)">Warnung automatisch überspringen (Cookies + JavaScript erforderlich)
+	<p id="skiparea" style="display: none;">
+		<input type="checkbox" id="skipcheckbox" onchange="updateSkipSetting(this)">Warnung automatisch überspringen (Cookies/LocalStorage erforderlich)
 	</p>
 	<?php
 	echo '<form name="piratenid_responseform" action="'. htmlspecialchars($target).'" method="POST" accept-charset="utf-8">';
@@ -90,9 +99,13 @@ function sendIndirectResponse($fields, $target, $isError = false) {
 	<input type="submit" value="Zurück zur anfragenden Seite &gt;&gt;&gt;">
 	</form>
 	<script type="text/javascript">
-		if (document.cookie.indexOf("piratenid_noexitwarning=true") > -1) { // good enough for this purpose
-			document.forms['piratenid_responseform'].submit();
-		}
+		document.getElementById('skiparea').style.display = 'block';
+		try {
+			if (localStorage.getItem("piratenid_skip_warning")) {
+				document.getElementById('skipcheckbox').checked = true;
+				document.forms['piratenid_responseform'].submit();
+			}
+		} catch (e) {} // ignore
 	</script>
 	<?php
 	include('../includes/footer.inc.php');

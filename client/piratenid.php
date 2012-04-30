@@ -210,13 +210,14 @@ class PiratenID {
 			die('PiratenID: Cannot init session, headers already sent'); // make sure its fatal.
 		}
 		
-		// Try to get better session IDs. As creating them using OpenSSL would be a mess,
+		// Try to get better session ID security. As creating them using OpenSSL would be a mess,
 		// and the regular algorithm is reasonably secure on current PHP, ignore failure.
-		@ini_set('session.entropy_file','/dev/urandom'); // will be ignored on windows
-		@ini_set('session.entropy_length','32');
+		//$original_error_reporting = error_reporting(0);
+		if (!ini_get('session.entropy_file')) ini_set('session.entropy_file','/dev/urandom'); // will be ignored on windows
+		ini_set('session.entropy_length','32');
+		ini_set('session.use_only_cookies',1); // Try to enhance security, ignore if it fails (will be detected later)
+		//error_reporting($original_error_reporting);
 
-		// Try to enhance security, ignore if it fails (will be detected later)
-		@ini_set('session.use_only_cookies',1);
 
 		$cookieChanged = false;
 		$params = session_get_cookie_params();
@@ -227,10 +228,11 @@ class PiratenID {
 	
 		$alreadyStarted = session_id() !== '';
 		$onlyCookies = ini_get('session.use_only_cookies') === '1';
+		$mightAuthenticate = isset($_POST['openid_mode']);
 		
 		if (!$alreadyStarted) session_start();
 		
-		if ($alreadyStarted || !$onlyCookies || !isset($_SESSION['piratenid_user']) || $cookieChanged) {
+		if ($alreadyStarted || !$onlyCookies || !isset($_SESSION['piratenid_user']) || $cookieChanged || $mightAuthenticate) {
 			session_regenerate_id(true); // ensure params are applied, prevent session fixation attack
 		}
 
@@ -487,16 +489,18 @@ class PiratenID {
 			);
 		$context = stream_context_create($options);
 		
+		$original_error_reporting = error_reporting(0);
 		if ( self::INTERNAL_host == null ) {
-			$response = @file_get_contents(self::endpoint, false, $context);
+			$response = file_get_contents(self::endpoint, false, $context);
 		} else {
 			if (self::INTERNAL_host === gethostname()) { // Check if user set enabled the internal mode intentionally
-				$response = @file_get_contents(self::INTERNAL_endpoint, false, $context);
+				$response = file_get_contents(self::INTERNAL_endpoint, false, $context);
 			} else {
 				die("Internal config used on wrong server. Delete piratenid.php and get a clean version if you don't know what this is.");
 			}
 		}
-		
+		error_reporting($original_error_reporting);
+
 		
 		if (!$response) {
 			$error = "could not get response from server (maybe TLS issues?)";
