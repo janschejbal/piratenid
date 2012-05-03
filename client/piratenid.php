@@ -43,9 +43,9 @@ class PiratenID {
 	private static $hasRun = false;
 	
 	// OpenID endpoint to use (TODO)
-	const serverCN   = 'idtest.piratenpartei.de';
-	const serverroot = 'https://idtest.piratenpartei.de/';
-	const endpoint   = 'https://idtest.piratenpartei.de/openid/endpoint.php';
+	const serverCN   = 'id.piratenpartei.de';
+	const serverroot = 'https://id.piratenpartei.de/';
+	const endpoint   = 'https://id.piratenpartei.de/openid/endpoint.php';
 
 	// WARNING: THIS IS NOT AN OpenID CLIENT IMPLEMENTATION
 	// This is a *partial* implementation of the OpenID protocol for usage with a single, hardcoded trusted provider only.
