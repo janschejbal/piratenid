@@ -10,6 +10,7 @@ require('includes/header.inc.php');
 </p>
 <p>
 	Als Nutzer solltest du zunächst die <a href="doc/idsystem-userdoc.pdf">Anleitung für Nutzer</a> lesen.
+	Die Datenschutzerklärung findest du <a href="privacy.php">hier</a>.
 </p>
 <p>
 	Hast du eine Webanwendung und möchtest, dass deine Nutzer sich über PiratenID einloggen können?

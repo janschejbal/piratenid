@@ -86,6 +86,7 @@ if ($valid) {
 	und über das im nächsten Schritt einzugebende Token mit den Informationen über meine Gliederungsmitgliedschaften verknüpft werden,
 	damit ich diese im ID-System nutzen und gegenüber anderen Webseiten bestätigen lassen kann.<br>
 	Ohne diese Einwilligung kann das ID-System nicht genutzt werden.</em></p>
+	<p><a href="/privacy.php">Datenschutzerklärung</a></p>
 	<div>
 		<form action="create.php" method="POST" accept-charset="utf-8">
 			<table>

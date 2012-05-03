@@ -52,7 +52,7 @@ Prozesse:
 
 
 - Pirat will Datenschutzrichtlinen einsehen
-  - Auf URL (TODO) verweisen
+  - Auf URL https://id.piratenpartei.de/privacy.php verweisen
 
 - Pirat will Account vollständig löschen bzw. auch das Usersecret löschen lassen
   - schriftlichen Antrag auf Papier mit eigenhändiger Unterschrift verlangen!
