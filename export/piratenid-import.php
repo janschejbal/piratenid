@@ -1,11 +1,10 @@
 <?php
 
-// TODO: Self-review, Fremd-review
+// TODO: review
 
 // This file needs to be placed on the PiratenID server and requires piratenid-verify.php
 // It should be reachable only from the server doing the export
 // Suggestion: Deploy as a separate site, listening on a separate port
-
 
 /// CONFIG ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -19,6 +18,8 @@ function getDatabaseImportPDO() { // Database login data for token import
 	return new PDO('mysql:dbname=piratenid;host=127.0.0.1', "root", "");
 }
 
+$TESTING = false; // set to true to allow imports with less than 1000 entries
+
 /// END OF CONFIG ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -31,31 +32,7 @@ error_reporting(E_ALL & E_STRICT);
 function fatalErrors($errno, $errstr) { die("Fehler $errno:\n$errstr\n"); }
 set_error_handler("fatalErrors");
 
-
-// verifies an entry (single row)
-// function "err($errormessage)" needs to be defined!
-function PiratenIDImport_verifyEntry($entry) {
-	if (!is_array($entry)) die("Invalid data: entry not an array");
-	if (count($entry) != 7) die("Invalid data: wrong number of values");
-	for ($i = 0; $i<7; $i++) {
-		if (!is_string($entry[$i])) die("Invalid data: value not a string");
-		if (strlen($entry[$i]) > 100) die("Invalid data: value too long");
-		if (strpos($entry[$i], "\xC3\x83") !== false) die("Invalid data: looks like double UTF-8 encoding");
-		if (!mb_detect_encoding($entry[$i], 'UTF-8', true)) die("Invalid data: value not UTF-8");
-		if (!mb_check_encoding($entry[$i], 'UTF-8')) die("Invalid data: invalid UTF-8 sequence");
-		
-	}
-	
-	if (!preg_match('/^[a-f0-9]{64}$/D', $entry[0])) die("Invalid data: invalid token value");
-	if ($entry[0] == 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855') die("Invalid data: Token is hash of empty string");
-	
-	
-	if ($entry[1] !== 'ja' && $entry[1] !== 'nein') die("Invalid data: mitgliedschaft-bund must be either 'ja' or 'nein'");
-	if (!in_array($entry[2], array('', 'BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH') ,true)) {
-		die("Invalid data: value for mitgliedschaft-land is not in whitelist");
-	}
-	if ($entry[6] !== 'ja' && $entry[6] !== 'nein' && $entry[6] !== '') die("Invalid data: stimmberechtigt must be 'ja', 'nein' or empty string");
-}
+require_once('piratenid-verify.php');
 
 /*	
 	PiratenIDImport_import($db, $dataarray, $ignorelength = false): Importiert Token-Daten in PiratenID
@@ -116,7 +93,7 @@ function PiratenIDImport_import($db, $dataarray, $ignorelength = false) {
 		$db->commit();
 		
 	} catch (PDOException $e) {
-		die('Database error: ' . $e->getMessage()); // automatic rollback
+		die('Database error: ' . htmlspecialchars($e->getMessage())); // automatic rollback
 	}
 }
 
@@ -128,6 +105,7 @@ function PiratenIDImport_importFromPost($db, $ignorelength = false) {
 	
 	if (empty($_SERVER['REQUEST_METHOD'])) die("Cannot be used from command line");
 	if ($_SERVER['REQUEST_METHOD'] !== "POST") die("Must use POST");
+	if (empty($_SERVER['REMOTE_ADDR'])) die("Server did not provide remote IP");
 	if ($_SERVER['REMOTE_ADDR'] !== $ALLOWED_IP) die("IP not authorized for import");
 	
 	$postdata = file_get_contents('php://input');
@@ -138,6 +116,7 @@ function PiratenIDImport_importFromPost($db, $ignorelength = false) {
 	$encrypted = substr($postdata, 48);
 	unset($postdata);
 
+	// Derive keys
 	$key_crypto_raw = hash('sha256', 'crypto|'.$SECRET, true); // encryption key
 	$key_hmac_raw = hash('sha256', 'hmac|'.$SECRET, true);     // HMAC integrity key
 	$key_auth_raw = hash('sha256', 'auth|'.$SECRET, true);    // Authentication token
@@ -154,14 +133,16 @@ function PiratenIDImport_importFromPost($db, $ignorelength = false) {
 	if (!$json) die("Parsing failed");
 	unset($decrypted); // conserve memory
 	
-	if ($hmac != hash_hmac('sha256', $json, $key_hmac_raw)) die("Wrong HMAC authentication value");
+	if ($hmac !== hash_hmac('sha256', $json, $key_hmac_raw)) die("Wrong HMAC authentication value");
 	
 	$data = json_decode($json);
+	if (empty($data)) die("JSON decode failed");
+
 	PiratenIDImport_import($db, $data, $ignorelength);
 	echo "Import successful";
 }
 
-PiratenIDImport_importFromPost(getDatabaseImportPDO(), true); // TODO Remove "true" for production use!
+PiratenIDImport_importFromPost(getDatabaseImportPDO(), $TESTING);
 
 /* Example:
 

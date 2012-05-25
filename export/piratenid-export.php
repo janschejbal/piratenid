@@ -1,6 +1,6 @@
 <?php
 
-// TODO: Self-review, Fremd-review
+// TODO: review
 
 // This file needs to be placed on the system doing the export and requires piratenid-verify.php
 // Remember to update the secret in both this file and piratenid-import.php on the server receiving the import!
@@ -32,6 +32,7 @@ $TARGETURL = 'http://127.0.0.1:80/testimport.php';
 
 
 
+if (!empty($_SERVER['REQUEST_METHOD'])) die("This is not a web script. Run it from the command line!");
 
 require_once('piratenid-verify.php');
 $statLVs = PiratenIDImport_getLVs();
@@ -90,11 +91,11 @@ foreach ($input_data as $entry) {
 	$token = $entry['user_token'];
 	$mitgliedschaft_bund   = 'ja';
 	$mitgliedschaft_land   = $entry['USER_LV'];
-	$mitgliedschaft_kreis  = '';
 	$mitgliedschaft_bezirk = '';
+	$mitgliedschaft_kreis  = '';
 	$mitgliedschaft_ort    = '';
 	$stimmberechtigt       = (($entry['USER_Stimmberechtigt'] == -1) ? 'ja' : 'nein');
-	$out_entry = array($token, $mitgliedschaft_bund, $mitgliedschaft_land, $mitgliedschaft_kreis, $mitgliedschaft_bezirk, $mitgliedschaft_ort, $stimmberechtigt);
+	$out_entry = array($token, $mitgliedschaft_bund, $mitgliedschaft_land, $mitgliedschaft_bezirk, $mitgliedschaft_kreis, $mitgliedschaft_ort, $stimmberechtigt);
 	PiratenIDImport_verifyEntry($out_entry);
 	$output_data[] = $out_entry;
 	
@@ -108,6 +109,7 @@ $json = json_encode($output_data);
 unset($output_data); // conserve memory
 
 // Derive keys
+if (empty($SECRET)) PiratenIDImport_err("no secret for key derivation");
 $key_crypto_raw = hash('sha256', 'crypto|'.$SECRET, true); // encryption key
 $key_hmac_raw = hash('sha256', 'hmac|'.$SECRET, true);     // HMAC integrity key
 $key_auth_raw = hash('sha256', 'auth|'.$SECRET, true);    // Auth token
