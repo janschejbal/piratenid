@@ -95,6 +95,16 @@ Auf dem Export-Server muss eine aktuelle PHP-Version vorhanden sein, welche per 
 Es muss somit für die verwendete Datenbank entweder ein PDO-Treiber vorhanden sein, oder ODBC muss korrekt konfiguriert sein.
 Beim Zugriff auf eine MSSQL-Datenbank sollte ODBC verwendet werden.
 
+Unter Ubuntu kann ODBC mit folgenden Befehlen eingerichtet werden:
+    sudo apt-get install freetds-bin freetds-common tdsodbc odbcinst php5-odbc unixodbc
+    sudo cp /usr/share/doc/freetds-common/examples/odbcinst.ini /etc/odbcinst.ini
+(Falls ODBC auch aus Webanwendungen heraus genutzt werden soll, müssen noch der Webserver bzw. php-fastcgi neu gestartet werden.)
+Anschließend kann mit folgenden Einstellungen gearbeitet werden:
+  $SOURCEPDO = 'odbc:Driver=FreeTDS; Server=127.0.0.1; Port=1433; Database=datenbank; UID=benutzername; PWD=passwort';
+  $SOURCEUSER = ''; // User und Passwort MUESSEN im PDO-String angegeben werden, Variablen bleinen leer!
+  $SOURCEPASS = '';
+IP und Port sind anzupassen, "datenbank", "benutzername" und "passwort" jeweils durch Datenbanknamen, Benutzername und Passwort zu ersetzen.
+	
 Auf dem Export-Server werden die Dateien piratenid-verify.php, piratenid-export.php und piratenid-export-config.php benötigt.
 Die Konfiguration ist entsprechend anzupassen (gleiches Secret wie in der Import-Config).
 
