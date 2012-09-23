@@ -18,8 +18,6 @@ function PiratenIDImport_mapNulls(&$var) {
 
 if (!empty($_SERVER['REQUEST_METHOD'])) die("This is not a web script. Run it from the command line!");
 
-$statLVs = PiratenIDImport_getLVs();
-
 // Fetch data
 $pdo = new PDO($SOURCEPDO, $SOURCEUSER, $SOURCEPASS) or PiratenIDImport_err("Could not connect to data source");
 
