@@ -42,7 +42,7 @@ class PiratenID {
 	public static $error = null;
 	private static $hasRun = false;
 	
-	// OpenID endpoint to use (TODO)
+	// OpenID endpoint to use
 	const serverCN   = 'id.piratenpartei.de';
 	const serverroot = 'https://id.piratenpartei.de/';
 	const endpoint   = 'https://id.piratenpartei.de/openid/endpoint.php';

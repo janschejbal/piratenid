@@ -6,33 +6,8 @@
 // It should be reachable only from the server doing the export
 // Suggestion: Deploy as a separate site, listening on a separate port
 
-/// CONFIG ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Shared secret for encrypting and authenticating token imports - needs to match secret in piratenid-export.php
-// If compromised, replace with new random value in export and import file and re-import token table
-$SECRET = "7EbkyTL7N0npJhc4Gv2oXvm4mhDyYXk8cTMg2fa1bcOiiun3Xh7l5YsNNqw0";
-
-$ALLOWED_IP = '127.0.0.1'; // IP from which tokens will be imported. Only this IP will be allowed to request token imports
-
-function getDatabaseImportPDO() { // Database login data for token import
-	return new PDO('mysql:dbname=piratenid;host=127.0.0.1', "root", "");
-}
-
-$TESTING = false; // set to true to allow imports with less than 1000 entries
-
-/// END OF CONFIG ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-error_reporting(E_ALL & E_STRICT);
-function fatalErrors($errno, $errstr) { die("Fehler $errno:\n$errstr\n"); }
-set_error_handler("fatalErrors");
-
 require_once('piratenid-verify.php');
+require_once('piratenid-import-config.php');
 
 /*	
 	PiratenIDImport_import($db, $dataarray, $ignorelength = false): Importiert Token-Daten in PiratenID
@@ -67,9 +42,11 @@ function PiratenIDImport_import($db, $dataarray, $ignorelength = false) {
 	if (count($dataarray) < 2) die("Invalid data: less than 2 entries");
 	if (!$ignorelength && count($dataarray) < 1000) die("Invalid data: less than 1000 entries, data probably incomplete");
 	
+	$statsverifier = new PiratenIDImport_StatsVerifier();
+	
 	$seenTokens = array();
 	foreach ($dataarray as $entry) {
-		PiratenIDImport_verifyEntry($entry);
+		$statsverifier->verifyEntry($entry);
 		if (array_key_exists($entry[0], $seenTokens)) die("Invalid data: DUPLICATE TOKEN - SOMETHING IS *SERIOUSLY* WRONG");
 		$seenTokens[$entry[0]] = 1;
 	}
@@ -94,6 +71,16 @@ function PiratenIDImport_import($db, $dataarray, $ignorelength = false) {
 		
 	} catch (PDOException $e) {
 		die('Database error: ' . htmlspecialchars($e->getMessage())); // automatic rollback
+	}
+	
+	// Import successful. Write stats.
+	global $STATSFILE;
+	if (!empty($STATSFILE)) {
+		$outfile = fopen($STATSFILE, 'w');
+		// htmlspecialchars just to be safe if IE decides to interpret text/plain as HTML - there should never be any special chars, so it doesn't hurt
+		fwrite($outfile, htmlspecialchars("Last successful update: ". date('c') . "\n\n"));
+		fwrite($outfile, htmlspecialchars("Stats:\n". $statsverifier->getStats() . "\n"));
+		fclose($outfile);
 	}
 }
 
@@ -135,12 +122,18 @@ function PiratenIDImport_importFromPost($db, $ignorelength = false) {
 	
 	if ($hmac !== hash_hmac('sha256', $json, $key_hmac_raw)) die("Wrong HMAC authentication value");
 	
-	$data = json_decode($json);
+	$data = json_decode($json, true);
 	if (empty($data)) die("JSON decode failed");
+	
+	if ( empty($data['time']) || empty($data['data']) || !is_int($data['time']) || !is_array($data['data']) ) die("Invalid data format");
 
-	PiratenIDImport_import($db, $data, $ignorelength);
+	$timedelta = time() - $data['time'];
+	if (abs($timedelta) > 5*60) die("Data time mismatch (too old or server clocks out of sync)");
+	
+	PiratenIDImport_import($db, $data['data'], $ignorelength);
 	echo "Import successful";
 }
+
 
 PiratenIDImport_importFromPost(getDatabaseImportPDO(), $TESTING);
 

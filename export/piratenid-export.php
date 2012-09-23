@@ -5,63 +5,28 @@
 // This file needs to be placed on the system doing the export and requires piratenid-verify.php
 // Remember to update the secret in both this file and piratenid-import.php on the server receiving the import!
 
-//   USE ONLY ON A PROTECTED, INTERNAL NETWORK!
-//   The encryption is an additional security feature. It does NOT prevent against replay attacks!
-//   (i.e. if an attacker get a copy of a valid request, AND can send data to the import script,
-//   he can send the same data again and the importer will import the old data)
+//   USE ONLY ON A PROTECTED, INTERNAL NETWORK! The encryption is an additional security feature.
 
+require_once('piratenid-verify.php');
+require_once('piratenid-export-config.php');
 
-/// CONFIG ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Shared secret for encrypting and authenticating token imports - needs to match secret in piratenid-import.php
-// If compromised, replace with new random value in export and import file and re-import token table
-$SECRET = "7EbkyTL7N0npJhc4Gv2oXvm4mhDyYXk8cTMg2fa1bcOiiun3Xh7l5YsNNqw0";
-
-// Source Excel file for export data (full path, remember that backslashes need to be doubled)
-$SOURCEFILE = 'C:\\Users\\Jan\\Documents\\Projekte\\piratenpartei\\piratenid\\export\\piratenidtest.xlsx';
-
-// maximum age of the source file in seconds
-$MAXAGE = 10*60*60;
-
-// URL of the piratenid-import.php script that should receive the export data (internal network only!)
-$TARGETURL = 'http://127.0.0.1:80/testimport.php'; 
-
-/// END OF CONFIG ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
+function PiratenIDImport_mapNulls(&$var) {
+	if (empty($var)) return ''; // fix false/null etc.
+	if ($var = "NULL") return ''; // fix string "NULL"
+	return $var;
+}
 
 if (!empty($_SERVER['REQUEST_METHOD'])) die("This is not a web script. Run it from the command line!");
 
-require_once('piratenid-verify.php');
 $statLVs = PiratenIDImport_getLVs();
 
-// make sure errors are fatal
-error_reporting(E_ALL & E_STRICT);
-function fatalErrors($errno, $errstr) { PiratenIDImport_err("Fehler $errno:\n$errstr\n"); }
-set_error_handler("fatalErrors");
-
-
-// check source file
-if (!is_file($SOURCEFILE)) PiratenIDImport_err('missing source file');
-if (filemtime($SOURCEFILE) < (time() - $MAXAGE)) PiratenIDImport_err('source data too old');
-
-
-// Fetch table name
-$odbc = odbc_connect("Driver={Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)};DBQ=".$SOURCEFILE, "", "") or PiratenIDImport_err("Could not open data source");
-$tablelist = odbc_tables($odbc) or PiratenIDImport_err("Could not query tables");
-$tablearr = odbc_fetch_array($tablelist) or PiratenIDImport_err("Could not get table info");
-odbc_close($odbc);
-if (empty($tablearr['TABLE_NAME'])) PiratenIDImport_err("Table name not found");
-$tablename = $tablearr['TABLE_NAME'];
-
-
 // Fetch data
-$pdo = new PDO("odbc:Driver={Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)};DBQ=".$SOURCEFILE) or PiratenIDImport_err("Could not connect to data source");
+$pdo = new PDO($SOURCEPDO, $SOURCEUSER, $SOURCEPASS) or PiratenIDImport_err("Could not connect to data source");
+
 // String concatenation in SQL and no way around it... strict checking of the table name first!
-if (!preg_match('/^[a-zA-Z0-9_-]{1,28}\\$$/D', $tablename)) PiratenIDImport_err("Invalid table name");
-$statement = $pdo->prepare('SELECT * FROM ['.$tablename.'] ORDER BY user_token') or PiratenIDImport_err("Could not prepare query");
+if (!preg_match('/^[a-zA-Z0-9_-]{1,100}/D', $SOURCETABLE)) PiratenIDImport_err("Invalid table name (validation with regexp failed)"); 
+if (!preg_match('/^[a-zA-Z0-9_-]{1,100}/D', $COLUMN_TOKEN)) PiratenIDImport_err("Invalid token column name (validation with regexp failed)"); // MSSQL doesn't like variable ORDER BY colums
+$statement = $pdo->prepare('SELECT * FROM ['.$SOURCETABLE.'] ORDER BY ['.$COLUMN_TOKEN.']') or PiratenIDImport_err("Could not prepare query");
 if ($statement->execute()) {
 	$input_data = $statement->fetchAll(PDO::FETCH_ASSOC);
 } else {
@@ -70,42 +35,33 @@ if ($statement->execute()) {
 }
 
 if (empty($input_data)) PiratenIDImport_err("Could not fetch data - empty data set received");
-if (empty($input_data)) PiratenIDImport_err("Could not fetch data - empty data set received");
 if (count($input_data) < 2) die("Invalid data: less than 2 entries");
 
 // Convert data
 $output_data = array();
-$count_total = array();
-$count_stimmberechtigt = array();
-
-foreach ($statLVs as $lv) {
-	$count_total[$lv] = 0;
-	$count_stimmberechtigt[$lv] = 0;
-}
+$statsverifier = new PiratenIDImport_StatsVerifier();
 
 foreach ($input_data as $entry) {
-	if (empty($entry['user_token'])) PiratenIDImport_err("Missing field: user_token");
-	if (empty($entry['USER_LV'])) PiratenIDImport_err("Missing field: USER_LV");
-	if (empty($entry['USER_Stimmberechtigt'])) PiratenIDImport_err("Missing field: USER_Stimmberechtigt");
+	if (empty($entry[$COLUMN_TOKEN])) PiratenIDImport_err("Missing field: token");
+	if (!isset($entry[$COLUMN_LAND])) PiratenIDImport_err("Missing field: USER_LV");
+	if (!isset($entry[$COLUMN_STIMMBERECHTIGT])) PiratenIDImport_err("Missing field: stimmberechtigt");
 	
-	$token = $entry['user_token'];
+	$token = $entry[$COLUMN_TOKEN];
 	$mitgliedschaft_bund   = 'ja';
-	$mitgliedschaft_land   = $entry['USER_LV'];
-	$mitgliedschaft_bezirk = '';
-	$mitgliedschaft_kreis  = '';
-	$mitgliedschaft_ort    = '';
-	$stimmberechtigt       = (($entry['USER_Stimmberechtigt'] == -1) ? 'ja' : 'nein');
-	$out_entry = array($token, $mitgliedschaft_bund, $mitgliedschaft_land, $mitgliedschaft_bezirk, $mitgliedschaft_kreis, $mitgliedschaft_ort, $stimmberechtigt);
-	PiratenIDImport_verifyEntry($out_entry);
-	$output_data[] = $out_entry;
+	$mitgliedschaft_land   = $entry[$COLUMN_LAND];
+	$mitgliedschaft_bezirk = $COLUMN_BEZIRK ? PiratenIDImport_mapNulls($entry[$COLUMN_BEZIRK]) : '';
+	$mitgliedschaft_kreis  = $COLUMN_KREIS  ? PiratenIDImport_mapNulls($entry[$COLUMN_KREIS])  : '';
+	$mitgliedschaft_ort    = $COLUMN_ORT    ? PiratenIDImport_mapNulls($entry[$COLUMN_ORT])   : '';
+	$stimmberechtigt       = (($entry[$COLUMN_STIMMBERECHTIGT] == 1) ? 'ja' : 'nein');
 	
-	$count_total[$mitgliedschaft_land]++;
-	if ($stimmberechtigt === 'ja') $count_stimmberechtigt[$mitgliedschaft_land]++;
+	$out_entry = array($token, $mitgliedschaft_bund, $mitgliedschaft_land, $mitgliedschaft_bezirk, $mitgliedschaft_kreis, $mitgliedschaft_ort, $stimmberechtigt);
+	$statsverifier->verifyEntry($out_entry);
+	$output_data[] = $out_entry;
 }
 
 unset($input_data); // conserve memory
 
-$json = json_encode($output_data);
+$json = json_encode(array("time" => time(), "data" => $output_data));
 unset($output_data); // conserve memory
 
 // Derive keys
@@ -154,11 +110,7 @@ echo "\n-------------------------------\n";
 if ($result === "Import successful") {
 	echo "Looks like the import was successful!\n\n";
 	echo "Stats:\n";
-	foreach ($statLVs as $lv) {
-		$statLVstr = $lv;
-		if ($statLVstr === '') $statLVstr = 'XX';
-		printf(" | $statLVstr = %6d | $statLVstr-stimmberechtigt = %6d\n", $count_total[$lv], $count_stimmberechtigt[$lv]);
-	}
+	echo $statsverifier->getStats();
 } else {
 	echo "Looks like the import failed!";
 	exit(1);
