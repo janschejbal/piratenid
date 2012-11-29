@@ -3,7 +3,7 @@
 // TODO: review
 
 // This file needs to be placed on the PiratenID server and requires piratenid-verify.php
-// It should be reachable only from the server doing the export
+// It should be reachable only from the server doing the export and require SSL client certificate authentication
 // Suggestion: Deploy as a separate site, listening on a separate port
 
 require_once('piratenid-verify.php');
@@ -34,6 +34,10 @@ require_once('piratenid-import-config.php');
 		$ignorelength: Zum Testen mit kleinen Datensätzen auf "true" setzen.
 			Ist dieser Wert false oder nicht gesetzt, wird ein Import abgelehnt, wenn weniger als 1000 Datensätze geliefert werden.
 			Dies soll verhindern, dass durch einen defekten Import die Token-Datenbank gelöscht wird.
+	
+	Rückgabewert: Assoziatives Array mit zwei Werten:
+						"valid" (beinhaltet ein Array mit allen aktuell gültigen Token-Hashes)
+						"used"  (beinhaltet ein Array mit allen aktuell verwendeten Token-Hashes)
 */
 function PiratenIDImport_import($db, $dataarray, $ignorelength = false) {
 	if (!$db) die("No database connection");
@@ -81,6 +85,20 @@ function PiratenIDImport_import($db, $dataarray, $ignorelength = false) {
 		fwrite($outfile, htmlspecialchars("Last successful update: ". date('c') . "\n\n"));
 		fwrite($outfile, htmlspecialchars("Stats:\n". $statsverifier->getStats() . "\n"));
 		fclose($outfile);
+	}
+	
+	try {
+		$valid_tokens = $db->query("SELECT token FROM tokens", PDO::FETCH_COLUMN, 0)->fetchAll();
+		$used_tokens = $db->query("SELECT token FROM users",  PDO::FETCH_COLUMN, 0)->fetchAll();
+		
+		$valid_tokens = array_filter($valid_tokens);
+		sort($valid_tokens);
+		$used_tokens = array_filter($used_tokens);
+		sort($used_tokens);
+		
+		return array('valid' => $valid_tokens, 'used' => $used_tokens);
+	} catch (PDOException $e) {
+		die('Database error: ' . htmlspecialchars($e->getMessage())); // automatic rollback
 	}
 }
 
@@ -130,8 +148,9 @@ function PiratenIDImport_importFromPost($db, $ignorelength = false) {
 	$timedelta = time() - $data['time'];
 	if (abs($timedelta) > 5*60) die("Data time mismatch (too old or server clocks out of sync)");
 	
-	PiratenIDImport_import($db, $data['data'], $ignorelength);
-	echo "Import successful";
+	$newState = PiratenIDImport_import($db, $data['data'], $ignorelength);
+		
+	echo "Import successful\n" . json_encode($newState);
 }
 
 

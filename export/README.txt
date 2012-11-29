@@ -5,6 +5,11 @@ Das Importskript importiert die Daten in die PiratenID-Datenbank und erstellt op
 
 Beide Skripte prüfen die Gültigkeit der Daten. Das Exportskript zeigt bei gelungenem Export Statistiken an.
 
+Das Importskript meldet anschließend an das Importskript, welche Token nun gültig sind, und welche bereits verbraucht sind.
+(Beachte: Nicht mehr gültige Token können verbraucht sein!)
+Das Exportskript schreibt diese Informationen in eine separate Tabelle auf dem SAGE-Datenbankserver.
+So erhält SAGE Zugriff auf diese Informationen und kann z. B. das Neuausstellen von verlorenen Token automatisieren.
+
 === Sicherheit ===
 Die Daten werden ausschließlich über das gesicherte, interne Netzwerk übertragen.
 Die Token-Hashes werden vom Exportskript sortiert, um Rückschlüsse aus der Reihenfolge zu verhindern.
@@ -13,16 +18,24 @@ Sie enthalten keine personenbezogenen Angaben und müssen daher nicht besonders g
 
 Dennoch wird durch mehrere Maßnahmen sichergestellt, dass die Daten nicht in fremde Hände gelangen:
 * Die Datenübertragung erfolgt über ein internes, gesichertes und vertrauenswürdes Netzwerk
-* Die Daten werden symmetrisch verschlüsselt
+* Für die Übertragung wird SSL mit Clientauthentifizierung mit fest installierten Zertifikaten verwendet
+* Die Daten, welche vom Export-Server zum PiratenID-Server gesendet werden, werden zusätzlich symmetrisch verschlüsselt
 
 Durch mehrere Maßnahmen wird sichergestellt, dass keine verfälschten Daten importiert werden können:
 * Die Datenübertragung erfolgt über ein internes, gesichertes und vertrauenswürdes Netzwerk
+* Für die Übertragung wird SSL mit Clientauthentifizierung mit fest installierten Zertifikaten verwendet
 * Nur der Export-Server kann auf das Importskript zugreifen.
   * Die Webserver-Konfiguration erlaubt nur Zugriffe von der IP des Export-Servers
   * Das Importskript prüft die IP erneut
 * Ein Import erfolgt nur, wenn die Nachricht einen (konstanten) Authentifizierungssschlüssel enthält
 * Die Daten werden mit einem symmetrischen Schlüssel integritätsgesichert
 * Um Replay-Attacken zu verhindern, wird ein Timestamp mitsigniert.
+
+Durch folgende Maßnahmen wird sichergestellt, dass die Rückmeldung vom ID-Server zum Export-Server nicht verfälscht werden kann:
+* Die Datenübertragung erfolgt über ein internes, gesichertes und vertrauenswürdes Netzwerk
+* Für die Übertragung wird SSL mit Clientauthentifizierung mit fest installierten Zertifikaten verwendet
+  * die Rückmeldung erfolgt über die selbe Verbindung, über welche auch die Übertragung erfolgt ist
+
 
 === Dateien ===
 * README.txt ist diese Hilfedatei
@@ -32,14 +45,17 @@ Durch mehrere Maßnahmen wird sichergestellt, dass keine verfälschten Daten impor
 * piratenid-export.php ist das Exportskript
 * piratenid-export-config.php ist die Konfigurationsdatei für das Exportskript
 * piratenid-mktoken.php ist KEIN Teil der Export/Import-Architektur, sondern dient zur Erstellung von Testtokens auf dem Testserver
-
+TODO
 
 == Installationsanleitung für PiratenID Export/Import ==
+
+=== Konfiguration von SSL ===
+TODO
 
 === Importseite (auf PiratenID-Server) ===
 
 1. piratenid-verify.php, piratenid-import.php und piratenid-import-config.php in ein nicht öffentlich zugängigliches Verzeichnis auf dem Server platzieren.
-2. Datenbankzugang mit ausreichenden Rechten (nur DELETE und INSERT nur auf die Tabelle "tokens") anlegen
+2. Datenbankzugang mit ausreichenden Rechten (nur SELECT, DELETE und INSERT nur auf die Tabelle "tokens", zusätzlich SELECT auf token-Spalte in users) anlegen
 3. (Optional) Verzeichnis für Statistiken anlegen, in welchem PHP schreiben darf, und per Statistikdatei per Alias öffentlich lesbar machen:
 ----------------------------------------------------------------------------------------------------
 		# Innerhalb der Server-Direktive fuer den OEFFENTLICHEN Teil des Servers!
@@ -85,10 +101,10 @@ Häufigste Ursache: PDO (Datenbankzugriff) falsch konfiguriert.
 
 
 === Exportseite (auf einem Export-Server) ===
-Der Export-Server benötigt Zugriff auf eine Datenbank, welche die Export-Daten bereitstellt.
+Der Export-Server benötigt Zugriff auf eine Datenbank, welche die Export-Daten bereitstellt und Rückmeldungsdaten entgegennimmt.
 Er muss HTTP-Zugang zum oben konfigurierten Import-Endpunkt haben.
 
-Für den Export sollte ein separater Datenbank-Benutzer angelegt werden, welcher nur auf die Export-Daten zugreifen kann.
+Für den Export sollte ein separater Datenbank-Benutzer angelegt werden, welcher nur auf die Export-Daten zugreifen und Rückmeldungsdaten schreiben kann.
 Der Export-Nutzer sollte nur vom Export-Server aus nutzbar sein, und der Export-Server sollte sich nur mit dem Export-Nutzer auf die DB zugreifen können.
 
 Auf dem Export-Server muss eine aktuelle PHP-Version vorhanden sein, welche per PDO auf die Datenbank zugreifen kann.
@@ -101,7 +117,7 @@ Unter Ubuntu kann ODBC mit folgenden Befehlen eingerichtet werden:
 (Falls ODBC auch aus Webanwendungen heraus genutzt werden soll, müssen noch der Webserver bzw. php-fastcgi neu gestartet werden.)
 Anschließend kann mit folgenden Einstellungen gearbeitet werden:
   $SOURCEPDO = 'odbc:Driver=FreeTDS; Server=127.0.0.1; Port=1433; Database=datenbank; UID=benutzername; PWD=passwort';
-  $SOURCEUSER = ''; // User und Passwort MUESSEN im PDO-String angegeben werden, Variablen bleinen leer!
+  $SOURCEUSER = ''; // User und Passwort MUESSEN im PDO-String angegeben werden, Variablen bleiben leer!
   $SOURCEPASS = '';
 IP und Port sind anzupassen, "datenbank", "benutzername" und "passwort" jeweils durch Datenbanknamen, Benutzername und Passwort zu ersetzen.
 	
