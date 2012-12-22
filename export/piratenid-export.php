@@ -227,7 +227,8 @@ $statement->bindParam(1, $token,   PDO::PARAM_STR);
 $statement->bindParam(2, $isValid, PDO::PARAM_INT);
 $statement->bindParam(3, $isUsed,  PDO::PARAM_INT);
 foreach ($data as $token => $state) {
-	if (!preg_match('/^[a-f0-9]{64}$/D', $token)) PiratenIDImport_err("INVALID TOKEN REPORTED FROM ID SERVER");
+	// Check exact length with binary-safe function to prevent attacks with null bytes etc.
+	if (!is_string($token) || strlen($token) !== 64 || !preg_match('/^[a-f0-9]{64}$/D', $token)) PiratenIDImport_err("INVALID TOKEN REPORTED FROM ID SERVER");
 	$isValid = empty($state['valid']) ? 0 : 1;
 	$isUsed  = empty($state['used'])  ? 0 : 1;
 	$statement->execute() or dbError("Failed to insert into feedback table", $statement);

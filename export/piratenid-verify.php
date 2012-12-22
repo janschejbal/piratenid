@@ -23,6 +23,7 @@ function PiratenIDImport_verifyEntry($entry) {
 	if (count($entry) != 7) PiratenIDImport_err("Invalid data: wrong number of values");
 	for ($i = 0; $i<7; $i++) {
 		if (!is_string($entry[$i])) PiratenIDImport_err("Invalid data: value not a string");
+		if (strpos($entry[$i], "\0") !== false) PiratenIDImport_err("Invalid data: contains NULL byte");
 		if (strlen($entry[$i]) > 100) PiratenIDImport_err("Invalid data: value too long");
 		if (strpos($entry[$i], "\xC3\x83") !== false) PiratenIDImport_err("Invalid data: looks like double UTF-8 encoding");
 		if (!mb_detect_encoding($entry[$i], 'UTF-8', true)) PiratenIDImport_err("Invalid data: value not UTF-8");
