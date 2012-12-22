@@ -6,4 +6,5 @@ openssl req -new -x509 -keyout output/updater.key  -out output/updater.crt  -day
 openssl x509 -in output/idserver.crt -subject -fingerprint -noout
 openssl x509 -in output/updater.crt  -subject -fingerprint -noout
 
-cat output/updater.key output/updater.crt > output/updater-combined.key
+cat output/updater.crt  >> output/updater.key
+cat output/idserver.crt >> output/idserver.key

@@ -12,7 +12,7 @@ $TARGETURL = 'https://10.10.4.2:10443/import';
 $SERVER_CERT = '/temp/openssltest/output/idserver.crt';
 
 // Where to find the file containing both the client certificate and the corresponding private key
-$CLIENT_CERT = '/temp/openssltest/output/updater-combined.key';
+$CLIENT_CERT = '/temp/openssltest/output/updater.key';
 
 
 // Source database PDO String

@@ -45,13 +45,37 @@ Durch folgende Maßnahmen wird sichergestellt, dass die Rückmeldung vom ID-Server
 * piratenid-export.php ist das Exportskript
 * piratenid-export-config.php ist die Konfigurationsdatei für das Exportskript
 * piratenid-mktoken.php ist KEIN Teil der Export/Import-Architektur, sondern dient zur Erstellung von Testtokens auf dem Testserver
-TODO
+* Das Verzeichnis cert-generator enthält ein Skript zur Erstellung von Zertifikaten (siehe "Konfiguration von SSL")
 
 == Installationsanleitung für PiratenID Export/Import ==
 
 === Konfiguration von SSL ===
-TODO
+Sowohl für den Server als auch für den Client müssen Zertifikate erstellt werden.
+Hierfür beinhaltet das Verzeichnis "cert-generator" eine OpenSSL-Config und ein entsprechendes Skript.
+ACHTUNG: Unter Windows benötigt dieses Skript korrekt installierte UnxUtils und OpenSSL!
+Trotz der Dateiendung kann das Skript unter Linux auch als Shellskript benutzt werden!
 
+Das Skript erstellt im Verzeichnis "output" folgende Dateien:
+ * idserver.crt         - öffentliches (Server-)Zertifikat für den Import-Endpoint. Wird auf dem Export-Server installiert.
+ * idserver.key         - privater Schlüssel (inkl. Zertifikat) für den Import-Endpoint. Wird NUR auf dem ID-Server installiert!
+ * updater.crt          - öffentliches Clientzertifikat für den Export-Server. Wird auf dem ID-Server installiert.
+ * updater.key          - privater Schlüssel (inkl. Zertifikat) für den Export-Server. Wird NUR auf dem Export-Server installert!
+
+Alternativ können die Schlüssel und Zertifikate natürlich mit den Befehlen aus dem Skript manuell auf den jeweiligen Hosts erstellt werden,
+sodass die privaten Schlüssel sich nie außerhalb des jeweiligen Hosts aufhalten.
+Die öffentlichen Zertifikate müssen jeweils auf den anderen Host übertragen werden.
+
+Die privaten Schlüssel sollten durch entsprechende Rechtevergabe geschützt werden
+  # ID-Server
+  chmod 400 idserver.key
+  chown root idserver.key
+  # Export-Server
+  chown 400 updater.key
+  chown export-user updater.key
+
+Auf dem ID-Server sind die Pfade zu Schlüssel und Zertifikaten in der nginx.conf einzutragen (siehe unten).
+Auf dem Update-Server sind die Pfade in der piratenid-export-config.php einzutragen (siehe Kommentare in der Datei).
+ 
 === Importseite (auf PiratenID-Server) ===
 
 1. piratenid-verify.php, piratenid-import.php und piratenid-import-config.php in ein nicht öffentlich zugängigliches Verzeichnis auf dem Server platzieren.
@@ -65,15 +89,24 @@ TODO
 ----------------------------------------------------------------------------------------------------
 
 4. piratenid-import-config.php anpassen
-    * DB-Zugangsdaten eintragen
-    * IP, von welcher die Importe kommen, eintragen
     * Neues Secret generieren und eintragen (dieses muss später auch in piratenid-export-config.php eingetragen werden)
+    * IP, von welcher die Importe kommen, eintragen
+    * DB-Zugangsdaten eintragen
+	* Pfad zur Statistikdatei eintragen oder auf false setzen.
 
-5. Nginx einrichten. Nur der Export-Server darf auf das Import-Skript zugreifen, und die Zugriffsmöglcihkeiten sind restriktiv zu vergeben.
+5. Nginx einrichten.
+   Nur der Export-Server darf auf das Import-Skript zugreifen, und die Zugriffsmöglcihkeiten sind restriktiv zu vergeben.
+   Es muss SSL mit Clientzertifikaten verwendet werden.
    Eine Beispielkonfiguration folgt, darin müssen Pfade und die allow-IP (IP des Export-Servers) angepasst werden:
 ----------------------------------------------------------------------------------------------------
-	server { # HTTP endpoint for imports
-		listen 81;
+	server { # HTTPS endpoint for imports
+		listen 10443;
+		ssl on;
+		ssl_verify_client on;
+		ssl_certificate /srv/www/piratenid_test_import/idserver.key;
+		ssl_certificate_key /srv/www/piratenid_test_import/idserver.key;
+		ssl_client_certificate /srv/www/piratenid_test_import/updater.crt;
+
 		server_name idtest-import;
 		access_log /var/log/nginx/piratenid_test_import-access.log;
 		error_log /var/log/nginx/piratenid_test_import-error.log;

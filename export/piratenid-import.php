@@ -1,6 +1,6 @@
 <?php
 
-// TODO: review
+// TODO: 3rd-party-review
 
 // This file needs to be placed on the PiratenID server and requires piratenid-verify.php
 // It should be reachable only from the server doing the export and require SSL client certificate authentication

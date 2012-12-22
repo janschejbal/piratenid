@@ -1,6 +1,6 @@
 <?php
 
-// TODO: review
+// TODO: 3rd-party-review
 
 // This file needs to be placed on the system doing the export and requires piratenid-verify.php
 // Remember to update the secret in both this file and piratenid-import.php on the server receiving the import!
@@ -205,7 +205,7 @@ if ($result[0] === "Import successful") {
 
 $newState = json_decode($result[1], true);
 
-if (!array($newState) || empty($newState['valid']) || empty($newState['used'])) PiratenIDImport_err("Invalid newState.");
+if (!is_array($newState) || empty($newState['valid']) || empty($newState['used'])) PiratenIDImport_err("Invalid newState.");
 $validTokens = $newState['valid'];
 $usedTokens = $newState['used'];
 if (count(array_diff($newState['valid'], $sent_tokens)) !== 0 || count(array_diff($sent_tokens, $newState['valid'])) !== 0) { // check BOTH ways, array_diff only checks one direction!
