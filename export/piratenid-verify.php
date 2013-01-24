@@ -28,7 +28,6 @@ function PiratenIDImport_verifyEntry($entry) {
 		if (strpos($entry[$i], "\xC3\x83") !== false) PiratenIDImport_err("Invalid data: looks like double UTF-8 encoding");
 		if (!mb_detect_encoding($entry[$i], 'UTF-8', true)) PiratenIDImport_err("Invalid data: value not UTF-8");
 		if (!mb_check_encoding($entry[$i], 'UTF-8')) PiratenIDImport_err("Invalid data: invalid UTF-8 sequence");
-		
 	}
 	
 	if (!preg_match('/^[a-f0-9]{64}$/D', $entry[0])) PiratenIDImport_err("Invalid data: invalid token value");
@@ -46,6 +45,7 @@ function PiratenIDImport_verifyEntry($entry) {
 class PiratenIDImport_StatsVerifier {
 	private $lv_total = array();
 	private $lv_stimmberechtigt = array();
+	private $statehash = "empty";
 	
 	function __construct() {
 		foreach (PiratenIDImport_getLVs() as $lv) {
@@ -60,6 +60,10 @@ class PiratenIDImport_StatsVerifier {
 		$stimmberechtigt = $entry[6];
 		$this->lv_total[$mitgliedschaft_land]++;
 		if ($stimmberechtigt === 'ja') $this->lv_stimmberechtigt[$mitgliedschaft_land]++;
+		
+		// Generate state hash for integrity checking.
+		$this->statehash = hash('sha256', $this->statehash."\t".$entry[0]."\t".$entry[1]."\t".$entry[2]."\t".$entry[3]."\t".$entry[4]."\t".$entry[5]."\t".$entry[6]."\n");
+		if (empty($this->statehash) || strlen($this->statehash) != 64) PiratenIDImport_err("State hash calculation failed");
 	}
 	
 	function getStats() {
@@ -75,5 +79,10 @@ class PiratenIDImport_StatsVerifier {
 		}
 		$result .= sprintf(" | %8s = %6d | %8s-stimmberechtigt = %6d\n", "TOTAL", $total, "TOTAL", $total_stimmberechtigt);
 		return $result;
+	}
+	
+	// Returns a hash representing the data verified up to now (for error checking).
+	function getStateHash() {
+		return $this->statehash;
 	}
 }

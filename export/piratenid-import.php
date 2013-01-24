@@ -31,6 +31,7 @@ require_once('piratenid-import-config.php');
 			"KV Frankfurt am Main" umbennant, könnte dies dazu führen, dass eine Anwednung Mitgliedern des
 			"KV Frankfurt am Main" Zugriff auf einen Bereich verweigert, weil dieser nur für Mitglieder des "KV Frankfurt"
 			zugänglich ist.
+		$datahash: Der vom StatsVerifier nach einer Verifikation der Daten erzeugte State-Hash zur Integritätsprüfung
 		$ignorelength: Zum Testen mit kleinen Datensätzen auf "true" setzen.
 			Ist dieser Wert false oder nicht gesetzt, wird ein Import abgelehnt, wenn weniger als 1000 Datensätze geliefert werden.
 			Dies soll verhindern, dass durch einen defekten Import die Token-Datenbank gelöscht wird.
@@ -39,9 +40,10 @@ require_once('piratenid-import-config.php');
 						"valid" (beinhaltet ein Array mit allen aktuell gültigen Token-Hashes)
 						"used"  (beinhaltet ein Array mit allen aktuell verwendeten Token-Hashes)
 */
-function PiratenIDImport_import($db, $dataarray, $ignorelength = false) {
+function PiratenIDImport_import($db, $dataarray, $datahash, $ignorelength = false) {
 	if (!$db) die("No database connection");
 	if (!is_array($dataarray)) die("Invalid data: data not an array");
+	if (!is_string($datahash)) die("Invalid data: hash not a string");
 	if (empty($dataarray)) die("Invalid data: data is empty");
 	if (count($dataarray) < 2) die("Invalid data: less than 2 entries");
 	if (!$ignorelength && count($dataarray) < 1000) die("Invalid data: less than 1000 entries, data probably incomplete");
@@ -54,6 +56,8 @@ function PiratenIDImport_import($db, $dataarray, $ignorelength = false) {
 		if (array_key_exists($entry[0], $seenTokens)) die("Invalid data: DUPLICATE TOKEN - SOMETHING IS *SERIOUSLY* WRONG");
 		$seenTokens[$entry[0]] = 1;
 	}
+	
+	if ($datahash !== $statsverifier->getStateHash()) die("Invalid data: Data hash mismatch");
 	
 	try {
 		$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -143,12 +147,14 @@ function PiratenIDImport_importFromPost($db, $ignorelength = false) {
 	$data = json_decode($json, true);
 	if (empty($data)) die("JSON decode failed");
 	
-	if ( empty($data['time']) || empty($data['data']) || !is_int($data['time']) || !is_array($data['data']) ) die("Invalid data format");
+	if ( empty($data['time']) || empty($data['data']) || empty($data['datahash']) || !is_int($data['time']) || !is_array($data['data']) || !is_string($data['datahash']) ) {
+		die("Invalid data format");
+	}
 
 	$timedelta = time() - $data['time'];
 	if (abs($timedelta) > 5*60) die("Data time mismatch (too old or server clocks out of sync)");
 	
-	$newState = PiratenIDImport_import($db, $data['data'], $ignorelength);
+	$newState = PiratenIDImport_import($db, $data['data'], $data['datahash'], $ignorelength);
 		
 	echo "Import successful\n" . json_encode($newState);
 }

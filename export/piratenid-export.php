@@ -73,13 +73,14 @@ if ($lockresult !== "0") {
 echo "DB connection established, application lock obtained.\n";
 
 // String concatenation in SQL and no way around it... strict checking of the table name first (even if they come from config)!
-if (!preg_match('/^[a-zA-Z0-9_-]{1,100}/D', $SOURCETABLE)) PiratenIDImport_err("Invalid table name (validation with regexp failed)"); 
-if (!preg_match('/^[a-zA-Z0-9_-]{1,100}/D', $COLUMN_TOKEN)) PiratenIDImport_err("Invalid token column name (validation with regexp failed)"); // MSSQL doesn't like variable ORDER BY colums, we will have to build the query manually
+$dbElementRegexp = '/^[a-zA-Z0-9]{1,100}/D';
+if (!preg_match($dbElementRegexp, $SOURCETABLE)) PiratenIDImport_err("Invalid table name (validation with regexp failed)"); 
+if (!preg_match($dbElementRegexp, $COLUMN_TOKEN)) PiratenIDImport_err("Invalid token column name (validation with regexp failed)"); // MSSQL doesn't like variable ORDER BY colums, we will have to build the query manually
 // Used later when writing to the feedback table, verify now:
-if (!preg_match('/^[a-zA-Z0-9_-]{1,100}/D', $FEEDBACKTABLE)) PiratenIDImport_err("Invalid table name (validation with regexp failed)"); 
-if (!preg_match('/^[a-zA-Z0-9_-]{1,100}/D', $COLUMN_FEEDBACK_TOKEN)) PiratenIDImport_err("Invalid token column name (validation with regexp failed)");
-if (!preg_match('/^[a-zA-Z0-9_-]{1,100}/D', $COLUMN_FEEDBACK_ACTIVE)) PiratenIDImport_err("Invalid token column name (validation with regexp failed)");
-if (!preg_match('/^[a-zA-Z0-9_-]{1,100}/D', $COLUMN_FEEDBACK_USED)) PiratenIDImport_err("Invalid token column name (validation with regexp failed)");
+if (!preg_match($dbElementRegexp, $FEEDBACKTABLE)) PiratenIDImport_err("Invalid table name (validation with regexp failed)"); 
+if (!preg_match($dbElementRegexp, $COLUMN_FEEDBACK_TOKEN)) PiratenIDImport_err("Invalid token column name (validation with regexp failed)");
+if (!preg_match($dbElementRegexp, $COLUMN_FEEDBACK_ACTIVE)) PiratenIDImport_err("Invalid token column name (validation with regexp failed)");
+if (!preg_match($dbElementRegexp, $COLUMN_FEEDBACK_USED)) PiratenIDImport_err("Invalid token column name (validation with regexp failed)");
 
 // Lock table for initial update using a dummy statement
 $pdo->beginTransaction() or dbError("Failed to start transaction for pre-update"); // transaction ends after tokens have been pre-marked as active
@@ -100,9 +101,9 @@ $statsverifier = new PiratenIDImport_StatsVerifier();
 $sent_tokens = array();
 
 foreach ($input_data as $entry) {
-	if (empty($entry[$COLUMN_TOKEN])) PiratenIDImport_err("Missing field: token");
-	if (!isset($entry[$COLUMN_LAND])) PiratenIDImport_err("Missing field: USER_LV");
-	if (!isset($entry[$COLUMN_STIMMBERECHTIGT])) PiratenIDImport_err("Missing field: stimmberechtigt");
+	if (empty($entry[$COLUMN_TOKEN])) PiratenIDImport_err('Missing token field. Check value of $COLUMN_TOKEN.');
+	if (!isset($entry[$COLUMN_LAND])) PiratenIDImport_err('Missing "Land" field. Check value of $COLUMN_LAND.');
+	if (!isset($entry[$COLUMN_STIMMBERECHTIGT])) PiratenIDImport_err('Missing "stimmberechtigt" field. Check value of $COLUMN_STIMMBERECHTIGT.');
 	
 	$token = $entry[$COLUMN_TOKEN];
 	$mitgliedschaft_bund   = 'ja';
@@ -117,6 +118,7 @@ foreach ($input_data as $entry) {
 	$out_entry = array($token, $mitgliedschaft_bund, $mitgliedschaft_land, $mitgliedschaft_bezirk, $mitgliedschaft_kreis, $mitgliedschaft_ort, $stimmberechtigt);
 	$statsverifier->verifyEntry($out_entry);
 	$output_data[] = $out_entry;
+	$output_hash = $statsverifier->getStateHash();
 }
 
 unset($input_data); // conserve memory
@@ -141,7 +143,7 @@ foreach ($sent_tokens as $token) {
 $pdo->commit() or dbError("Failed to commit pre-update");
 
 
-$json = json_encode(array("time" => time(), "data" => $output_data));
+$json = json_encode(array("time" => time(), "data" => $output_data, "datahash" => $output_hash));
 unset($output_data); // conserve memory
 
 // Derive keys
@@ -190,9 +192,9 @@ $context = stream_context_create(
 $result = file_get_contents($TARGETURL, false, $context);
 
 
-$result = explode("\n", $result, 2);
+$result_parts = explode("\n", $result, 2);
 
-if ($result[0] === "Import successful") {
+if ($result_parts[0] === "Import successful") {
 	echo "Server reported successful import.\n\n";
 	echo "Stats:\n";
 	echo $statsverifier->getStats();
@@ -203,9 +205,12 @@ if ($result[0] === "Import successful") {
 	PiratenIDImport_err("Looks like the import failed.");
 }
 
-$newState = json_decode($result[1], true);
+$newState = json_decode($result_parts[1], true);
 
-if (!is_array($newState) || empty($newState['valid']) || empty($newState['used'])) PiratenIDImport_err("Invalid newState.");
+if (!is_array($newState) || empty($newState['valid']) || empty($newState['used'])) {
+	PiratenIDImport_err("Invalid newState; some tokens marked active in the feedback table may be inactive (but not the other way around)");
+}
+
 $validTokens = $newState['valid'];
 $usedTokens = $newState['used'];
 if (count(array_diff($newState['valid'], $sent_tokens)) !== 0 || count(array_diff($sent_tokens, $newState['valid'])) !== 0) { // check BOTH ways, array_diff only checks one direction!
@@ -216,7 +221,7 @@ $data = array();
 foreach ($validTokens as $token) $data[$token]['valid'] = true;
 foreach ($usedTokens as $token)  $data[$token]['used']  = true;
 
-$pdo->beginTransaction() or dbError("Could not start PDO transaction");
+$pdo->beginTransaction() or dbError("Could not start PDO transaction to write feedback; some tokens marked active in the feedback table may be inactive (but not the other way around)");
 // Table and column names verified above
 if ($pdo->exec('DELETE FROM ['.$FEEDBACKTABLE.'] WITH (HOLDLOCK, TABLOCKX)') === false) dbError("Failed to clear feedback table");
 $statement = $pdo->prepare(
