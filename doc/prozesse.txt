@@ -76,9 +76,10 @@ Prozesse:
   - Logging muss nur anonymisiert werden, falls Betrieb nicht hinter Squid
   - Datenbank einrichten, Dump importieren (doc/tech/database.sql.txt)
   - User für PiratenID: SELECT, INSERT, UPDATE, DELETE für alle Tabellen außer tokens, nur SELECT für tokens
-  - User für Import: INSERT, DELETE für tokens
+  - User für Import: SELECT, INSERT, DELETE für tokens, SELECT für token-Spalte von users
   - Code aufspielen
   - Doku-PDFs kompilieren und in Verzeichnis doc aufspielen
+    - oder von idtest kopieren
   - In includes: cp siteconstants.EXAMPLE.inc.php siteconstants.inc.php
   - siteconstants.inc.php bearbeiten und alle Variablen setzen (DB-Zugang, frische secrets!)
   - Sicheres Backup der siteconstants, ggf. Rechte setzen?
@@ -87,7 +88,7 @@ Prozesse:
   - ggf. Dummyseite "du bist hier falsch" *ohne* Link (Lerneffekt!) auf plain-HTTP auf port 80 anbieten
   - siehe auch Seite "id02" im internen Wiki
   - Ggf. Watchdog-Skript einsetzen, was Länge von loginfailures_log regelmäßig prüft und ggf. Alarm schlägt
-
+  - Export/Import: Siehe README.txt im Export-Verzeichnis
 
 - (IT) Datenaustausch MV (regelmäßig, möglichst täglich)
   - Export-Skript auf MV-Maschine laufen lassen
